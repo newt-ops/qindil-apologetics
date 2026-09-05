@@ -1,0 +1,52 @@
+{
+  "name": "qindil-backend",
+  "version": "2.0.0",
+  "private": true,
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "seed:roles": "tsx src/scripts/seedRoles.ts",
+    "seed:admin": "tsx src/scripts/seedSuperAdmin.ts",
+    "seed:home": "tsx src/scripts/seedPublicHome.ts",
+    "seed:events": "tsx src/scripts/seedPublicEvents.ts",
+    "seed:tasks": "tsx src/scripts/seedTasks.ts",
+    "seed:demo": "tsx src/scripts/seedDemoData.ts",
+    "test:phase1": "tsx src/scripts/testPhase1.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.4.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-async-handler": "^1.2.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.4.0",
+    "google-auth-library": "^9.14.0",
+    "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.3",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "resend": "^4.0.0",
+    "telegraf": "^4.16.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/hpp": "^0.2.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.14.10",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.3"
+  }
+}

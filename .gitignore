@@ -1,0 +1,30 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+build/
+frontend/dist/
+frontend/node_modules/
+backend/dist/
+backend/node_modules/
+
+# Environment Variables & Secrets
+.env
+.env.*
+*.env
+
+# Internal Scaffolding & Prompts
+prompts/
+Qindil_Prompts_v1/
+Qindil_Prompts_v2/
+.antigravity-inbox/
+.antigravity/
+.gemini/
+
+# Logs & Operating System Files
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE Folders
+.vscode/
+.idea/

@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-rgb: 250 248 245;
+  --color-surface-rgb: 255 255 255;
+  --color-gold-rgb: 179 133 76;
+  --color-gold-hover-rgb: 150 110 58;
+  --color-text-rgb: 28 25 23;
+  --color-text-muted-rgb: 120 113 108;
+  --color-border-rgb: 231 229 228;
+  --color-danger-rgb: 220 38 38;
+  --color-success-rgb: 22 163 74;
+}
+
+.dark {
+  --color-bg-rgb: 10 10 10;
+  --color-surface-rgb: 20 20 20;
+  --color-gold-rgb: 201 160 107;
+  --color-gold-hover-rgb: 221 181 136;
+  --color-text-rgb: 245 241 234;
+  --color-text-muted-rgb: 168 162 158;
+  --color-border-rgb: 38 38 38;
+  --color-danger-rgb: 220 38 38;
+  --color-success-rgb: 22 163 74;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans antialiased min-h-screen transition-colors duration-200;
+  }
+}
+
