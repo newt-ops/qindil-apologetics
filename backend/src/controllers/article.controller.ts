@@ -6,7 +6,6 @@ import TaskModel from '../models/Task.model.js';
 import AuditLogModel from '../models/AuditLog.model.js';
 import { createNotification } from '../services/notify.js';
 import { sendTelegramTaskProgressNotification } from '../telegram/index.js';
-import { sendArticleReviewOutcomeEmail } from '../services/email/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 
@@ -381,7 +380,6 @@ export const reviewArticle = asyncHandler(
     }
 
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
-    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
 
     if (decision === 'requestChanges') {
       if (article.status !== 'inReview') {
@@ -403,7 +401,7 @@ export const reviewArticle = asyncHandler(
         await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'inProgress' } });
       }
 
-      // Notify author via bell, telegram, and email
+      // Notify author via in-app notification and Telegram
       await createNotification({
         recipient: authorId,
         type: 'changes_requested',
@@ -418,15 +416,6 @@ export const reviewArticle = asyncHandler(
         'changes_requested',
         reviewNotes.trim()
       );
-
-      if (authorEmail) {
-        await sendArticleReviewOutcomeEmail(
-          authorEmail,
-          article.title,
-          'changesRequested',
-          reviewNotes.trim()
-        );
-      }
     } else if (decision === 'approve') {
       if (article.status !== 'inReview') {
         return next(
@@ -451,10 +440,6 @@ export const reviewArticle = asyncHandler(
       });
 
       await sendTelegramTaskProgressNotification(authorId, article.title, 'approved');
-
-      if (authorEmail) {
-        await sendArticleReviewOutcomeEmail(authorEmail, article.title, 'approved', reviewNotes);
-      }
     } else if (decision === 'publish') {
       if (article.status !== 'inReview' && article.status !== 'approved') {
         return next(
@@ -498,10 +483,6 @@ export const reviewArticle = asyncHandler(
       });
 
       await sendTelegramTaskProgressNotification(authorId, article.title, 'published');
-
-      if (authorEmail) {
-        await sendArticleReviewOutcomeEmail(authorEmail, article.title, 'published');
-      }
     }
 
     // Write audit log
@@ -551,9 +532,8 @@ export const requestChanges = asyncHandler(
     article.reviewNotes = reviewNotes;
     await article.save();
 
-    // Notify author
+    // Notify author via in-app notification and Telegram
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
-    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
 
     await createNotification({
       recipient: authorId,
@@ -569,15 +549,6 @@ export const requestChanges = asyncHandler(
       'changes_requested',
       reviewNotes
     );
-
-    if (authorEmail) {
-      await sendArticleReviewOutcomeEmail(
-        authorEmail,
-        article.title,
-        'changesRequested',
-        reviewNotes
-      );
-    }
 
     // Write audit log
     await AuditLogModel.create({
@@ -619,9 +590,8 @@ export const approveArticle = asyncHandler(
     article.status = 'approved';
     await article.save();
 
-    // Notify author
+    // Notify author via in-app notification and Telegram
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
-    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
 
     await createNotification({
       recipient: authorId,
@@ -636,14 +606,6 @@ export const approveArticle = asyncHandler(
       article.title,
       'approved'
     );
-
-    if (authorEmail) {
-      await sendArticleReviewOutcomeEmail(
-        authorEmail,
-        article.title,
-        'approved'
-      );
-    }
 
     // Write audit log
     await AuditLogModel.create({
@@ -686,9 +648,8 @@ export const publishArticle = asyncHandler(
     article.publishedAt = new Date();
     await article.save();
 
-    // Notify author
+    // Notify author via in-app notification and Telegram
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
-    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
 
     await createNotification({
       recipient: authorId,
@@ -703,14 +664,6 @@ export const publishArticle = asyncHandler(
       article.title,
       'published'
     );
-
-    if (authorEmail) {
-      await sendArticleReviewOutcomeEmail(
-        authorEmail,
-        article.title,
-        'published'
-      );
-    }
 
     // Write audit log
     await AuditLogModel.create({
