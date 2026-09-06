@@ -139,7 +139,7 @@ export function MiniDashboardPage() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Link
               to="/"
-              className="inline-flex items-center space-x-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold transition shadow-sm"
+              className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold active:scale-95 transition-all shadow-apple-sm"
               title="Return to Main Page"
             >
               <Icon name="ArrowLeft" size={14} className="text-gold" />
@@ -147,7 +147,7 @@ export function MiniDashboardPage() {
             </Link>
             <Link
               to="/articles"
-              className="inline-flex items-center space-x-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:border-gold/50 transition shadow-sm"
+              className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-text hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"
             >
               <Icon name="BookOpen" size={14} />
               <span className="hidden sm:inline">Browse Library</span>
@@ -155,7 +155,7 @@ export function MiniDashboardPage() {
             {isAdminUser && (
               <Link
                 to="/admin"
-                className="inline-flex items-center space-x-1.5 rounded-lg bg-gold px-3.5 py-2 text-xs font-bold text-bg transition hover:bg-goldHover shadow-md"
+                className="inline-flex items-center space-x-1.5 rounded-full bg-gold px-4 py-2 text-xs font-bold text-bg shadow-apple-gold transition-all hover:bg-goldHover active:scale-95"
               >
                 <Icon name="Activity" size={14} />
                 <span>Admin Workspace</span>
@@ -167,7 +167,7 @@ export function MiniDashboardPage() {
 
         {/* Member Status Metrics Strip - Prompt 42: Compact 3-card swipe strip on mobile */}
         <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
-          <div className="rounded-xl border border-border bg-surface p-3 sm:p-4 text-center space-y-0.5 shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-3.5 sm:p-5 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
               <Icon name="User" size={12} className="text-gold" />
               <span>Role Tier</span>
@@ -177,7 +177,7 @@ export function MiniDashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-surface p-3 sm:p-4 text-center space-y-0.5 shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-3.5 sm:p-5 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
               <Icon name="Send" size={12} className="text-gold" />
               <span>Telegram Sync</span>
@@ -187,7 +187,7 @@ export function MiniDashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-surface p-3 sm:p-4 text-center space-y-0.5 shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-3.5 sm:p-5 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
               <Icon name="Bell" size={12} className="text-gold" />
               <span>Alerts</span>
@@ -203,7 +203,7 @@ export function MiniDashboardPage() {
           {/* Left Column: Profile Card, Avatar & Security (5 cols on lg) */}
           <div className="lg:col-span-5 space-y-5">
             {/* Profile Edit Card */}
-            <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-xl space-y-4">
+            <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-5 sm:p-7 shadow-apple-card space-y-5">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-gold flex items-center gap-1.5">
                   <Icon name="User" size={14} />
@@ -375,9 +375,9 @@ export function MiniDashboardPage() {
           {/* Right Column: Notifications & Research Hub (7 cols on lg) */}
           <div className="lg:col-span-7 space-y-5">
             {/* Tabbed Card */}
-            <div className="rounded-xl sm:rounded-2xl border border-border bg-surface shadow-xl overflow-hidden">
+            <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl shadow-apple-card overflow-hidden">
               {/* Tabs Strip */}
-              <div className="flex items-center border-b border-border bg-bg/50 px-4 sm:px-6 pt-3">
+              <div className="flex items-center border-b border-border/70 bg-bg/50 px-4 sm:px-6 pt-3">
                 <button
                   onClick={() => setActiveTab('notifications')}
                   className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 mr-6 ${
@@ -412,7 +412,7 @@ export function MiniDashboardPage() {
                         {[1, 2, 3].map((n) => (
                           <div
                             key={n}
-                            className="h-16 animate-pulse rounded-xl border border-border bg-bg/50 p-4"
+                            className="h-16 animate-pulse rounded-2xl border border-border/80 bg-bg/50 p-4"
                           />
                         ))}
                       </div>
@@ -423,10 +423,10 @@ export function MiniDashboardPage() {
                             key={n._id}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`flex items-start justify-between rounded-xl border p-3.5 sm:p-4 transition ${
+                            className={`flex items-start justify-between rounded-2xl border p-3.5 sm:p-4 transition-all shadow-apple-sm ${
                               n.read
-                                ? 'border-border/60 bg-bg/40'
-                                : 'border-gold/40 bg-gold/5 shadow-sm'
+                                ? 'border-border/70 bg-bg/40'
+                                : 'border-gold/40 bg-gold/5 shadow-apple-sm'
                             }`}
                           >
                             <div className="space-y-1 min-w-0 pr-3">
@@ -488,11 +488,11 @@ export function MiniDashboardPage() {
                         <Link
                           key={s.title}
                           to={s.to}
-                          className="group rounded-xl border border-border bg-bg/70 p-3.5 transition hover:border-gold/50 hover:bg-surface space-y-1.5"
+                          className="group rounded-2xl border border-border/80 bg-surface/70 backdrop-blur-sm p-4 shadow-apple-sm transition-all duration-200 hover:border-gold/50 hover:shadow-apple-md hover:-translate-y-0.5 active:scale-98 space-y-2"
                         >
-                          <div className="flex items-center space-x-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold group-hover:bg-gold group-hover:text-bg transition">
-                              <Icon name={s.icon as any} size={14} />
+                          <div className="flex items-center space-x-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/10 text-gold group-hover:bg-gold group-hover:text-bg transition-all shadow-apple-sm">
+                              <Icon name={s.icon as any} size={15} />
                             </div>
                             <span className="text-xs font-bold text-text group-hover:text-gold transition-colors">
                               {s.title}
@@ -505,9 +505,9 @@ export function MiniDashboardPage() {
                       ))}
                     </div>
 
-                    <div className="rounded-xl border border-gold/25 bg-gold/5 p-3.5 sm:p-4 space-y-1.5 mt-2">
+                    <div className="rounded-2xl border border-gold/25 bg-gold/5 p-4 space-y-1.5 mt-2 shadow-apple-sm">
                       <div className="flex items-center space-x-2 text-xs font-bold text-gold">
-                        <Icon name="BookOpen" size={13} />
+                        <Icon name="BookOpen" size={14} />
                         <span>Scholarly Research Mandate</span>
                       </div>
                       <p className="text-[11px] text-textMuted leading-relaxed">

@@ -30,5 +30,69 @@
   body {
     @apply bg-bg text-text font-sans antialiased min-h-screen transition-colors duration-200;
   }
+
+  /* Smooth Apple selection highlight */
+  ::selection {
+    background-color: rgba(201, 168, 76, 0.25);
+    color: inherit;
+  }
+
+  /* Minimalist Apple-style pill scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 113, 108, 0.25);
+    border-radius: 9999px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(120, 113, 108, 0.45);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
 }
+
+@layer utilities {
+  /* Apple Glassmorphic Card Container */
+  .apple-glass {
+    @apply backdrop-blur-xl bg-surface/85 border border-border/70 shadow-apple-sm transition-all duration-300;
+  }
+
+  .dark .apple-glass {
+    @apply bg-surface/75 border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)];
+  }
+
+  /* Apple Elevated Card */
+  .apple-card {
+    @apply rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-md shadow-apple-card transition-all duration-300 hover:shadow-apple-elevated;
+  }
+
+  .dark .apple-card {
+    @apply border-white/[0.08] bg-surface/80 shadow-[0_10px_36px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)];
+  }
+
+  /* Tactile button compression */
+  .apple-press {
+    @apply active:scale-[0.97] transition-transform duration-150 ease-out;
+  }
+
+  /* Pill container with frosted blur */
+  .apple-pill {
+    @apply rounded-full backdrop-blur-md border border-border/70 px-3.5 py-1.5 transition-all duration-200;
+  }
+}
+
 

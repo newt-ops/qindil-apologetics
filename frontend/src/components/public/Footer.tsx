@@ -96,11 +96,11 @@ export function Footer() {
                     href={social.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-bg text-textMuted transition hover:border-gold hover:text-gold"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-surface/80 backdrop-blur-md shadow-apple-sm text-textMuted transition-all hover:border-gold/60 hover:text-gold active:scale-90"
                     aria-label={social.name}
                     title={social.name}
                   >
-                    <Icon name={social.icon as any} size={16} />
+                    <Icon name={social.icon as any} size={15} />
                   </a>
                 ))}
               </div>

@@ -34,18 +34,18 @@ export const ToastSingle: React.FC<{ item: ToastItem }> = ({ item }) => {
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      className={`flex items-center gap-3 w-full max-w-sm rounded-lg border p-4 shadow-xl backdrop-blur-md ${config.border} ${config.bg}`}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className={`flex items-center gap-3 w-full max-w-sm rounded-2xl border p-3.5 sm:p-4 shadow-apple-float backdrop-blur-2xl ${config.border} ${config.bg}`}
     >
       <div className={`shrink-0 ${config.iconColor}`}>
         <Icon name={config.icon} size={20} />
       </div>
 
-      <p className="flex-1 text-sm font-medium text-text leading-snug">{item.message}</p>
+      <p className="flex-1 text-xs sm:text-sm font-medium text-text leading-snug">{item.message}</p>
 
       <button
         onClick={() => removeToast(item.id)}
-        className="shrink-0 text-textMuted hover:text-text p-1 transition-colors"
+        className="shrink-0 rounded-full p-1 text-textMuted hover:bg-bg/80 hover:text-text active:scale-90 transition-all"
         aria-label="Dismiss toast"
       >
         <Icon name="X" size={16} />

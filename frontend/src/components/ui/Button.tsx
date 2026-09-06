@@ -4,6 +4,7 @@ import Spinner from './Spinner';
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
+  pill?: boolean;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -15,6 +16,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       variant = 'primary',
       size = 'md',
+      pill = false,
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -26,20 +28,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      'inline-flex items-center justify-center font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+      'inline-flex items-center justify-center font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.97]';
 
     const variantClasses = {
-      primary: 'bg-gold text-bg hover:bg-goldHover active:scale-[0.98]',
+      primary:
+        'bg-gold text-bg shadow-[0_2px_10px_rgba(201,168,76,0.25),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:bg-goldHover hover:shadow-[0_4px_16px_rgba(201,168,76,0.35)]',
       secondary:
-        'border border-border bg-surface text-text hover:bg-surface/80 hover:border-gold/30 active:scale-[0.98]',
-      danger: 'bg-danger text-white hover:bg-danger/80 active:scale-[0.98]',
-      ghost: 'text-textMuted hover:text-text hover:bg-surface/60 active:scale-[0.98]',
+        'border border-border/80 bg-surface/90 backdrop-blur-md text-text shadow-apple-sm hover:bg-surface hover:border-gold/40 hover:shadow-apple-md',
+      danger:
+        'bg-danger text-white shadow-[0_2px_10px_rgba(220,38,38,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:bg-danger/90',
+      ghost: 'text-textMuted hover:text-text hover:bg-surface/70',
     };
 
     const sizeClasses = {
-      sm: 'text-xs px-3 py-1.5 gap-1.5',
-      md: 'text-sm px-4 py-2.5 gap-2',
-      lg: 'text-base px-6 py-3 gap-2.5',
+      sm: `text-xs px-3.5 py-1.5 gap-1.5 ${pill ? 'rounded-full' : 'rounded-lg'}`,
+      md: `text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 gap-2 ${pill ? 'rounded-full' : 'rounded-xl'}`,
+      lg: `text-sm sm:text-base px-6 sm:px-7 py-2.5 sm:py-3.5 gap-2.5 ${pill ? 'rounded-full' : 'rounded-2xl'}`,
     };
 
     const spinnerSizeMap = {

@@ -37,7 +37,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div className={`relative flex items-center ${className}`}>
-      <div className="pointer-events-none absolute left-3 text-[#c9a84c]">
+      <div className="pointer-events-none absolute left-3.5 text-gold">
         <Icon name="Search" size={16} />
       </div>
 
@@ -46,14 +46,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         value={term}
         onChange={(e) => setTerm(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-zinc-800 bg-zinc-900/90 pl-9 pr-9 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:border-[#c9a84c] focus:outline-none transition-colors shadow-inner font-sans"
+        className="w-full rounded-full border border-border/80 bg-surface/80 backdrop-blur-md pl-10 pr-9 py-2.5 text-xs sm:text-sm text-text placeholder:text-textMuted/70 shadow-apple-sm focus:bg-surface focus:border-gold focus:ring-4 focus:ring-gold/15 focus:outline-none transition-all duration-200 font-sans"
       />
 
       {term && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-2.5 p-1 text-zinc-400 hover:text-zinc-100 transition-colors"
+          className="absolute right-3 rounded-full p-1 text-textMuted hover:text-text hover:bg-bg/80 active:scale-90 transition-all"
           title="Clear search"
         >
           <Icon name="X" size={14} />

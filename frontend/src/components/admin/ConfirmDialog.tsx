@@ -39,19 +39,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <div className="space-y-5 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${currentIcon.color}`}
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-apple-sm ${currentIcon.color}`}
           >
-            <Icon name={currentIcon.name} size={24} />
+            <Icon name={currentIcon.name} size={22} />
           </div>
 
           <div className="space-y-1.5 flex-1">
-            <h4 className="text-lg font-bold text-text">{title}</h4>
+            <h4 className="text-base sm:text-lg font-bold text-text tracking-tight">{title}</h4>
             <p className="text-xs text-textMuted leading-relaxed">{description}</p>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+        <div className="flex items-center justify-end gap-3 border-t border-border/60 pt-4">
           <Button variant="secondary" size="sm" onClick={onClose} disabled={isLoading}>
             {cancelText}
           </Button>

@@ -27,11 +27,11 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-      className="group flex flex-col justify-between rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/80 backdrop-blur-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-stone-300/40 dark:hover:shadow-black/70 hover:border-gold/60 dark:hover:border-gold/50 h-full"
+      className="group flex flex-col justify-between rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl overflow-hidden shadow-apple-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-apple-elevated hover:border-gold/50 active:scale-[0.98] h-full"
     >
       <Link to={`/articles/${article.slug}`} className="flex flex-col flex-1">
         {/* Visual Cover Banner — Prompt 42 mobile density scaling */}
-        <div className="relative h-28 sm:h-44 md:h-48 w-full overflow-hidden bg-stone-100 dark:bg-zinc-950 border-b border-stone-200/60 dark:border-zinc-800/60 shrink-0">
+        <div className="relative h-28 sm:h-44 md:h-48 w-full overflow-hidden bg-stone-100 dark:bg-zinc-950 border-b border-border/60 shrink-0">
           {article.coverImageUrl ? (
             <img
               src={article.coverImageUrl}
@@ -41,7 +41,7 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
           ) : (
             <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-[#b3854c]/15 via-stone-100 to-stone-50 dark:from-[#c9a84c]/15 dark:via-zinc-900 dark:to-zinc-950">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,168,76,0.12),transparent_70%)]" />
-              <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-white/80 dark:bg-zinc-900/80 border border-gold/30 shadow-md flex items-center justify-center text-gold transition-transform duration-500 group-hover:scale-110">
+              <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-2xl bg-white/80 dark:bg-zinc-900/80 border border-gold/30 shadow-apple-sm flex items-center justify-center text-gold transition-transform duration-500 group-hover:scale-110">
                 <Icon name="BookOpen" size={18} className="sm:hidden" />
                 <Icon name="BookOpen" size={24} className="hidden sm:inline" />
               </div>

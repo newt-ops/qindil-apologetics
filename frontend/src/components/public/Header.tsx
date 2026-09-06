@@ -44,22 +44,24 @@ export function Header() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="sticky top-0 z-40 w-full border-b border-border bg-bg/90 backdrop-blur-md"
+      className="sticky top-0 z-40 w-full border-b border-border/60 bg-bg/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl shadow-apple-sm"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center active:scale-98 transition-transform">
           <Logo variant="full" height={36} />
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex lg:items-center lg:space-x-6">
+        <nav className="hidden lg:flex lg:items-center lg:space-x-1 bg-surface/60 dark:bg-zinc-900/60 border border-border/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-apple-sm">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`text-sm font-medium transition-colors ${
-                isActive(item.path) ? 'text-gold' : 'text-textMuted hover:text-text'
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 ${
+                isActive(item.path)
+                  ? 'bg-gold/15 text-gold shadow-sm font-bold'
+                  : 'text-textMuted hover:text-text hover:bg-surface/80'
               }`}
             >
               {item.label}
@@ -74,7 +76,7 @@ export function Header() {
             value={headerSearchTerm}
             onChange={(e) => setHeaderSearchTerm(e.target.value)}
             placeholder="Search Qindil..."
-            className="w-36 lg:w-48 rounded-full border border-border bg-surface px-3 py-1.5 pl-8 text-xs text-text placeholder:text-textMuted focus:w-56 focus:border-gold focus:outline-none transition-all duration-300"
+            className="w-36 lg:w-48 rounded-full border border-border/80 bg-surface/80 backdrop-blur-sm px-3 py-1.5 pl-8 text-xs text-text placeholder:text-textMuted/70 shadow-apple-sm focus:w-56 focus:border-gold focus:ring-4 focus:ring-gold/15 focus:outline-none transition-all duration-300"
           />
           <button type="submit" className="absolute left-2.5 text-textMuted hover:text-gold transition-colors">
             <Icon name="Search" size={14} />
@@ -82,36 +84,36 @@ export function Header() {
         </form>
 
         {/* Auth / Action Area */}
-        <div className="hidden md:flex md:items-center md:space-x-3">
+        <div className="hidden md:flex md:items-center md:space-x-2.5">
           <ThemeToggle />
           {isAuthenticated && user ? (
             <div className="relative">
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center space-x-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text transition hover:border-gold/50"
+                className="flex items-center space-x-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-text shadow-apple-sm transition-all hover:border-gold/50 active:scale-95"
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 text-gold text-xs font-bold">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 text-gold text-xs font-bold border border-gold/30">
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <span>{user.name.split(' ')[0]}</span>
-                <Icon name="ChevronDown" size={16} className="text-textMuted" />
+                <Icon name="ChevronDown" size={14} className="text-textMuted" />
               </button>
 
               <AnimatePresence>
                 {isUserDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-48 rounded-md border border-border bg-surface p-1 shadow-xl"
+                    className="absolute right-0 mt-2 w-52 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
                   >
                     <Link
                       to="/dashboard"
                       onClick={() => setIsUserDropdownOpen(false)}
-                      className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm text-text transition hover:bg-bg hover:text-gold"
+                      className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
                     >
-                      <Icon name="Activity" size={16} />
+                      <Icon name="Activity" size={15} />
                       <span>Workspace</span>
                     </Link>
 
@@ -120,9 +122,9 @@ export function Header() {
                         setIsUserDropdownOpen(false);
                         logoutMutation.mutate();
                       }}
-                      className="flex w-full items-center space-x-2 rounded-md px-3 py-2 text-sm text-danger transition hover:bg-bg"
+                      className="flex w-full items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger transition hover:bg-danger/10"
                     >
-                      <Icon name="LogOut" size={16} />
+                      <Icon name="LogOut" size={15} />
                       <span>Log Out</span>
                     </button>
                   </motion.div>
@@ -130,16 +132,16 @@ export function Header() {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <Link
                 to="/login"
-                className="text-sm font-medium text-textMuted transition hover:text-text"
+                className="rounded-full border border-border/80 bg-surface/60 backdrop-blur-sm px-3.5 py-1.5 text-xs font-semibold text-textMuted transition hover:text-text hover:border-gold/40 active:scale-95"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="rounded-md bg-gold px-3.5 py-1.5 text-sm font-semibold text-bg transition hover:bg-goldHover"
+                className="rounded-full bg-gold px-4 py-1.5 text-xs font-bold text-bg shadow-[0_2px_10px_rgba(201,168,76,0.3)] transition hover:bg-goldHover active:scale-95"
               >
                 Register
               </Link>
@@ -152,10 +154,10 @@ export function Header() {
           <ThemeToggle />
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="rounded-md p-2 text-textMuted transition hover:bg-surface hover:text-text"
+            className="rounded-full p-2 text-textMuted transition hover:bg-surface hover:text-text active:scale-90"
             aria-label="Open Mobile Menu"
           >
-            <Icon name="Menu" size={24} />
+            <Icon name="Menu" size={22} />
           </button>
         </div>
       </div>

@@ -87,37 +87,37 @@ export function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4 pt-1 sm:pt-3">
               <Link
                 to="/articles"
-                className="w-full sm:w-auto rounded-xl sm:rounded-2xl bg-gold px-6 py-2.5 sm:px-7 sm:py-3.5 text-xs sm:text-sm font-bold text-zinc-950 transition-all hover:bg-goldHover shadow-lg shadow-gold/20 flex items-center justify-center space-x-2"
+                className="w-full sm:w-auto rounded-full bg-gold px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-zinc-950 shadow-apple-gold hover:bg-goldHover active:scale-97 flex items-center justify-center space-x-2 transition-all duration-200"
               >
-                <Icon name="BookOpen" size={15} />
+                <Icon name="BookOpen" size={16} />
                 <span>Explore Research Library</span>
               </Link>
               <Link
                 to="/topics"
-                className="w-full sm:w-auto rounded-xl sm:rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-6 py-2.5 sm:px-7 sm:py-3.5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 transition-all hover:border-gold/50 hover:text-gold flex items-center justify-center space-x-2 shadow-sm"
+                className="w-full sm:w-auto rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-text shadow-apple-sm hover:border-gold/50 hover:text-gold active:scale-97 flex items-center justify-center space-x-2 transition-all duration-200"
               >
-                <Icon name="Compass" size={15} />
+                <Icon name="Compass" size={16} />
                 <span>Browse Disciplines</span>
               </Link>
             </div>
 
             {/* Scholarly Highlights Strip — Dense mobile grid */}
             <div className="pt-6 sm:pt-12 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 max-w-3xl mx-auto text-left">
-              <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 p-2.5 sm:p-4 backdrop-blur-sm">
-                <p className="text-base sm:text-2xl font-black text-gold">100%</p>
-                <p className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">Primary Citations</p>
+              <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/80 p-3.5 sm:p-5 backdrop-blur-md shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+                <p className="text-lg sm:text-2xl font-black text-gold">100%</p>
+                <p className="text-[10px] sm:text-[11px] font-medium text-textMuted mt-0.5">Primary Citations</p>
               </div>
-              <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 p-2.5 sm:p-4 backdrop-blur-sm">
-                <p className="text-base sm:text-2xl font-black text-gold">17+</p>
-                <p className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">Thematic Topics</p>
+              <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/80 p-3.5 sm:p-5 backdrop-blur-md shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+                <p className="text-lg sm:text-2xl font-black text-gold">17+</p>
+                <p className="text-[10px] sm:text-[11px] font-medium text-textMuted mt-0.5">Thematic Topics</p>
               </div>
-              <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 p-2.5 sm:p-4 backdrop-blur-sm">
-                <p className="text-base sm:text-2xl font-black text-gold">32</p>
-                <p className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">Scholarly Team</p>
+              <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/80 p-3.5 sm:p-5 backdrop-blur-md shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+                <p className="text-lg sm:text-2xl font-black text-gold">32</p>
+                <p className="text-[10px] sm:text-[11px] font-medium text-textMuted mt-0.5">Scholarly Team</p>
               </div>
-              <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 p-2.5 sm:p-4 backdrop-blur-sm">
-                <p className="text-base sm:text-2xl font-black text-gold">Open</p>
-                <p className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">Public Library</p>
+              <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/80 p-3.5 sm:p-5 backdrop-blur-md shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+                <p className="text-lg sm:text-2xl font-black text-gold">Open</p>
+                <p className="text-[10px] sm:text-[11px] font-medium text-textMuted mt-0.5">Public Library</p>
               </div>
             </div>
           </motion.div>
@@ -167,23 +167,23 @@ export function HomePage() {
                 >
                   <Link
                     to={`/topics/${topic.slug}`}
-                    className="group block h-full rounded-2xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/90 dark:bg-zinc-900/90 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-gold/60 hover:shadow-lg hover:shadow-gold/5"
+                    className="group block h-full rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold/50 shadow-apple-sm hover:shadow-apple-card active:scale-98"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10 text-gold border border-gold/30">
-                        <Icon name="Layers" size={15} />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gold/10 text-gold border border-gold/30 shadow-apple-sm">
+                        <Icon name="Layers" size={16} />
                       </div>
                       <Icon
                         name="ArrowRight"
                         size={13}
-                        className="text-zinc-400 group-hover:text-gold group-hover:translate-x-0.5 transition-all"
+                        className="text-textMuted group-hover:text-gold group-hover:translate-x-0.5 transition-all"
                       />
                     </div>
-                    <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-gold transition-colors truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-text group-hover:text-gold transition-colors truncate">
                       {topic.name}
                     </h3>
                     {topic.description && (
-                      <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed mt-1">
+                      <p className="text-[10px] sm:text-xs text-textMuted line-clamp-2 leading-relaxed mt-1">
                         {topic.description}
                       </p>
                     )}
@@ -192,7 +192,7 @@ export function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-6 text-center text-xs text-zinc-500">
+            <div className="rounded-2xl border border-border/80 bg-surface/70 backdrop-blur-sm p-6 text-center text-xs text-textMuted shadow-apple-sm">
               No categories available at the moment.
             </div>
           )}
@@ -207,14 +207,14 @@ export function HomePage() {
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gold">
                 Featured Scholarship
               </span>
-              <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h2 className="text-lg sm:text-3xl font-black text-text tracking-tight">
                 Peer-Reviewed Publications
               </h2>
             </div>
 
             <Link
               to="/articles"
-              className="inline-flex items-center space-x-1 text-xs sm:text-sm font-bold text-gold hover:text-goldHover transition-colors shrink-0"
+              className="inline-flex items-center space-x-1 text-xs sm:text-sm font-bold text-gold hover:text-goldHover transition-colors shrink-0 active:scale-95"
             >
               <span>View Library</span>
               <Icon name="ArrowRight" size={13} />
@@ -226,82 +226,81 @@ export function HomePage() {
               {[1, 2, 3].map((n) => (
                 <div
                   key={n}
-                  className="h-64 w-[240px] shrink-0 sm:w-auto animate-pulse rounded-2xl border border-stone-200 dark:border-zinc-800 bg-stone-100/70 dark:bg-zinc-900/60"
+                  className="h-64 w-[240px] shrink-0 sm:w-auto animate-pulse rounded-3xl border border-border/70 bg-stone-100/70 dark:bg-zinc-900/60"
                 />
               ))}
             </div>
           ) : isArticlesError ? (
-            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-6 text-center text-xs sm:text-sm text-danger font-medium">
-              Failed to load featured articles. Please try again later.
+            <div className="rounded-3xl border border-danger/30 bg-danger/10 p-6 text-center text-xs sm:text-sm text-danger font-medium shadow-apple-sm">
+              Failed to load articles. Please refresh the page.
             </div>
           ) : articles && articles.length > 0 ? (
-            /* Prompt 42: Horizontal-scroll snap row on mobile, 3-col grid on desktop */
-            <div className="flex overflow-x-auto snap-x gap-3 pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0 scrollbar-none">
+            <div className="flex overflow-x-auto snap-x gap-3 pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:pb-0 scrollbar-none">
               {articles.slice(0, 6).map((article, index) => (
                 <div
                   key={article._id}
-                  className="shrink-0 w-[68vw] max-w-[260px] snap-center sm:w-auto sm:max-w-none"
+                  className="shrink-0 w-[72vw] max-w-[280px] snap-center sm:w-auto sm:max-w-none"
                 >
                   <ArticleCard article={article} index={index} />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-8 text-center text-xs text-zinc-500">
-              No published articles available yet. Check back soon!
+            <div className="rounded-3xl border border-border/80 bg-surface/70 backdrop-blur-sm p-8 text-center text-xs text-textMuted shadow-apple-sm">
+              No publications currently available in this repository.
             </div>
           )}
         </div>
       </section>
 
-      {/* 4. INTELLECTUAL FOUNDATIONS / PILLARS — Prompt 42 Scaled Density */}
-      <section className="py-10 sm:py-20 border-t border-stone-200/80 dark:border-zinc-800/80 bg-stone-50/70 dark:bg-zinc-950/60">
+      {/* 4. METHODOLOGY & PILLARS */}
+      <section className="py-10 sm:py-20 border-t border-border/60 bg-stone-50/50 dark:bg-zinc-950/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-2">
             <span className="text-[10px] sm:text-xs font-bold text-gold uppercase tracking-widest">
               Intellectual Methodology
             </span>
-            <h2 className="text-xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
+            <h2 className="text-xl sm:text-3xl font-black text-text tracking-tight">
               Our Core Research Pillars
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-xs sm:text-sm text-textMuted">
               Defending theological truth through rigorous philosophical argumentation and peer-reviewed scholarship.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-5 sm:p-7 space-y-3 shadow-sm hover:border-gold/60 transition-colors">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
-                <Icon name="BookOpen" size={20} />
+            <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-6 sm:p-8 space-y-3.5 shadow-apple-card hover:shadow-apple-elevated hover:border-gold/50 hover:-translate-y-1 transition-all">
+              <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-gold/10 border border-gold/30 shadow-apple-sm flex items-center justify-center text-gold">
+                <Icon name="BookOpen" size={22} />
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+              <h3 className="text-sm sm:text-base font-bold text-text">
                 Theological &amp; Rational Apologetics
               </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-xs text-textMuted leading-relaxed">
                 Formulating rigorous philosophical defenses of Monotheism (Tawhid), divine wisdom, and Islamic cosmology against reductionist materialism.
               </p>
             </div>
 
-            <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-5 sm:p-7 space-y-3 shadow-sm hover:border-gold/60 transition-colors">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
-                <Icon name="Shield" size={20} />
+            <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-6 sm:p-8 space-y-3.5 shadow-apple-card hover:shadow-apple-elevated hover:border-gold/50 hover:-translate-y-1 transition-all">
+              <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-gold/10 border border-gold/30 shadow-apple-sm flex items-center justify-center text-gold">
+                <Icon name="Shield" size={22} />
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+              <h3 className="text-sm sm:text-base font-bold text-text">
                 Critical Refutations &amp; Forensics
               </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-xs text-textMuted leading-relaxed">
                 Methodically dismantling contemporary anti-theist polemics and orientalist claims using original manuscripts and primary academic citations.
               </p>
             </div>
 
-            <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-5 sm:p-7 space-y-3 shadow-sm hover:border-gold/60 transition-colors">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
-                <Icon name="Video" size={20} />
+            <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-6 sm:p-8 space-y-3.5 shadow-apple-card hover:shadow-apple-elevated hover:border-gold/50 hover:-translate-y-1 transition-all">
+              <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-gold/10 border border-gold/30 shadow-apple-sm flex items-center justify-center text-gold">
+                <Icon name="Video" size={22} />
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+              <h3 className="text-sm sm:text-base font-bold text-text">
                 Scholarly Digital Publications
               </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-xs text-textMuted leading-relaxed">
                 Producing high-definition video treatises, debate dissections, and accessible multimedia presentations for digital intellectual discourse.
               </p>
             </div>
@@ -310,36 +309,36 @@ export function HomePage() {
       </section>
 
       {/* 5. INQUIRY & DISCOURSE CALL TO ACTION */}
-      <section className="py-10 sm:py-16 bg-bg">
+      <section className="py-10 sm:py-20 bg-bg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-gradient-to-br from-white/95 via-surface to-stone-100/50 dark:from-zinc-900/95 dark:via-zinc-900/70 dark:to-zinc-950 p-6 sm:p-12 shadow-xl shadow-stone-200/30 dark:shadow-black/50 overflow-hidden text-center max-w-3xl mx-auto">
-            <div className="relative z-10 space-y-4">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] sm:text-xs font-semibold text-gold">
+          <div className="relative rounded-3xl border border-border/80 bg-surface/95 dark:bg-zinc-900/90 backdrop-blur-2xl p-8 sm:p-14 shadow-apple-float overflow-hidden text-center max-w-3xl mx-auto">
+            <div className="relative z-10 space-y-5">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1 text-[10px] sm:text-xs font-semibold text-gold shadow-apple-sm">
                 <Icon name="Mail" size={12} />
                 <span>Intellectual Inquiries &amp; Contributions</span>
               </div>
 
-              <h2 className="text-xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h2 className="text-xl sm:text-3xl font-black text-text tracking-tight">
                 Have a Theological or Philosophical Inquiry?
               </h2>
 
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto">
+              <p className="text-xs sm:text-sm text-textMuted leading-relaxed max-w-xl mx-auto">
                 Our research council welcomes academic critiques, apologetic inquiries, and collaborative paper submissions from researchers globally.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <Link
                   to="/contact"
-                  className="w-full sm:w-auto rounded-xl bg-gold px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 transition-all hover:bg-goldHover shadow-md flex items-center justify-center space-x-2"
+                  className="w-full sm:w-auto rounded-full bg-gold px-6 py-3 text-xs sm:text-sm font-bold text-zinc-950 shadow-apple-gold hover:bg-goldHover active:scale-97 flex items-center justify-center space-x-2 transition-all"
                 >
-                  <Icon name="Send" size={14} />
+                  <Icon name="Send" size={15} />
                   <span>Submit an Inquiry</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="w-full sm:w-auto rounded-xl border border-stone-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-2.5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 transition-all hover:border-gold/50 hover:text-gold flex items-center justify-center space-x-2"
+                  className="w-full sm:w-auto rounded-full border border-border/80 bg-surface/80 px-6 py-3 text-xs sm:text-sm font-semibold text-text shadow-apple-sm hover:border-gold/50 hover:text-gold active:scale-97 flex items-center justify-center space-x-2 transition-all"
                 >
-                  <Icon name="User" size={14} />
+                  <Icon name="User" size={15} />
                   <span>Join Research Community</span>
                 </Link>
               </div>

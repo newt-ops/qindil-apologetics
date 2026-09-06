@@ -42,10 +42,10 @@ export function Pagination({
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={!hasPrevPage}
-        className="flex items-center space-x-1 rounded-md border border-border bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:border-gold disabled:opacity-40 disabled:hover:border-border"
+        className="flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-text shadow-apple-sm transition-all hover:border-gold/50 active:scale-90 disabled:opacity-40 disabled:hover:border-border/80 disabled:active:scale-100"
         aria-label="Previous Page"
       >
-        <Icon name="ChevronLeft" size={16} />
+        <Icon name="ChevronLeft" size={15} />
         <span className="hidden sm:inline">Prev</span>
       </button>
 
@@ -54,7 +54,7 @@ export function Pagination({
         <>
           <button
             onClick={() => onPageChange(1)}
-            className="rounded-md border border-border bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:border-gold"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-surface/80 text-xs font-semibold text-text shadow-apple-sm transition hover:border-gold active:scale-90"
           >
             1
           </button>
@@ -67,10 +67,10 @@ export function Pagination({
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          className={`rounded-md px-3.5 py-2 text-xs font-semibold transition ${
+          className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition-all active:scale-90 ${
             p === page
-              ? 'bg-gold text-bg shadow-md shadow-gold/20'
-              : 'border border-border bg-surface text-text hover:border-gold'
+              ? 'bg-gold text-bg font-bold shadow-apple-gold'
+              : 'border border-border/80 bg-surface/80 backdrop-blur-sm text-text hover:border-gold/50 shadow-apple-sm'
           }`}
         >
           {p}
@@ -85,7 +85,7 @@ export function Pagination({
           )}
           <button
             onClick={() => onPageChange(totalPages)}
-            className="rounded-md border border-border bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:border-gold"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-surface/80 text-xs font-semibold text-text shadow-apple-sm transition hover:border-gold active:scale-90"
           >
             {totalPages}
           </button>
@@ -96,11 +96,11 @@ export function Pagination({
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={!hasNextPage}
-        className="flex items-center space-x-1 rounded-md border border-border bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:border-gold disabled:opacity-40 disabled:hover:border-border"
+        className="flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-text shadow-apple-sm transition-all hover:border-gold/50 active:scale-90 disabled:opacity-40 disabled:hover:border-border/80 disabled:active:scale-100"
         aria-label="Next Page"
       >
         <span className="hidden sm:inline">Next</span>
-        <Icon name="ChevronRight" size={16} />
+        <Icon name="ChevronRight" size={15} />
       </button>
     </nav>
   );

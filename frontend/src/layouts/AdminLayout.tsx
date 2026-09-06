@@ -107,12 +107,12 @@ export const AdminLayout: React.FC = () => {
       {/* Main Right Content Workspace Column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Admin Topbar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-surface/85 backdrop-blur-xl px-4 sm:px-6 shadow-apple-sm">
           {/* Left Side: Mobile Menu Toggle + Title */}
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="rounded-md border border-border p-2 text-textMuted hover:bg-bg hover:text-text md:hidden transition-colors"
+              className="rounded-full border border-border/80 p-2 text-textMuted hover:bg-bg hover:text-text active:scale-90 md:hidden transition-all shadow-apple-sm"
               aria-label="Open Mobile Menu"
             >
               <Icon name="Menu" size={20} />
@@ -126,11 +126,11 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           {/* Right Side: Back to Main Page + Notification Bell + User Dropdown */}
-          <div className="flex items-center space-x-2.5 sm:space-x-4">
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
             {/* Back to Main Page Button */}
             <Link
               to="/"
-              className="inline-flex items-center space-x-1.5 rounded-lg border border-border bg-bg px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold transition shadow-xs"
+              className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3.5 sm:px-4 py-1.5 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold active:scale-95 transition-all shadow-apple-sm"
               title="Return to Main Page"
             >
               <Icon name="ArrowLeft" size={13} className="text-gold" />
@@ -144,7 +144,7 @@ export const AdminLayout: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setProfileDropdownOpen((prev) => !prev)}
-                className="flex items-center space-x-2.5 rounded-lg border border-border bg-bg px-3 py-1.5 text-xs hover:border-gold/40 transition-colors"
+                className="flex items-center space-x-2.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3.5 py-1.5 text-xs hover:border-gold/40 active:scale-95 transition-all shadow-apple-sm"
               >
                 {user?.avatarUrl ? (
                   <img
@@ -153,7 +153,7 @@ export const AdminLayout: React.FC = () => {
                     className="h-6 w-6 rounded-full object-cover border border-gold/40"
                   />
                 ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 font-bold text-gold text-xs">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 font-bold text-gold text-xs border border-gold/30">
                     {user?.name?.charAt(0) || 'A'}
                   </div>
                 )}
@@ -177,13 +177,13 @@ export const AdminLayout: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 z-30 mt-2 w-56 rounded-lg border border-border bg-surface p-2 shadow-xl space-y-1"
+                      className="absolute right-0 z-30 mt-2 w-56 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
                     >
-                      <div className="border-b border-border px-3 py-2">
+                      <div className="border-b border-border/60 px-3 py-2">
                         <p className="text-xs font-bold text-text truncate">{user?.name}</p>
                         <p className="text-[11px] text-textMuted truncate">{user?.email}</p>
                         <div className="mt-1.5">
-                          <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[9px] font-bold text-gold uppercase tracking-wider">
+                          <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 text-[9px] font-bold text-gold uppercase tracking-wider shadow-apple-sm">
                             {isSuperAdmin ? 'Super Admin' : 'Admin'}
                           </span>
                         </div>
@@ -192,7 +192,7 @@ export const AdminLayout: React.FC = () => {
                       <Link
                         to="/dashboard"
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center space-x-2 rounded-md px-3 py-2 text-xs font-medium text-textMuted hover:bg-bg hover:text-text transition-colors"
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
                       >
                         <Icon name="User" size={14} />
                         <span>Member Dashboard</span>
@@ -201,7 +201,7 @@ export const AdminLayout: React.FC = () => {
                       <Link
                         to="/"
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center space-x-2 rounded-md px-3 py-2 text-xs font-medium text-textMuted hover:bg-bg hover:text-text transition-colors"
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-surface/80 hover:text-gold"
                       >
                         <Icon name="Globe" size={14} />
                         <span>Back to Main Page</span>
@@ -210,7 +210,7 @@ export const AdminLayout: React.FC = () => {
                       <button
                         onClick={handleLogout}
                         disabled={logoutMutation.isPending}
-                        className="w-full flex items-center space-x-2 rounded-md px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                       >
                         <Icon name="LogOut" size={14} />
                         <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>

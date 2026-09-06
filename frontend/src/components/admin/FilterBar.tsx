@@ -11,7 +11,7 @@ export interface FilterBarProps {
 export const FilterBar: React.FC<FilterBarProps> = ({ children, onReset, className = '' }) => {
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface/70 p-3 shadow-sm ${className}`}
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-surface/80 backdrop-blur-md p-3.5 shadow-apple-sm ${className}`}
     >
       <div className="flex flex-wrap items-center gap-3 flex-1">{children}</div>
 

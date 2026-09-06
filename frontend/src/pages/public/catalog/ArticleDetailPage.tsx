@@ -220,24 +220,25 @@ export function ArticleDetailPage() {
           )}
 
           {/* Author & Byline Meta Card */}
-          <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/80 backdrop-blur-md p-3 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+          {/* Author & Byline Meta Card */}
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-4 sm:p-6 shadow-apple-card flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
               {article.author?.avatarUrl ? (
                 <img
                   src={article.author.avatarUrl}
                   alt={article.author.name}
-                  className="h-9 w-9 sm:h-11 sm:w-11 rounded-full object-cover border-2 border-gold/40 shadow-sm shrink-0"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border-2 border-gold/40 shadow-sm shrink-0"
                 />
               ) : (
-                <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gold/20 text-gold font-bold text-sm sm:text-base shrink-0 border border-gold/40">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gold/20 text-gold font-bold text-sm sm:text-base shrink-0 border border-gold/40 shadow-apple-sm">
                   {article.author?.name ? article.author.name.charAt(0).toUpperCase() : 'Q'}
                 </div>
               )}
               <div>
-                <p className="font-bold text-zinc-900 dark:text-zinc-100 text-xs sm:text-base">
+                <p className="font-bold text-text text-xs sm:text-base">
                   {article.author?.name || 'Qindil Research Team'}
                 </p>
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-textMuted">
                   <span>{formattedDate}</span>
                   <span>•</span>
                   <span className="text-gold font-medium">Peer Reviewed</span>
@@ -249,10 +250,10 @@ export function ArticleDetailPage() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleCopyLink}
-                className="inline-flex items-center space-x-1 rounded-lg sm:rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-950 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-gold hover:border-gold/50 transition-all shadow-sm"
+                className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 px-4 py-2 text-[11px] sm:text-xs font-semibold text-text hover:text-gold hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"
                 title="Copy Article Link"
               >
-                <Icon name={copiedLink ? 'Check' : 'Share'} size={12} className="text-gold sm:w-3 sm:h-3" />
+                <Icon name={copiedLink ? 'Check' : 'Share'} size={13} className="text-gold" />
                 <span>{copiedLink ? 'Copied' : 'Share'}</span>
               </button>
             </div>
@@ -261,27 +262,27 @@ export function ArticleDetailPage() {
 
         {/* Cover Image Feature Banner */}
         {article.coverImageUrl && (
-          <div className="overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 shadow-2xl shadow-stone-300/30 dark:shadow-black/60">
+          <div className="overflow-hidden rounded-2xl sm:rounded-3xl border border-border/80 shadow-apple-elevated">
             <img
               src={article.coverImageUrl}
               alt={article.title}
-              className="w-full max-h-[220px] sm:max-h-[500px] object-cover"
+              className="w-full max-h-[240px] sm:max-h-[500px] object-cover"
             />
           </div>
         )}
 
         {/* Article Content Paper */}
-        <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-4 sm:p-12 shadow-xl shadow-stone-200/30 dark:shadow-black/50 leading-relaxed">
+        <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-6 sm:p-14 shadow-apple-float leading-relaxed">
           <ContentRenderer content={article.content || article.excerpt} />
         </div>
 
         {/* Academic Citation Reference Box */}
-        <div className="rounded-xl sm:rounded-2xl border border-stone-200/80 dark:border-zinc-800/80 bg-stone-50/80 dark:bg-zinc-950/70 p-3.5 sm:p-6 space-y-2 text-xs">
-          <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100">
-            <Icon name="Bookmark" size={13} className="text-gold" />
+        <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/80 backdrop-blur-md p-4 sm:p-7 space-y-2.5 text-xs shadow-apple-sm">
+          <div className="flex items-center gap-1.5 font-bold text-text">
+            <Icon name="Bookmark" size={14} className="text-gold" />
             <span className="text-xs sm:text-sm">Academic Citation Reference</span>
           </div>
-          <p className="font-mono text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-stone-200 dark:border-zinc-800 break-all select-all">
+          <p className="font-mono text-[11px] sm:text-xs text-textMuted bg-bg/80 p-3 sm:p-4 rounded-2xl border border-border/80 break-all select-all shadow-inner">
             {article.author?.name || 'Qindil Research'}. "{article.title}." <em>Qindil Intellectual Journal</em>, {formattedDate || '2026'}. Web.
           </p>
         </div>

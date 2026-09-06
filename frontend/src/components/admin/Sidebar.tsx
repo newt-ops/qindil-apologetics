@@ -92,10 +92,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
             key={item.path}
             to={item.path}
             onClick={onItemClick}
-            className={`flex items-center justify-between rounded-md px-3 py-2.5 text-xs font-medium transition-all duration-150 ${
+            className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-98 ${
               isActive
-                ? 'bg-gold/15 text-gold border-l-2 border-gold font-bold shadow-sm'
-                : 'text-textMuted hover:bg-surface/80 hover:text-text'
+                ? 'bg-gold/15 text-gold font-bold shadow-apple-sm'
+                : 'text-textMuted hover:bg-surface/90 hover:text-text'
             }`}
           >
             <div className="flex items-center space-x-2.5">
@@ -120,10 +120,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
 
   return (
     <aside
-      className={`flex flex-col h-full bg-surface border-r border-border font-sans select-none ${className}`}
+      className={`flex flex-col h-full bg-surface/95 dark:bg-zinc-950/95 backdrop-blur-xl border-r border-border/80 font-sans select-none ${className}`}
     >
       {/* Brand Header */}
-      <div className="flex items-center justify-between border-b border-border p-4">
+      <div className="flex items-center justify-between border-b border-border/60 p-4">
         <div className="flex items-center space-x-3">
           <Logo variant="mark" height={32} />
           <div>
@@ -135,12 +135,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
       </div>
 
       {/* Role Badge Indicator */}
-      <div className="mx-3 my-3 rounded-md border border-border bg-bg/50 px-3 py-2 flex items-center justify-between">
+      <div className="mx-3 my-2.5 rounded-2xl border border-border/80 bg-bg/60 backdrop-blur-sm px-3.5 py-2.5 flex items-center justify-between shadow-apple-sm">
         <div className="flex items-center space-x-2 truncate">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
           <span className="text-xs text-text font-medium truncate">{user?.name || 'Admin'}</span>
         </div>
-        <span className="shrink-0 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
+        <span className="shrink-0 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider shadow-apple-sm">
           {isSuperAdmin ? 'Super Admin' : 'Admin'}
         </span>
       </div>
@@ -152,11 +152,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="border-t border-border p-3 space-y-2">
+      <div className="border-t border-border/60 p-3 space-y-2">
         <Link
           to="/"
           onClick={onItemClick}
-          className="flex items-center justify-center space-x-2 w-full rounded-lg border border-border bg-bg/80 hover:bg-bg px-3 py-2 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold transition shadow-xs"
+          className="flex items-center justify-center space-x-2 w-full rounded-full border border-border/80 bg-bg/80 hover:bg-bg px-4 py-2.5 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold active:scale-97 transition-all shadow-apple-sm"
         >
           <Icon name="Globe" size={14} className="text-gold" />
           <span>Back to Main Site</span>

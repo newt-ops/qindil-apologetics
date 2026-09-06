@@ -58,24 +58,24 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-md"
           />
 
           {/* Modal dialog box */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`relative z-10 w-full ${sizeClasses[size]} rounded-xl border border-border bg-surface shadow-2xl overflow-hidden`}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className={`relative z-10 w-full ${sizeClasses[size]} rounded-2xl sm:rounded-3xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-apple-float overflow-hidden`}
           >
             {/* Modal Header */}
             {title && (
-              <div className="flex items-center justify-between border-b border-border p-4 sm:px-6">
-                <h3 className="text-lg font-bold text-gold">{title}</h3>
+              <div className="flex items-center justify-between border-b border-border/60 p-4 sm:px-6">
+                <h3 className="text-base sm:text-lg font-bold text-gold tracking-tight">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="rounded-md p-1 text-textMuted hover:bg-bg hover:text-text transition-colors"
+                  className="rounded-full p-1.5 text-textMuted hover:bg-bg hover:text-text active:scale-95 transition-all"
                   aria-label="Close modal"
                 >
                   <Icon name="X" size={18} />
@@ -86,7 +86,7 @@ export const Modal: React.FC<ModalProps> = ({
             {!title && (
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 z-20 rounded-md p-1 text-textMuted hover:bg-bg hover:text-text transition-colors"
+                className="absolute right-4 top-4 z-20 rounded-full p-1.5 text-textMuted hover:bg-bg hover:text-text active:scale-95 transition-all"
                 aria-label="Close modal"
               >
                 <Icon name="X" size={18} />

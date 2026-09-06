@@ -31,9 +31,9 @@ export function Table<T extends Record<string, any>>({
   className = '',
 }: TableProps<T>) {
   return (
-    <div className={`w-full overflow-x-auto rounded-lg border border-border bg-surface scrollbar-thin ${className}`}>
+    <div className={`w-full overflow-x-auto rounded-2xl border border-border/80 bg-surface/90 backdrop-blur-md shadow-apple-card overflow-hidden scrollbar-thin ${className}`}>
       <table className="w-full text-left text-sm text-text border-collapse min-w-[550px] sm:min-w-full">
-        <thead className="border-b border-border bg-bg/80 text-xs font-semibold uppercase tracking-wider text-textMuted">
+        <thead className="border-b border-border/70 bg-bg/70 backdrop-blur-sm text-[11px] font-semibold uppercase tracking-wider text-textMuted">
           <tr>
             {columns.map((col, colIdx) => (
               <th
