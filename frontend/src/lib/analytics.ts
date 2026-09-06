@@ -66,6 +66,24 @@ export const initGA4 = (): void => {
   }
 };
 
+export const trackGA4PageView = (path: string): void => {
+  if (typeof window === 'undefined' || getCookieConsent() !== 'accepted') {
+    return;
+  }
+
+  const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID;
+  if (!measurementId) return;
+
+  if (window.gtag) {
+    window.gtag('config', measurementId, {
+      page_path: path,
+    });
+    if (import.meta.env.DEV) {
+      console.log(`[GA4] Pageview recorded: ${path}`);
+    }
+  }
+};
+
 export const trackGA4Event = (action: string, category?: string, label?: string, value?: number): void => {
   if (typeof window === 'undefined' || getCookieConsent() !== 'accepted') {
     return;
