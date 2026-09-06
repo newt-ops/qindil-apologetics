@@ -7,6 +7,7 @@ import ArticleCard from '../../../components/public/ArticleCard';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
 import { ArticleDetailSkeleton } from '../../../components/ui/Skeleton';
+import { useReaderStore } from '../../../stores/readerStore';
 
 export function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -105,6 +106,35 @@ export function ArticleDetailPage() {
   // Calculate estimated reading time
   const wordCount = article.content ? article.content.replace(/<[^>]*>?/gm, '').split(/\s+/).filter(Boolean).length : 0;
   const readingTimeMinutes = Math.max(2, Math.ceil(wordCount > 0 ? wordCount / 200 : 4));
+
+  // Reader Store Integration: Bookmarks & History
+  const toggleBookmark = useReaderStore((state) => state.toggleBookmark);
+  const isBookmarked = useReaderStore((state) => (slug ? state.isBookmarked(slug) : false));
+  const recordRead = useReaderStore((state) => state.recordRead);
+
+  useEffect(() => {
+    if (article) {
+      recordRead({
+        slug: article.slug,
+        title: article.title,
+        topicName: article.topic?.name,
+        coverImageUrl: article.coverImageUrl,
+        estimatedReadTime: readingTimeMinutes,
+      });
+    }
+  }, [article, recordRead, readingTimeMinutes]);
+
+  const handleToggleBookmark = () => {
+    if (!article) return;
+    toggleBookmark({
+      slug: article.slug,
+      title: article.title,
+      topic: article.topic ? { name: article.topic.name, slug: article.topic.slug } : undefined,
+      excerpt: article.excerpt,
+      coverImageUrl: article.coverImageUrl,
+      estimatedReadTime: readingTimeMinutes,
+    });
+  };
 
   // Construct Article Schema JSON-LD for Search Engine Indexing
   const articleJsonLd = {
@@ -234,8 +264,21 @@ export function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* Actions: Share / Copy Link */}
+            {/* Actions: Bookmark & Share */}
             <div className="flex items-center space-x-2">
+              <button
+                onClick={handleToggleBookmark}
+                className={`inline-flex items-center space-x-1.5 rounded-full border px-4 py-2 text-[11px] sm:text-xs font-semibold active:scale-95 transition-all shadow-apple-sm ${
+                  isBookmarked
+                    ? 'border-gold bg-gold/15 text-gold font-bold shadow-apple-sm'
+                    : 'border-border/80 bg-surface/80 text-text hover:text-gold hover:border-gold/50'
+                }`}
+                title={isBookmarked ? 'Remove from Saved Articles' : 'Save Article to Library'}
+              >
+                <Icon name="Bookmark" size={13} className="text-gold" />
+                <span>{isBookmarked ? 'Saved' : 'Bookmark'}</span>
+              </button>
+
               <button
                 onClick={handleCopyLink}
                 className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 px-4 py-2 text-[11px] sm:text-xs font-semibold text-text hover:text-gold hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"

@@ -24,6 +24,7 @@ import {
 
 // Admin Operations, Editorial, Video & System Pages
 import {
+  AdminWelcomePage,
   WorkspacePage,
   TeamRosterPage,
   MemberProfilePage,
@@ -44,6 +45,15 @@ import {
 } from '../pages/admin';
 
 import ProtectedRoute from './ProtectedRoute';
+import { useHasRole } from '../hooks/useHasRole';
+
+function AdminDashboardIndex() {
+  const isSuperAdmin = useHasRole('superAdmin');
+  if (isSuperAdmin) {
+    return <AdminWelcomePage />;
+  }
+  return <WorkspacePage />;
+}
 
 export function AppRoutes() {
   return (
@@ -60,6 +70,16 @@ export function AppRoutes() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
+
+        {/* Member Profile & Personal Library (integrated with main web) */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <MiniDashboardPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Standalone Auth Pages */}
@@ -68,16 +88,6 @@ export function AppRoutes() {
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-      {/* Member Mini-Dashboard Route (every logged-in user can access) */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <MiniDashboardPage />
-          </ProtectedRoute>
-        }
-      />
 
       {/* Admin Shell Routes (guarded by requiredRole="admin") */}
       <Route
@@ -88,7 +98,7 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<WorkspacePage />} />
+        <Route index element={<AdminDashboardIndex />} />
         <Route path="workspace" element={<WorkspacePage />} />
 
 

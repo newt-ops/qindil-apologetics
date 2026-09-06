@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
 import { useLogout } from '../../hooks/useAuth';
+import { useHasRole } from '../../hooks/useHasRole';
 import Icon from '../icons/Icon';
 import Logo from '../shared/Logo';
 import ThemeToggle from '../shared/ThemeToggle';
@@ -22,6 +23,8 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
   const location = useLocation();
   const { isAuthenticated, user } = useAuthStore();
   const logoutMutation = useLogout();
+  const isSuperAdmin = useHasRole('superAdmin');
+  const isAdmin = useHasRole('admin');
 
   // Close mobile drawer automatically when route changes
   useEffect(() => {
@@ -90,13 +93,37 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                     </div>
                   </div>
 
+                  {/* Role-Specific Admin Panel Button */}
+                  {isSuperAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={onClose}
+                      className="flex w-full items-center justify-center space-x-2 rounded-full bg-gold/15 border border-gold/40 py-2.5 text-xs font-bold text-gold shadow-apple-sm transition hover:bg-gold hover:text-zinc-950 active:scale-97"
+                    >
+                      <Icon name="Shield" size={14} />
+                      <span>SuperAdmin Panel</span>
+                    </Link>
+                  )}
+
+                  {isAdmin && !isSuperAdmin && (
+                    <Link
+                      to="/admin/workspace"
+                      onClick={onClose}
+                      className="flex w-full items-center justify-center space-x-2 rounded-full bg-gold/15 border border-gold/40 py-2.5 text-xs font-bold text-gold shadow-apple-sm transition hover:bg-gold hover:text-zinc-950 active:scale-97"
+                    >
+                      <Icon name="Folder" size={14} />
+                      <span>Admin Panel</span>
+                    </Link>
+                  )}
+
+                  {/* Personal Profile & Saved Articles */}
                   <Link
                     to="/dashboard"
                     onClick={onClose}
                     className="flex w-full items-center justify-center space-x-2 rounded-full border border-border/80 bg-surface/80 py-2.5 text-xs font-semibold text-text shadow-apple-sm transition hover:border-gold active:scale-97"
                   >
-                    <Icon name="Activity" size={14} />
-                    <span>Workspace</span>
+                    <Icon name="User" size={14} className="text-gold" />
+                    <span>My Profile &amp; Saved</span>
                   </Link>
 
                   <button

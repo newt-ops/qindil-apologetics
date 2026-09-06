@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
 import { useLogout } from '../../hooks/useAuth';
+import { useHasRole } from '../../hooks/useHasRole';
 import Icon from '../icons/Icon';
 import MobileMenu from './MobileMenu';
 import Logo from '../shared/Logo';
@@ -13,6 +14,8 @@ export function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const logoutMutation = useLogout();
+  const isSuperAdmin = useHasRole('superAdmin');
+  const isAdmin = useHasRole('admin');
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -87,49 +90,113 @@ export function Header() {
         <div className="hidden md:flex md:items-center md:space-x-2.5">
           <ThemeToggle />
           {isAuthenticated && user ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center space-x-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-text shadow-apple-sm transition-all hover:border-gold/50 active:scale-95"
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 text-gold text-xs font-bold border border-gold/30">
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <span>{user.name.split(' ')[0]}</span>
-                <Icon name="ChevronDown" size={14} className="text-textMuted" />
-              </button>
+            <div className="flex items-center space-x-2">
+              {/* Distinct Admin Panel Buttons for SuperAdmin & Admin */}
+              {isSuperAdmin ? (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center space-x-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-xs font-bold text-gold hover:bg-gold hover:text-zinc-950 transition-all active:scale-95 shadow-sm"
+                  title="SuperAdmin Command Center"
+                >
+                  <Icon name="Shield" size={13} />
+                  <span>SuperAdmin Panel</span>
+                </Link>
+              ) : isAdmin ? (
+                <Link
+                  to="/admin/workspace"
+                  className="inline-flex items-center space-x-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-xs font-bold text-gold hover:bg-gold hover:text-zinc-950 transition-all active:scale-95 shadow-sm"
+                  title="Editorial Operations Console"
+                >
+                  <Icon name="Folder" size={13} />
+                  <span>Admin Panel</span>
+                </Link>
+              ) : null}
 
-              <AnimatePresence>
-                {isUserDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-52 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
-                  >
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setIsUserDropdownOpen(false)}
-                      className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
-                    >
-                      <Icon name="Activity" size={15} />
-                      <span>Workspace</span>
-                    </Link>
+              {/* User Profile & Mini Dashboard Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="flex items-center space-x-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-text shadow-apple-sm transition-all hover:border-gold/50 active:scale-95"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 text-gold text-xs font-bold border border-gold/30 shrink-0">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="truncate max-w-[100px]">{user.name.split(' ')[0]}</span>
+                  <Icon name="ChevronDown" size={13} className="text-textMuted" />
+                </button>
 
-                    <button
-                      onClick={() => {
-                        setIsUserDropdownOpen(false);
-                        logoutMutation.mutate();
-                      }}
-                      className="flex w-full items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger transition hover:bg-danger/10"
+                <AnimatePresence>
+                  {isUserDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
                     >
-                      <Icon name="LogOut" size={15} />
-                      <span>Log Out</span>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      {/* User Header in Dropdown */}
+                      <div className="px-3 py-2 border-b border-border/60 mb-1">
+                        <p className="text-xs font-bold text-text truncate">{user.name}</p>
+                        <p className="text-[10px] text-textMuted truncate">{user.email}</p>
+                        <span className="inline-block text-[9px] font-semibold text-gold mt-0.5">
+                          {isSuperAdmin
+                            ? 'Super Administrator'
+                            : isAdmin
+                            ? 'Editorial Admin'
+                            : 'Registered Reader'}
+                        </span>
+                      </div>
+
+                      {/* Personal Profile & Saved Library */}
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
+                      >
+                        <Icon name="User" size={14} className="text-gold" />
+                        <span>My Profile &amp; Saved</span>
+                      </Link>
+
+                      {/* Admin Link inside dropdown for quick access */}
+                      {isSuperAdmin && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-gold transition hover:bg-gold/10"
+                        >
+                          <Icon name="Shield" size={14} />
+                          <span>SuperAdmin Command</span>
+                        </Link>
+                      )}
+
+                      {isAdmin && !isSuperAdmin && (
+                        <Link
+                          to="/admin/workspace"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-gold transition hover:bg-gold/10"
+                        >
+                          <Icon name="Folder" size={14} />
+                          <span>Admin Workspace</span>
+                        </Link>
+                      )}
+
+                      <div className="border-t border-border/60 my-1" />
+
+                      {/* Logout */}
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          logoutMutation.mutate();
+                        }}
+                        className="flex w-full items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger transition hover:bg-danger/10"
+                      >
+                        <Icon name="LogOut" size={14} />
+                        <span>Log Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
