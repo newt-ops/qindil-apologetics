@@ -7,40 +7,38 @@ import { VideoLogModel } from '../models/VideoLog.model.js';
 import { EventModel } from '../models/Event.model.js';
 import { AuditLogModel } from '../models/AuditLog.model.js';
 import { createNotification } from '../services/notify.js';
-import { sendTelegramTaskNotification } from '../services/telegram.js';
-import { sendTaskAssignedEmail } from '../services/email.js';
+import { sendTelegramTaskNotification, sendTelegramTaskProgressNotification } from '../telegram/index.js';
+import { sendTaskAssignedEmail } from '../services/email/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 
-// Helper to generate URL-safe slugs
 function slugify(text: string): string {
-  const base = text
+  return text
+    .toString()
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  const randomSuffix = Math.random().toString(36).substring(2, 7);
-  return `${base}-${randomSuffix}`;
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
 }
 
 // @desc    Get current user's assigned tasks
 // @route   GET /api/v1/tasks/mine
-// @access  Private (Admin / SuperAdmin)
+// @access  Private (Assignee / Admin)
 export const getMyTasks = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!._id;
 
-    // Find tasks assigned to this user, sorted by dueDate ascending
     const tasks = await TaskModel.find({ assignedTo: userId })
-      .populate('linkedArticle', 'title slug coverImageUrl status')
+      .populate('assignedTo', 'name email avatarUrl roles')
+      .populate('createdBy', 'name email avatarUrl')
+      .populate('linkedArticle', 'title slug coverImageUrl status topic')
       .populate('linkedVideo', 'title videoUrl platform')
       .sort({ dueDate: 1 })
       .lean();
 
     const now = new Date();
 
-    // Map tasks to update overdue status dynamically if past dueDate and not completed
     const processedTasks = tasks.map((task) => {
       const isOverdue = new Date(task.dueDate) < now && task.status !== 'done';
       return {
@@ -104,55 +102,64 @@ export const getTaskById = asyncHandler(
   }
 );
 
-// @desc    Assign a new task to team members
+// @desc    Create and assign a new Task (Article/Video/General)
 // @route   POST /api/v1/tasks
-// @access  Private (SuperAdmin only)
-export const assignTask = asyncHandler(
+// @access  Private (SuperAdmin or Admin)
+export const createTask = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const {
-      type,
       title,
       description,
+      type = 'general',
       assignedTo,
       dueDate,
-      topicId,
-      articleTitle,
+      linkedArticle,
+      linkedVideo,
       videoCategoryId,
       isRefutation,
       targetVideoUrl,
     } = req.body;
 
-    // 1. Verify assignees
-    const assignees = await UserModel.find({ _id: { $in: assignedTo }, isActive: true }).populate('roles');
-
-    if (assignees.length !== assignedTo.length) {
-      const foundIds = assignees.map((u) => u._id.toString());
-      const missingIds = assignedTo.filter((id: string) => !foundIds.includes(id));
+    if (!title || !assignedTo || !Array.isArray(assignedTo) || assignedTo.length === 0 || !dueDate) {
       return next(
         ApiError.badRequest(
-          `Invalid or inactive assignee IDs provided: ${missingIds.join(', ')}`,
-          'INVALID_ASSIGNEES'
+          'Title, assignedTo (array of user IDs), and dueDate are required.',
+          'MISSING_REQUIRED_FIELDS'
         )
       );
     }
 
-    // Verify all assignees have role 'admin' or 'superAdmin'
-    for (const assignee of assignees) {
-      const roleNames = assignee.roles.map((r: any) => (typeof r === 'string' ? r : r.name));
-      const hasAdminRank = roleNames.includes('admin') || roleNames.includes('superAdmin');
-      if (!hasAdminRank) {
+    const dueDateObj = new Date(dueDate);
+    if (isNaN(dueDateObj.getTime())) {
+      return next(ApiError.badRequest('Invalid due date provided.', 'INVALID_DUE_DATE'));
+    }
+
+    // 1. Verify assignees exist and are active
+    const assignees = await UserModel.find({ _id: { $in: assignedTo }, isActive: true }).populate('roles');
+    if (assignees.length !== assignedTo.length) {
+      return next(
+        ApiError.badRequest(
+          'One or more assigned users do not exist or are inactive.',
+          'INVALID_ASSIGNEE'
+        )
+      );
+    }
+
+    const { videoType, destination } = req.body;
+
+    if (type === 'video') {
+      const vType = videoType || 'normal';
+      if (vType === 'refutation' && (!targetVideoUrl || !targetVideoUrl.trim())) {
         return next(
           ApiError.badRequest(
-            `User "${assignee.name}" (${assignee.email}) does not have admin/superAdmin privileges.`,
-            'NOT_ADMIN'
+            'Target video URL is required when video type is "refutation".',
+            'MISSING_TARGET_URL'
           )
         );
       }
     }
 
-    const dueDateObj = new Date(dueDate);
-
-    // 2. Create base Task document
+    // 2. Create Task record with status 'pending' (VideoLog document created on accept)
     const task = new TaskModel({
       type,
       title,
@@ -161,43 +168,14 @@ export const assignTask = asyncHandler(
       createdBy: req.user!._id,
       dueDate: dueDateObj,
       status: 'pending',
+      linkedArticle: linkedArticle || undefined,
+      linkedVideo: linkedVideo || undefined,
+      videoType: type === 'video' ? (videoType || 'normal') : undefined,
+      destination: type === 'video' ? (destination || 'official') : undefined,
+      targetVideoUrl: type === 'video' ? (targetVideoUrl || undefined) : undefined,
     });
 
-    // 3. Handle linked resource creation based on type
-    if (type === 'video') {
-      const videoLog = await VideoLogModel.create({
-        title,
-        category: videoCategoryId || undefined,
-        isRefutation: Boolean(isRefutation),
-        targetVideoUrl,
-        contentCreator: assignedTo[0],
-        editor: assignedTo[1] || assignedTo[0],
-        task: task._id,
-        boardStage: 'idea',
-        stageHistory: [
-          {
-            stage: 'idea',
-            movedBy: req.user!._id,
-            movedAt: new Date(),
-          },
-        ],
-      });
-      task.linkedVideo = videoLog._id as any;
-    } else if (type === 'article') {
-      const articleTitleText = articleTitle || title;
-      const articleSlug = slugify(articleTitleText);
-      const article = await ArticleModel.create({
-        title: articleTitleText,
-        slug: articleSlug,
-        topic: topicId || undefined,
-        author: assignedTo[0],
-        status: 'draft',
-        linkedTaskId: task._id,
-      });
-      task.linkedArticle = article._id as any;
-    }
-
-    // 4. Create linked Event (Deadline)
+    // 3. Create linked Event (Deadline)
     const deadlineEvent = await EventModel.create({
       title: `[Deadline] ${title}`,
       description: description || `Task deadline for: ${title}`,
@@ -221,8 +199,8 @@ export const assignTask = asyncHandler(
         link: '/admin/workspace',
       });
 
-      await sendTelegramTaskNotification(assignee._id.toString(), title);
-      await sendTaskAssignedEmail(assignee.email, title);
+      await sendTelegramTaskNotification(assignee._id.toString(), title, type, dueDateObj);
+      await sendTaskAssignedEmail(assignee.email, title, req.user?.name, type, dueDateObj);
     }
 
     // 6. Audit log entry
@@ -244,10 +222,107 @@ export const assignTask = asyncHandler(
       { path: 'assignedTo', select: 'name email avatarUrl' },
       { path: 'createdBy', select: 'name email' },
       { path: 'linkedArticle', select: 'title slug status' },
-      { path: 'linkedVideo', select: 'title boardStage' },
+      { path: 'linkedVideo', select: 'title status videoType destination targetVideoUrl posterUrl notes submittedUrl' },
     ]);
 
     sendSuccess(res, task, undefined, 201);
+  }
+);
+
+export const assignTask = createTask;
+
+// @desc    Accept & Start an assigned Task (creates Article draft for article tasks)
+// @route   PATCH /api/v1/tasks/:id/accept
+// @access  Private (Assignees only)
+export const acceptTask = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
+    const task = await TaskModel.findById(id);
+
+    if (!task) {
+      return next(ApiError.notFound('Task not found', 'NOT_FOUND'));
+    }
+
+    const callerId = req.user!._id.toString();
+    const isAssignee = task.assignedTo.some((uid) => uid.toString() === callerId);
+
+    if (!isAssignee) {
+      return next(
+        ApiError.forbidden('Only an assigned team member can accept this task.', 'FORBIDDEN')
+      );
+    }
+
+    if (task.status !== 'pending') {
+      return next(
+        ApiError.conflict(
+          `Task cannot be accepted because its status is already "${task.status}".`,
+          'TASK_NOT_PENDING'
+        )
+      );
+    }
+
+    // Update status to inProgress
+    task.status = 'inProgress';
+
+    // If article task and no linked article draft exists, create the Article now!
+    if (task.type === 'article' && !task.linkedArticle) {
+      let articleSlug = slugify(task.title);
+      const existingSlug = await ArticleModel.findOne({ slug: articleSlug });
+      if (existingSlug) {
+        articleSlug = `${articleSlug}-${Date.now().toString(36)}`;
+      }
+
+      const article = await ArticleModel.create({
+        title: task.title,
+        slug: articleSlug,
+        author: req.user!._id,
+        status: 'draft',
+        linkedTaskId: task._id,
+      });
+
+      task.linkedArticle = article._id as any;
+    }
+
+    // If video task and no linked VideoLog exists, create the VideoLog now!
+    if (task.type === 'video' && !task.linkedVideo) {
+      const videoLog = await VideoLogModel.create({
+        title: task.title,
+        creator: req.user!._id,
+        videoType: task.videoType || 'normal',
+        destination: task.destination || 'official',
+        targetVideoUrl: task.targetVideoUrl || undefined,
+        status: 'inProgress',
+        linkedTaskId: task._id,
+      });
+
+      task.linkedVideo = videoLog._id as any;
+    }
+
+    await task.save();
+
+    // Audit log
+    await AuditLogModel.create({
+      actor: req.user!._id,
+      action: 'task.accept',
+      targetType: 'Task',
+      targetId: task._id,
+      metadata: {
+        taskTitle: task.title,
+        taskType: task.type,
+        linkedArticleId: task.linkedArticle,
+        linkedVideoId: task.linkedVideo,
+      },
+    });
+
+    await task.populate([
+      { path: 'assignedTo', select: 'name email avatarUrl' },
+      { path: 'createdBy', select: 'name email' },
+      { path: 'linkedArticle', select: 'title slug status coverImageUrl' },
+      { path: 'linkedVideo', select: 'title status videoType destination targetVideoUrl posterUrl notes submittedUrl' },
+    ]);
+
+    sendSuccess(res, task);
   }
 );
 
@@ -349,6 +424,26 @@ export const updateTaskStatus = asyncHandler(
     }
 
     task.status = newStatus;
+
+    // If status is moved out of pending to inProgress for an article task, ensure Article draft exists
+    if (newStatus === 'inProgress' && task.type === 'article' && !task.linkedArticle) {
+      let articleSlug = slugify(task.title);
+      const existingSlug = await ArticleModel.findOne({ slug: articleSlug });
+      if (existingSlug) {
+        articleSlug = `${articleSlug}-${Date.now().toString(36)}`;
+      }
+
+      const article = await ArticleModel.create({
+        title: task.title,
+        slug: articleSlug,
+        author: req.user!._id,
+        status: 'draft',
+        linkedTaskId: task._id,
+      });
+
+      task.linkedArticle = article._id as any;
+    }
+
     await task.save();
 
     // Audit log entry
@@ -362,6 +457,18 @@ export const updateTaskStatus = asyncHandler(
         newStatus,
       },
     });
+
+    // Notify assignees if superAdmin updated status
+    if (isSuperAdmin && !isAssignee) {
+      for (const assigneeId of task.assignedTo) {
+        await sendTelegramTaskProgressNotification(
+          assigneeId.toString(),
+          task.title,
+          newStatus === 'done' ? 'approved' : 'changes_requested',
+          `Task status updated from "${currentStatus}" to "${newStatus}".`
+        );
+      }
+    }
 
     await task.populate([
       { path: 'assignedTo', select: 'name email avatarUrl' },

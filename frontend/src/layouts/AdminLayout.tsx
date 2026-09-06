@@ -28,8 +28,8 @@ export const AdminLayout: React.FC = () => {
         return 'Team Workspace';
       case '/admin/articles':
         return 'My Articles';
-      case '/admin/production':
-        return 'Production Board';
+      case '/admin/videos':
+        return 'Video Workspace';
       case '/admin/calendar':
         return 'Operations Calendar';
       case '/admin/team':
@@ -125,8 +125,18 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Side: Notification Bell Placeholder + User Dropdown */}
-          <div className="flex items-center space-x-4">
+          {/* Right Side: Back to Main Page + Notification Bell + User Dropdown */}
+          <div className="flex items-center space-x-2.5 sm:space-x-4">
+            {/* Back to Main Page Button */}
+            <Link
+              to="/"
+              className="inline-flex items-center space-x-1.5 rounded-lg border border-border bg-bg px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold transition shadow-xs"
+              title="Return to Main Page"
+            >
+              <Icon name="ArrowLeft" size={13} className="text-gold" />
+              <span>Main Page</span>
+            </Link>
+
             {/* Notification Bell Component */}
             <NotificationBell />
 
@@ -190,12 +200,11 @@ export const AdminLayout: React.FC = () => {
 
                       <Link
                         to="/"
-                        target="_blank"
                         onClick={() => setProfileDropdownOpen(false)}
                         className="flex items-center space-x-2 rounded-md px-3 py-2 text-xs font-medium text-textMuted hover:bg-bg hover:text-text transition-colors"
                       >
-                        <Icon name="ExternalLink" size={14} />
-                        <span>Public Website</span>
+                        <Icon name="Globe" size={14} />
+                        <span>Back to Main Page</span>
                       </Link>
 
                       <button

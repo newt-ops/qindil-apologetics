@@ -14,6 +14,8 @@ export interface ISiteSettings extends Document {
   socialLinks?: ISocialLinks;
   contactEmail?: string;
   maintenanceMode: boolean;
+  telegramSalawatMessageId?: number;
+  telegramSalawatSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +33,8 @@ const siteSettingsSchema = new Schema<ISiteSettings>(
     },
     contactEmail: { type: String, lowercase: true, trim: true },
     maintenanceMode: { type: Boolean, default: false },
+    telegramSalawatMessageId: { type: Number },
+    telegramSalawatSentAt: { type: Date },
   },
   {
     timestamps: true,

@@ -1,8 +1,9 @@
 import cron from 'node-cron';
+import { Markup } from 'telegraf';
 import { TaskModel } from '../models/Task.model.js';
 import { IUser } from '../models/User.model.js';
-import { sendDeadlineReminderEmail } from '../services/email.js';
-import { notifyUser } from '../services/telegram.js';
+import { sendDeadlineReminderEmail } from '../services/email/index.js';
+import { notifyUser } from '../telegram/index.js';
 import { createNotification } from '../services/notify.js';
 
 /**
@@ -33,8 +34,16 @@ export const runDeadlineReminderCheck = async (): Promise<void> => {
 
             // Telegram reminder
             if (user.telegramChatId) {
-              const msg = `⏰ *Task Deadline Reminder*\n\nYour task "*${task.title}*" is due in less than 24 hours (${new Date(task.dueDate).toLocaleString()}).`;
-              await notifyUser(user.telegramChatId, msg).catch((err) =>
+              const msg = `⏰ *Task Deadline Reminder*\n\nYour task "*${task.title}*" is due in less than 24 hours (${new Date(task.dueDate).toLocaleString()}).\n\nPlease finalize and update your status in your workspace.`;
+              await notifyUser(
+                user._id,
+                msg,
+                'Markdown',
+                Markup.inlineKeyboard([
+                  [Markup.button.url('🌐 Open Workspace', 'https://qindilapologetics.com/admin/workspace')],
+                  [Markup.button.callback('📋 View My Tasks', 'my_tasks')],
+                ])
+              ).catch((err) =>
                 console.error(`Failed to send Telegram reminder to ${user._id}:`, err)
               );
             }

@@ -262,8 +262,12 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 });
 
 // Domain root SEO endpoints
+// Domain root SEO endpoints
 app.get('/sitemap.xml', getSitemap);
 app.get('/robots.txt', getRobotsTxt);
+
+// Maintenance mode check middleware (intercepts public routes when maintenance mode is active)
+app.use(checkMaintenance);
 
 // Public routes (no auth required)
 app.use('/api/v1/public', publicRouter);
@@ -307,13 +311,11 @@ app.use('/api/v1/audit-log', auditRouter);
 // Site settings routes (public read, superAdmin write)
 app.use('/api/v1/settings', settingsRouter);
 
-// Maintenance mode check middleware (intercepts public routes when maintenance mode is active)
-app.use(checkMaintenance);
-
 // 404 handler
 app.use(notFound);
 
 // Centralized error handler
 app.use(errorHandler);
+
 
 export default app;

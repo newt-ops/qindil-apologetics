@@ -1,71 +1,65 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type VideoBoardStage =
-  | 'idea'
-  | 'scripting'
-  | 'filming'
-  | 'editing'
-  | 'review'
-  | 'published';
-
-export interface IStageHistory {
-  stage: VideoBoardStage;
-  movedBy: Types.ObjectId;
-  movedAt: Date;
-}
+export type VideoType = 'refutation' | 'normal';
+export type VideoDestination = 'official' | 'personal';
+export type VideoStatus =
+  | 'draft'
+  | 'inProgress'
+  | 'submitted'
+  | 'changesRequested'
+  | 'approved'
+  | 'published'
+  | 'posted';
 
 export interface IVideoLog extends Document {
   title: string;
-  category?: Types.ObjectId;
-  isRefutation: boolean;
+  creator: Types.ObjectId;
+  videoType: VideoType;
+  destination: VideoDestination;
   targetVideoUrl?: string;
-  contentCreator: Types.ObjectId;
-  editor: Types.ObjectId;
-  task?: Types.ObjectId;
-  boardStage: VideoBoardStage;
-  stageHistory: IStageHistory[];
   posterUrl?: string;
+  notes?: string;
+  status: VideoStatus;
+  reviewNotes?: string;
+  submittedUrl?: string;
   publishedUrl?: string;
   publishedAt?: Date;
-  notes?: string;
+  linkedTaskId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const stageHistorySchema = new Schema<IStageHistory>(
-  {
-    stage: {
-      type: String,
-      enum: ['idea', 'scripting', 'filming', 'editing', 'review', 'published'],
-      required: true,
-    },
-    movedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    movedAt: { type: Date, default: Date.now },
-  },
-  { _id: false }
-);
-
 const videoLogSchema = new Schema<IVideoLog>(
   {
     title: { type: String, required: true, trim: true },
-    category: { type: Schema.Types.ObjectId, ref: 'VideoCategory', index: true },
-    isRefutation: { type: Boolean, default: false },
-    targetVideoUrl: { type: String },
-    contentCreator: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    editor: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    task: { type: Schema.Types.ObjectId, ref: 'Task' },
-    boardStage: {
+    creator: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    videoType: {
       type: String,
-      enum: ['idea', 'scripting', 'filming', 'editing', 'review', 'published'],
-      default: 'idea',
+      enum: ['refutation', 'normal'],
+      default: 'normal',
+      required: true,
+    },
+    destination: {
+      type: String,
+      enum: ['official', 'personal', 'officialAccount', 'personalAccount'],
+      default: 'official',
+      required: true,
+    },
+    targetVideoUrl: { type: String, trim: true },
+    posterUrl: { type: String, trim: true },
+    notes: { type: String },
+    status: {
+      type: String,
+      enum: ['draft', 'inProgress', 'submitted', 'changesRequested', 'approved', 'published', 'posted'],
+      default: 'inProgress',
       required: true,
       index: true,
     },
-    stageHistory: [stageHistorySchema],
-    posterUrl: { type: String },
-    publishedUrl: { type: String },
+    reviewNotes: { type: String },
+    submittedUrl: { type: String, trim: true },
+    publishedUrl: { type: String, trim: true },
     publishedAt: { type: Date },
-    notes: { type: String },
+    linkedTaskId: { type: Schema.Types.ObjectId, ref: 'Task' },
   },
   {
     timestamps: true,

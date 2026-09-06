@@ -3,6 +3,7 @@ import {
   getMyTasks,
   getTaskById,
   assignTask,
+  acceptTask,
   listTasks,
   updateTaskStatus,
 } from '../controllers/task.controller.js';
@@ -28,6 +29,9 @@ router.get('/', requireRole('superAdmin'), listTasks);
 
 // GET /api/v1/tasks/:id — Get task details by ID
 router.get('/:id', requireRole('admin'), getTaskById);
+
+// PATCH /api/v1/tasks/:id/accept — Accept and start an assigned task (assignees only)
+router.patch('/:id/accept', requireRole('admin'), acceptTask);
 
 // PATCH /api/v1/tasks/:id/status — Update task status (assignee or superAdmin)
 router.patch('/:id/status', requireRole('admin'), validate(updateTaskStatusSchema), updateTaskStatus);

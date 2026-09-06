@@ -5,6 +5,7 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  avatarUrl?: string;
 }
 
 export interface VerifyOtpPayload {
@@ -34,6 +35,12 @@ export interface ResetPasswordPayload {
 export interface AuthResponseData {
   accessToken: string;
   user: User;
+}
+
+export interface TelegramCodeResponse {
+  linkCode: string;
+  expiresAt: string;
+  botUsername: string;
 }
 
 export const registerApi = async (data: RegisterPayload) => {
@@ -73,5 +80,10 @@ export const resetPasswordApi = async (data: ResetPasswordPayload) => {
 
 export const getMeApi = async () => {
   const response = await apiClient.get<{ success: boolean; data: { user: User; permissions: string[] } }>('/auth/me');
+  return response.data;
+};
+
+export const generateTelegramCodeAuthApi = async () => {
+  const response = await apiClient.post<{ success: boolean; data: TelegramCodeResponse }>('/auth/telegram/code');
   return response.data;
 };

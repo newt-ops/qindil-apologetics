@@ -26,11 +26,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLa
         transition={{ duration: 0.2 }}
         className="flex items-center justify-center"
       >
-        {isDark ? (
-          <Icon name="Sun" size={18} className="text-gold" />
-        ) : (
-          <Icon name="Moon" size={18} className="text-gold" />
-        )}
+        <Icon name="ThemeToggle" size={18} className="text-gold" />
       </motion.div>
       {showLabel && (
         <span className="text-xs font-medium text-text">

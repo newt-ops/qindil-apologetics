@@ -3,6 +3,7 @@ import {
   getMyTasksApi,
   getTaskByIdApi,
   assignTaskApi,
+  acceptTaskApi,
   listAllTasksApi,
   updateTaskStatusApi,
   TaskItem,
@@ -90,6 +91,18 @@ export const useAssignTask = () => {
     mutationFn: (data: AssignTaskPayload) => assignTaskApi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+export const useAcceptTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => acceptTaskApi(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
     },
   });
 };

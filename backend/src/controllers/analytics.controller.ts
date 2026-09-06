@@ -38,22 +38,22 @@ export const getOverview = asyncHandler(
       }
     });
 
-    // 4. Videos by Stage
+    // 4. Videos by Status
     const rawVideoStats = await VideoLogModel.aggregate([
-      { $group: { _id: '$boardStage', count: { $sum: 1 } } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
     ]);
 
-    const videosByStage = {
-      idea: 0,
-      scripting: 0,
-      filming: 0,
-      editing: 0,
-      review: 0,
+    const videosByStatus = {
+      draft: 0,
+      inProgress: 0,
+      submitted: 0,
+      changesRequested: 0,
+      approved: 0,
       published: 0,
     };
     rawVideoStats.forEach((item) => {
-      if (item._id && item._id in videosByStage) {
-        videosByStage[item._id as keyof typeof videosByStage] = item.count;
+      if (item._id && item._id in videosByStatus) {
+        videosByStatus[item._id as keyof typeof videosByStatus] = item.count;
       }
     });
 
@@ -91,7 +91,7 @@ export const getOverview = asyncHandler(
       totalViews,
       activeTasksCount,
       articlesByStatus,
-      videosByStage,
+      videosByStatus,
       tasksByStatus,
       topArticles,
     });

@@ -15,9 +15,12 @@ export interface LinkedArticle {
 export interface LinkedVideo {
   _id: string;
   title: string;
-  boardStage?: string;
-  videoUrl?: string;
-  platform?: string;
+  status?: string;
+  videoType?: 'refutation' | 'normal';
+  destination?: 'official' | 'personal';
+  targetVideoUrl?: string;
+  posterUrl?: string;
+  submittedUrl?: string;
 }
 
 export interface TaskItem {
@@ -32,6 +35,9 @@ export interface TaskItem {
   isOverdue?: boolean;
   linkedArticle?: LinkedArticle;
   linkedVideo?: LinkedVideo;
+  videoType?: 'refutation' | 'normal';
+  destination?: 'official' | 'personal';
+  targetVideoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,8 +50,8 @@ export interface AssignTaskPayload {
   dueDate: string;
   topicId?: string;
   articleTitle?: string;
-  videoCategoryId?: string;
-  isRefutation?: boolean;
+  videoType?: 'refutation' | 'normal';
+  destination?: 'official' | 'personal';
   targetVideoUrl?: string;
 }
 
@@ -102,6 +108,13 @@ export const listAllTasksApi = async (params?: ListTasksParams) => {
 export const getTaskByIdApi = async (id: string) => {
   const response = await apiClient.get<{ success: boolean; data: TaskItem }>(
     `/tasks/${id}`
+  );
+  return response.data;
+};
+
+export const acceptTaskApi = async (id: string) => {
+  const response = await apiClient.patch<{ success: boolean; data: TaskItem }>(
+    `/tasks/${id}/accept`
   );
   return response.data;
 };

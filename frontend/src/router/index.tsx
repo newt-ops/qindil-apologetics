@@ -1,43 +1,48 @@
 import { Routes, Route } from 'react-router-dom';
 import PublicLayout from '../layouts/PublicLayout';
 import AdminLayout from '../layouts/AdminLayout';
-import HomePage from '../pages/public/HomePage';
-import TopicsPage from '../pages/public/TopicsPage';
-import ArticlesByTopicPage from '../pages/public/ArticlesByTopicPage';
-import ArticlesPage from '../pages/public/ArticlesPage';
-import ArticleDetailPage from '../pages/public/ArticleDetailPage';
-import AboutPage from '../pages/public/AboutPage';
-import ContactPage from '../pages/public/ContactPage';
-import EventsPage from '../pages/public/EventsPage';
-import PrivacyPolicyPage from '../pages/public/PrivacyPolicyPage';
-import TermsOfServicePage from '../pages/public/TermsOfServicePage';
-import NotFoundPage from '../pages/public/NotFoundPage';
-import MiniDashboardPage from '../pages/public/MiniDashboardPage';
+// Public Pages
+import {
+  HomePage,
+  TopicsPage,
+  ArticlesByTopicPage,
+  ArticlesPage,
+  ArticleDetailPage,
+  AboutPage,
+  ContactPage,
+  EventsPage,
+  PrivacyPolicyPage,
+  TermsOfServicePage,
+  NotFoundPage,
+  MiniDashboardPage,
+  LoginPage,
+  RegisterPage,
+  VerifyOtpPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+} from '../pages/public';
 
-import WorkspacePage from '../pages/admin/WorkspacePage';
-import TeamRosterPage from '../pages/admin/TeamRosterPage';
-import MemberProfilePage from '../pages/admin/MemberProfilePage';
-import AllTasksPage from '../pages/admin/AllTasksPage';
-import AssignTaskPage from '../pages/admin/AssignTaskPage';
-import TaskDetailPage from '../pages/admin/TaskDetailPage';
-import CalendarPage from '../pages/admin/CalendarPage';
-import TopicsManagementPage from '../pages/admin/TopicsManagementPage';
-import ArticlesListPage from '../pages/admin/ArticlesListPage';
-import ArticleEditorPage from '../pages/admin/ArticleEditorPage';
-import ReviewQueuePage from '../pages/admin/ReviewQueuePage';
-import ArticleReviewPage from '../pages/admin/ArticleReviewPage';
-import ProductionBoardPage from '../pages/admin/ProductionBoardPage';
-import VideoDetailPage from '../pages/admin/VideoDetailPage';
-import EventsManagementPage from '../pages/admin/EventsManagementPage';
-import AnalyticsDashboardPage from '../pages/admin/AnalyticsDashboardPage';
-import ContactInboxPage from '../pages/admin/ContactInboxPage';
-import AuditLogPage from '../pages/admin/AuditLogPage';
-import SiteSettingsPage from '../pages/admin/SiteSettingsPage';
-import LoginPage from '../pages/public/auth/LoginPage';
-import RegisterPage from '../pages/public/auth/RegisterPage';
-import VerifyOtpPage from '../pages/public/auth/VerifyOtpPage';
-import ForgotPasswordPage from '../pages/public/auth/ForgotPasswordPage';
-import ResetPasswordPage from '../pages/public/auth/ResetPasswordPage';
+// Admin Operations, Editorial, Video & System Pages
+import {
+  WorkspacePage,
+  TeamRosterPage,
+  MemberProfilePage,
+  AllTasksPage,
+  AssignTaskPage,
+  TaskDetailPage,
+  CalendarPage,
+  TopicsManagementPage,
+  ArticlesListPage,
+  ArticleEditorPage,
+  ReviewQueuePage,
+  VideoTaskDetailPage,
+  EventsManagementPage,
+  AnalyticsDashboardPage,
+  ContactInboxPage,
+  AuditLogPage,
+  SiteSettingsPage,
+} from '../pages/admin';
+
 import ProtectedRoute from './ProtectedRoute';
 
 export function AppRoutes() {
@@ -85,8 +90,6 @@ export function AppRoutes() {
       >
         <Route index element={<WorkspacePage />} />
         <Route path="workspace" element={<WorkspacePage />} />
-        <Route path="production" element={<ProductionBoardPage />} />
-        <Route path="production/:id" element={<VideoDetailPage />} />
 
 
         {/* SuperAdmin Only Routes */}
@@ -123,6 +126,14 @@ export function AppRoutes() {
           }
         />
         <Route
+          path="tasks/assign"
+          element={
+            <ProtectedRoute requiredRole="superAdmin">
+              <AssignTaskPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="topics"
           element={
             <ProtectedRoute requiredRole="superAdmin">
@@ -150,7 +161,7 @@ export function AppRoutes() {
           path="articles/:id/review"
           element={
             <ProtectedRoute requiredRole="superAdmin">
-              <ArticleReviewPage />
+              <ReviewQueuePage />
             </ProtectedRoute>
           }
         />
@@ -206,7 +217,16 @@ export function AppRoutes() {
         <Route path="tasks/:id" element={<TaskDetailPage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="articles" element={<ArticlesListPage />} />
+        <Route
+          path="articles/review"
+          element={
+            <ProtectedRoute requiredRole="superAdmin">
+              <ReviewQueuePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="articles/:id/edit" element={<ArticleEditorPage />} />
+        <Route path="videos/:id" element={<VideoTaskDetailPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
 import ArticleModel from '../models/Article.model.js';
 import UserModel from '../models/User.model.js';
+import TaskModel from '../models/Task.model.js';
 import AuditLogModel from '../models/AuditLog.model.js';
 import { createNotification } from '../services/notify.js';
+import { sendTelegramTaskProgressNotification } from '../telegram/index.js';
+import { sendArticleReviewOutcomeEmail } from '../services/email/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 
@@ -46,7 +49,8 @@ export const getArticleForEdit = asyncHandler(
 
     const article = await ArticleModel.findById(id)
       .populate('topic', 'name slug')
-      .populate('author', 'name email avatarUrl');
+      .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl');
 
     if (!article) {
       return next(ApiError.notFound('Article not found', 'NOT_FOUND'));
@@ -87,8 +91,8 @@ export const updateArticleDraft = asyncHandler(
       );
     }
 
-    // Editing only allowed while status is 'draft' or 'changesRequested'
-    if (article.status !== 'draft' && article.status !== 'changesRequested') {
+    // Authors cannot edit while status is 'inReview' (under SuperAdmin review). SuperAdmin can edit at any status.
+    if (!isSuperAdmin && article.status === 'inReview') {
       return next(
         ApiError.forbidden(
           `Cannot edit article while status is "${article.status}".`,
@@ -130,7 +134,15 @@ export const updateArticleDraft = asyncHandler(
       }
     }
 
+    // Always record lastEditedBy without modifying author
+    article.lastEditedBy = req.user!._id;
+
     await article.save();
+
+    const populated = await ArticleModel.findById(article._id)
+      .populate('topic', 'name slug')
+      .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl');
 
     // Write audit log
     await AuditLogModel.create({
@@ -138,10 +150,77 @@ export const updateArticleDraft = asyncHandler(
       action: 'article.updateDraft',
       targetModel: 'Article',
       targetId: article._id,
-      details: { title: article.title, status: article.status },
+      details: { title: article.title, status: article.status, lastEditedBy: req.user!._id },
     });
 
-    sendSuccess(res, article);
+    sendSuccess(res, populated || article);
+  }
+);
+
+// @desc    Fast autosave for article drafts (author only, no audit log)
+// @route   PATCH /api/v1/articles/:id/autosave
+// @access  Private (Author only)
+export const autosaveArticle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+    const callerId = req.user!._id.toString();
+    const isSuperAdmin = req.user!.roles.some((r: any) =>
+      typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
+    );
+
+    const article = await ArticleModel.findById(id);
+
+    if (!article) {
+      return next(ApiError.notFound('Article not found', 'NOT_FOUND'));
+    }
+
+    const isAuthor = article.author.toString() === callerId;
+    if (!isAuthor && !isSuperAdmin) {
+      return next(
+        ApiError.forbidden('Only the author or superAdmin can autosave this draft.', 'FORBIDDEN')
+      );
+    }
+
+    if (!isSuperAdmin && article.status === 'inReview') {
+      return next(
+        ApiError.forbidden(
+          `Cannot autosave article while status is "${article.status}".`,
+          'INVALID_STATUS'
+        )
+      );
+    }
+
+    const { title, topic, content, excerpt, coverImageUrl, slug: inputSlug } = req.body || {};
+
+    if (title !== undefined) {
+      article.title = title;
+      if (article.linkedTaskId && title.trim()) {
+        await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { title: title.trim() } });
+      }
+    }
+    if (topic !== undefined) article.topic = topic || undefined;
+    if (excerpt !== undefined) article.excerpt = excerpt;
+    if (coverImageUrl !== undefined) article.coverImageUrl = coverImageUrl;
+    if (content !== undefined) {
+      article.content = typeof content === 'object' ? JSON.stringify(content) : content;
+    }
+
+    if (inputSlug && inputSlug.trim()) {
+      article.slug = slugify(inputSlug);
+    } else if (!article.slug && article.title?.trim()) {
+      article.slug = slugify(article.title);
+    }
+
+    article.lastAutosavedAt = new Date();
+    article.lastEditedBy = req.user!._id;
+    await article.save();
+
+    const populated = await ArticleModel.findById(article._id)
+      .populate('topic', 'name slug')
+      .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl');
+
+    sendSuccess(res, populated || article);
   }
 );
 
@@ -188,16 +267,18 @@ export const submitForReview = asyncHandler(
       article.content = typeof content === 'object' ? JSON.stringify(content) : content;
     }
 
-    // Check completeness requirement before review submission
+    // Validate all required metadata fields before allowing transition
     const finalTitle = article.title?.trim();
     const finalContent = article.content?.trim();
     const finalTopic = article.topic;
+    const finalExcerpt = article.excerpt?.trim();
+    const finalCover = article.coverImageUrl?.trim();
 
-    if (!finalTitle || !finalContent || !finalTopic) {
+    if (!finalTitle || !finalContent || !finalTopic || !finalExcerpt || !finalCover) {
       return next(
         ApiError.badRequest(
-          'Title, Topic, and Content must all be filled out before submitting for review.',
-          'INCOMPLETE_ARTICLE'
+          'All metadata fields (Title, Topic Category, Excerpt/Summary, Cover Image, and Content) are required before submitting for review.',
+          'INCOMPLETE_ARTICLE_METADATA'
         )
       );
     }
@@ -214,6 +295,11 @@ export const submitForReview = asyncHandler(
 
     article.status = 'inReview';
     await article.save();
+
+    // Also update linked Task status to 'inReview'
+    if (article.linkedTaskId) {
+      await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'inReview' } });
+    }
 
     // Trigger notification to every SuperAdmin
     const superAdmins = await UserModel.find({ isActive: true }).populate('roles');
@@ -252,9 +338,187 @@ export const listReviewQueue = asyncHandler(
     const articles = await ArticleModel.find({ status: 'inReview' })
       .populate('topic', 'name slug')
       .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl')
       .sort({ createdAt: 1 }); // Oldest submitted first
 
     sendSuccess(res, articles);
+  }
+);
+
+// @desc    Review article decision (approve, requestChanges, or publish)
+// @route   PATCH /api/v1/articles/:id/review
+// @access  Private (SuperAdmin only)
+export const reviewArticle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+    const { decision, reviewNotes } = req.body;
+
+    if (!['approve', 'requestChanges', 'publish'].includes(decision)) {
+      return next(
+        ApiError.badRequest(
+          'Invalid review decision. Must be "approve", "requestChanges", or "publish".',
+          'INVALID_DECISION'
+        )
+      );
+    }
+
+    if (decision === 'requestChanges' && (!reviewNotes || !reviewNotes.trim())) {
+      return next(
+        ApiError.badRequest(
+          'Review notes explaining requested changes are required.',
+          'MISSING_REVIEW_NOTES'
+        )
+      );
+    }
+
+    const article = await ArticleModel.findById(id)
+      .populate('topic', 'name slug')
+      .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl');
+
+    if (!article) {
+      return next(ApiError.notFound('Article not found', 'NOT_FOUND'));
+    }
+
+    const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
+    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
+
+    if (decision === 'requestChanges') {
+      if (article.status !== 'inReview') {
+        return next(
+          ApiError.badRequest(
+            `Cannot request changes on article with status "${article.status}".`,
+            'INVALID_STATUS'
+          )
+        );
+      }
+
+      article.status = 'changesRequested';
+      article.reviewNotes = reviewNotes.trim();
+      article.lastEditedBy = req.user!._id;
+      await article.save();
+
+      // Kick linked task back to inProgress
+      if (article.linkedTaskId) {
+        await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'inProgress' } });
+      }
+
+      // Notify author via bell, telegram, and email
+      await createNotification({
+        recipient: authorId,
+        type: 'changes_requested',
+        title: 'Changes Requested on Article',
+        body: `Reviewer notes for "${article.title}": ${reviewNotes.trim()}`,
+        link: `/admin/articles/${article._id}/edit`,
+      });
+
+      await sendTelegramTaskProgressNotification(
+        authorId,
+        article.title,
+        'changes_requested',
+        reviewNotes.trim()
+      );
+
+      if (authorEmail) {
+        await sendArticleReviewOutcomeEmail(
+          authorEmail,
+          article.title,
+          'changesRequested',
+          reviewNotes.trim()
+        );
+      }
+    } else if (decision === 'approve') {
+      if (article.status !== 'inReview') {
+        return next(
+          ApiError.badRequest(
+            `Cannot approve article with status "${article.status}".`,
+            'INVALID_STATUS'
+          )
+        );
+      }
+
+      article.status = 'approved';
+      if (reviewNotes) article.reviewNotes = reviewNotes.trim();
+      article.lastEditedBy = req.user!._id;
+      await article.save();
+
+      await createNotification({
+        recipient: authorId,
+        type: 'article_approved',
+        title: 'Article Approved',
+        body: `Your article "${article.title}" has been approved!`,
+        link: `/admin/articles/${article._id}/edit`,
+      });
+
+      await sendTelegramTaskProgressNotification(authorId, article.title, 'approved');
+
+      if (authorEmail) {
+        await sendArticleReviewOutcomeEmail(authorEmail, article.title, 'approved', reviewNotes);
+      }
+    } else if (decision === 'publish') {
+      if (article.status !== 'inReview' && article.status !== 'approved') {
+        return next(
+          ApiError.badRequest(
+            `Cannot publish article with status "${article.status}". Must be "inReview" or "approved".`,
+            'INVALID_STATUS'
+          )
+        );
+      }
+
+      article.status = 'published';
+      if (!article.publishedAt) {
+        article.publishedAt = new Date();
+      }
+      if (reviewNotes) article.reviewNotes = reviewNotes.trim();
+      article.lastEditedBy = req.user!._id;
+
+      // Finalize slug if missing
+      if (!article.slug && article.title) {
+        let genSlug = slugify(article.title);
+        const slugExists = await ArticleModel.findOne({ slug: genSlug, _id: { $ne: article._id } });
+        if (slugExists) {
+          genSlug = `${genSlug}-${Date.now().toString().slice(-4)}`;
+        }
+        article.slug = genSlug;
+      }
+
+      await article.save();
+
+      // Update linked task to done
+      if (article.linkedTaskId) {
+        await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'done' } });
+      }
+
+      await createNotification({
+        recipient: authorId,
+        type: 'article_published',
+        title: 'Article Published',
+        body: `Your article "${article.title}" is now published and live on Qindil!`,
+        link: `/articles/${article.slug}`,
+      });
+
+      await sendTelegramTaskProgressNotification(authorId, article.title, 'published');
+
+      if (authorEmail) {
+        await sendArticleReviewOutcomeEmail(authorEmail, article.title, 'published');
+      }
+    }
+
+    // Write audit log
+    await AuditLogModel.create({
+      actor: req.user!._id,
+      action: `article.review.${decision}`,
+      targetModel: 'Article',
+      targetId: article._id,
+      details: { title: article.title, decision, reviewNotes: reviewNotes || '' },
+    });
+
+    const updatedArticle = await ArticleModel.findById(id)
+      .populate('topic', 'name slug')
+      .populate('author', 'name email avatarUrl')
+      .populate('lastEditedBy', 'name email avatarUrl');
+
+    sendSuccess(res, updatedArticle || article);
   }
 );
 
@@ -289,6 +553,8 @@ export const requestChanges = asyncHandler(
 
     // Notify author
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
+    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
+
     await createNotification({
       recipient: authorId,
       type: 'changes_requested',
@@ -296,6 +562,22 @@ export const requestChanges = asyncHandler(
       body: `Reviewer notes for "${article.title}": ${reviewNotes}`,
       link: `/admin/articles/${article._id}/edit`,
     });
+
+    await sendTelegramTaskProgressNotification(
+      authorId,
+      article.title,
+      'changes_requested',
+      reviewNotes
+    );
+
+    if (authorEmail) {
+      await sendArticleReviewOutcomeEmail(
+        authorEmail,
+        article.title,
+        'changesRequested',
+        reviewNotes
+      );
+    }
 
     // Write audit log
     await AuditLogModel.create({
@@ -339,6 +621,8 @@ export const approveArticle = asyncHandler(
 
     // Notify author
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
+    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
+
     await createNotification({
       recipient: authorId,
       type: 'article_approved',
@@ -346,6 +630,20 @@ export const approveArticle = asyncHandler(
       body: `Your article "${article.title}" has been approved!`,
       link: `/admin/articles`,
     });
+
+    await sendTelegramTaskProgressNotification(
+      authorId,
+      article.title,
+      'approved'
+    );
+
+    if (authorEmail) {
+      await sendArticleReviewOutcomeEmail(
+        authorEmail,
+        article.title,
+        'approved'
+      );
+    }
 
     // Write audit log
     await AuditLogModel.create({
@@ -390,6 +688,8 @@ export const publishArticle = asyncHandler(
 
     // Notify author
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
+    const authorEmail = typeof article.author === 'object' ? (article.author as any).email : undefined;
+
     await createNotification({
       recipient: authorId,
       type: 'article_published',
@@ -397,6 +697,20 @@ export const publishArticle = asyncHandler(
       body: `Your article "${article.title}" is now published and live on Qindil!`,
       link: `/articles/${article.slug}`,
     });
+
+    await sendTelegramTaskProgressNotification(
+      authorId,
+      article.title,
+      'published'
+    );
+
+    if (authorEmail) {
+      await sendArticleReviewOutcomeEmail(
+        authorEmail,
+        article.title,
+        'published'
+      );
+    }
 
     // Write audit log
     await AuditLogModel.create({
@@ -534,6 +848,7 @@ export const listArticlesAdmin = asyncHandler(
       ArticleModel.find(queryFilter)
         .populate('topic', 'name slug')
         .populate('author', 'name email avatarUrl')
+        .populate('lastEditedBy', 'name email avatarUrl')
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -605,6 +920,7 @@ export default {
   updateArticleDraft,
   submitForReview,
   listReviewQueue,
+  reviewArticle,
   requestChanges,
   approveArticle,
   publishArticle,

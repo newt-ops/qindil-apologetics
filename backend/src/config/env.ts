@@ -20,12 +20,17 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
+  RESEND_VERIFICATION_EMAIL: z.string().optional(),
+  RESEND_TASKS_EMAIL: z.string().optional(),
+  RESEND_CONTACT_EMAIL: z.string().optional(),
+  RESEND_INFO_EMAIL: z.string().optional(),
   RESEND_NOREPLY_EMAIL: z.string().optional(),
   RESEND_NOTIFICATIONS_EMAIL: z.string().optional(),
   RESEND_APOLOGY_EMAIL: z.string().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_BOT_USERNAME: z.string().optional(),
   TELEGRAM_NOTIFY_CHANNEL_ID: z.string().optional(),
+  TELEGRAM_OFFICIAL_CHANNEL_ID: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

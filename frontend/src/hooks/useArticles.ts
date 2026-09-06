@@ -3,7 +3,10 @@ import {
   getMyArticlesApi,
   getArticleForEditApi,
   updateArticleDraftApi,
+  autosaveArticleApi,
   submitForReviewApi,
+  reviewArticleApi,
+  ReviewDecision,
   getReviewQueueApi,
   requestChangesApi,
   approveArticleApi,
@@ -95,12 +98,45 @@ export const useUpdateArticleDraft = () => {
   });
 };
 
+export const useAutosaveArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateArticleDraftPayload }) =>
+      autosaveArticleApi(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+    },
+  });
+};
+
 export const useSubmitForReview = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data?: UpdateArticleDraftPayload }) =>
       submitForReviewApi(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+    },
+  });
+};
+
+export const useReviewArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      decision,
+      reviewNotes,
+    }: {
+      id: string;
+      decision: ReviewDecision;
+      reviewNotes?: string;
+    }) => reviewArticleApi(id, decision, reviewNotes),
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });

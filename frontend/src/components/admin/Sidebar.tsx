@@ -19,10 +19,11 @@ const navItems: NavItemConfig[] = [
   // Admin + SuperAdmin Items
   { label: 'Workspace', path: '/admin/workspace', icon: 'Folder', implemented: true },
   { label: 'My Articles', path: '/admin/articles', icon: 'FileText', implemented: true },
-  { label: 'Production Board', path: '/admin/production', icon: 'Activity', implemented: true },
   { label: 'Calendar', path: '/admin/calendar', icon: 'Calendar', implemented: true },
 
   // SuperAdmin Only Items
+  { label: 'All Tasks', path: '/admin/tasks', icon: 'CheckSquare', superAdminOnly: true, implemented: true },
+  { label: 'Assign Task', path: '/admin/tasks/assign', icon: 'Plus', superAdminOnly: true, implemented: true },
   { label: 'Team Roster', path: '/admin/team', icon: 'Users', superAdminOnly: true, implemented: true },
   { label: 'Topics', path: '/admin/topics', icon: 'Tag', superAdminOnly: true, implemented: true },
   { label: 'Review Queue', path: '/admin/review-queue', icon: 'Eye', superAdminOnly: true, implemented: true },
@@ -151,8 +152,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="border-t border-border p-3 text-center">
-        <p className="text-[10px] font-mono text-textMuted/60">Qindil Platform v2.0</p>
+      <div className="border-t border-border p-3 space-y-2">
+        <Link
+          to="/"
+          onClick={onItemClick}
+          className="flex items-center justify-center space-x-2 w-full rounded-lg border border-border bg-bg/80 hover:bg-bg px-3 py-2 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold transition shadow-xs"
+        >
+          <Icon name="Globe" size={14} className="text-gold" />
+          <span>Back to Main Site</span>
+        </Link>
+        <p className="text-[10px] font-mono text-textMuted/60 text-center">Qindil Platform v2.0</p>
       </div>
     </aside>
   );

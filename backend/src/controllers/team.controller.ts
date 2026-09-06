@@ -4,6 +4,7 @@ import { UserModel } from '../models/User.model.js';
 import { RoleModel } from '../models/Role.model.js';
 import { AuditLogModel } from '../models/AuditLog.model.js';
 import { createNotification } from '../services/notify.js';
+import { sendTelegramRoleChangeNotification } from '../telegram/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 
@@ -169,6 +170,13 @@ export const updateMemberRole = asyncHandler(
       body: `Your Qindil account role has been updated to "${newRoleName}".`,
       link: '/dashboard',
     });
+
+    // Send Telegram role notification (congratulatory on promotion, respectful on demotion)
+    await sendTelegramRoleChangeNotification(
+      targetUser._id.toString(),
+      currentRoleName,
+      newRoleName
+    );
 
     sendSuccess(res, sanitizeUser(targetUser));
   }

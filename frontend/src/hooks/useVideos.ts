@@ -1,26 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getBoardApi,
   getVideoByIdApi,
-  moveStageApi,
+  acceptVideoTaskApi,
   updateVideoDetailsApi,
-  VideoBoardStage,
+  submitVideoTaskApi,
+  reviewVideoTaskApi,
+  postVideoTaskApi,
   UpdateVideoDetailsPayload,
+  SubmitVideoPayload,
+  ReviewVideoPayload,
+  PostVideoPayload,
 } from '../api/video';
 import { useAuthStore } from '../stores/authStore';
-
-export const useBoard = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
-  return useQuery({
-    queryKey: ['videos', 'board'],
-    queryFn: async () => {
-      const res = await getBoardApi();
-      return res.data || [];
-    },
-    enabled: isAuthenticated,
-  });
-};
 
 export const useVideoById = (id?: string) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -35,15 +26,15 @@ export const useVideoById = (id?: string) => {
   });
 };
 
-export const useMoveStage = () => {
+export const useAcceptVideoTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, stage }: { id: string; stage: VideoBoardStage }) =>
-      moveStageApi(id, stage),
+    mutationFn: (id: string) => acceptVideoTaskApi(id),
     onSuccess: (res, variables) => {
-      queryClient.setQueryData(['videos', 'detail', variables.id], res.data);
-      queryClient.invalidateQueries({ queryKey: ['videos', 'board'] });
+      queryClient.setQueryData(['videos', 'detail', variables], res.data);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 };
@@ -56,10 +47,53 @@ export const useUpdateVideoDetails = () => {
       updateVideoDetailsApi(id, data),
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['videos', 'detail', variables.id], res.data);
-      queryClient.invalidateQueries({ queryKey: ['videos', 'board'] });
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 };
 
-export default useBoard;
+export const useSubmitVideoTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: SubmitVideoPayload }) =>
+      submitVideoTaskApi(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(['videos', 'detail', variables.id], res.data);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+export const useReviewVideoTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ReviewVideoPayload }) =>
+      reviewVideoTaskApi(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(['videos', 'detail', variables.id], res.data);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+export const usePostVideoTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PostVideoPayload }) =>
+      postVideoTaskApi(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(['videos', 'detail', variables.id], res.data);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+export default useVideoById;
 

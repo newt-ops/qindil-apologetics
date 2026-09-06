@@ -21,6 +21,7 @@ import {
   resetPassword,
   me,
 } from '../controllers/auth.controller.js';
+import { generateTelegramLinkCode } from '../controllers/me.controller.js';
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.post('/logout', logout);
 router.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword);
 router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
 router.get('/me', protect, me);
+router.post('/telegram/code', protect, generateTelegramLinkCode);
 
 export default router;

@@ -7,12 +7,12 @@ import { OAuth2Client } from 'google-auth-library';
 import { env } from '../config/env.js';
 import { UserModel } from '../models/User.model.js';
 import { RefreshTokenModel } from '../models/RefreshToken.model.js';
-import { IRole } from '../models/Role.model.js';
+import { IRole, RoleModel } from '../models/Role.model.js';
 import { ApiError } from '../utils/apiError.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { generateOtp, hashOtp, compareOtp } from '../services/otp.js';
-import { sendOtpEmail } from '../services/email.js';
+import { sendOtpEmail } from '../services/email/index.js';
 import { resolvePermissions } from '../utils/resolvePermissions.js';
 
 const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
@@ -47,7 +47,7 @@ const sanitizeUser = (user: any) => {
 // @desc    Register a new local user
 // @route   POST /api/v1/auth/register
 export const register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const { name, email, password } = req.body;
+  const { name, email, password, avatarUrl } = req.body;
 
   const existingUser = await UserModel.findOne({ email });
   if (existingUser) {
@@ -59,10 +59,15 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
   const otpHash = await hashOtp(otp);
   const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+  const userRole = await RoleModel.findOne({ name: 'user' });
+  const roles = userRole ? [userRole._id] : [];
+
   const user = await UserModel.create({
     name,
     email,
     passwordHash,
+    avatarUrl: avatarUrl || undefined,
+    roles,
     authProvider: 'local',
     emailVerified: false,
     otpHash,
@@ -193,24 +198,40 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
   if (user) {
     if (!user.googleId) {
       user.googleId = googleId;
-      user.authProvider = 'both';
+      user.authProvider = user.passwordHash ? 'both' : 'google';
     }
     user.emailVerified = true;
+    // Set initial Google avatar if user has not set an avatar yet (preserves user updates)
     if (avatarUrl && !user.avatarUrl) {
       user.avatarUrl = avatarUrl;
     }
+    if (name && (!user.name || user.name === 'Google User')) {
+      user.name = name;
+    }
+    if (!user.roles || user.roles.length === 0) {
+      const userRole = await RoleModel.findOne({ name: 'user' });
+      if (userRole) {
+        user.roles = [userRole._id as any];
+      }
+    }
     user.lastLoginAt = new Date();
     await user.save();
+    user = await user.populate('roles');
   } else {
+    const userRole = await RoleModel.findOne({ name: 'user' });
+    const roles = userRole ? [userRole._id] : [];
+
     user = await UserModel.create({
       name: name || 'Google User',
       email,
       googleId,
       authProvider: 'google',
-      avatarUrl,
+      avatarUrl: avatarUrl || undefined,
+      roles,
       emailVerified: true,
       lastLoginAt: new Date(),
     });
+    user = await user.populate('roles');
   }
 
   const roleNames = user.roles ? user.roles.map((r: any) => (r as IRole).name || r.toString()) : [];

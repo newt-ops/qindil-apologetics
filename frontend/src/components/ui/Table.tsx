@@ -32,14 +32,18 @@ export function Table<T extends Record<string, any>>({
 }: TableProps<T>) {
   return (
     <div className={`w-full overflow-x-auto rounded-lg border border-border bg-surface scrollbar-thin ${className}`}>
-      <table className="w-full text-left text-sm text-text border-collapse min-w-[600px] sm:min-w-full">
-        <thead className="border-b border-border bg-bg/60 text-xs font-semibold uppercase tracking-wider text-textMuted">
+      <table className="w-full text-left text-sm text-text border-collapse min-w-[550px] sm:min-w-full">
+        <thead className="border-b border-border bg-bg/80 text-xs font-semibold uppercase tracking-wider text-textMuted">
           <tr>
-            {columns.map((col) => (
+            {columns.map((col, colIdx) => (
               <th
                 key={col.key}
                 style={{ width: col.width }}
-                className={`px-4 py-3 ${
+                className={`px-3 sm:px-4 py-3 ${
+                  colIdx === 0
+                    ? 'sticky left-0 z-20 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)] dark:shadow-[1px_0_0_0_rgba(255,255,255,0.06)]'
+                    : ''
+                } ${
                   col.sortable && onSort ? 'cursor-pointer select-none hover:text-text' : ''
                 }`}
                 onClick={() => {
@@ -80,8 +84,15 @@ export function Table<T extends Record<string, any>>({
               const key = keyExtractor ? keyExtractor(item, index) : item._id || item.id || index;
               return (
                 <tr key={key} className="hover:bg-bg/40 transition-colors duration-150">
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3.5 align-middle">
+                  {columns.map((col, colIdx) => (
+                    <td
+                      key={col.key}
+                      className={`px-3 sm:px-4 py-3.5 align-middle ${
+                        colIdx === 0
+                          ? 'sticky left-0 z-10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-sm font-medium shadow-[1px_0_0_0_rgba(0,0,0,0.1)] dark:shadow-[1px_0_0_0_rgba(255,255,255,0.06)]'
+                          : ''
+                      }`}
+                    >
                       {col.render ? col.render(item) : item[col.key] ?? '—'}
                     </td>
                   ))}

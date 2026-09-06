@@ -13,6 +13,9 @@ export interface ITask extends Document {
   status: TaskStatus;
   linkedArticle?: Types.ObjectId;
   linkedVideo?: Types.ObjectId;
+  videoType?: 'refutation' | 'normal';
+  destination?: 'official' | 'personal';
+  targetVideoUrl?: string;
   calendarEventId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -41,6 +44,9 @@ const taskSchema = new Schema<ITask>(
     },
     linkedArticle: { type: Schema.Types.ObjectId, ref: 'Article' },
     linkedVideo: { type: Schema.Types.ObjectId, ref: 'VideoLog' },
+    videoType: { type: String, enum: ['refutation', 'normal'] },
+    destination: { type: String, enum: ['official', 'personal'] },
+    targetVideoUrl: { type: String, trim: true },
     calendarEventId: { type: Schema.Types.ObjectId, ref: 'Event' },
   },
   {

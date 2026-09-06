@@ -172,7 +172,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2 py-3 text-gold">
               <Spinner size="md" />
-              <span className="text-xs font-semibold">Uploading to Cloudinary...</span>
+              <span className="text-xs font-semibold">Uploading media...</span>
             </div>
           ) : (
             <div className="space-y-2">

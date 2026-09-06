@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Role {
   _id: string;
@@ -35,50 +36,64 @@ interface AuthState {
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  permissions: [],
-  isAuthenticated: false,
-  isLoading: true,
-
-  setAuth: (user: User, accessToken: string, permissions: string[] = []) =>
-    set({
-      user,
-      accessToken,
-      permissions,
-      isAuthenticated: true,
-      isLoading: false,
-    }),
-
-  setAccessToken: (accessToken: string) =>
-    set({
-      accessToken,
-      isAuthenticated: true,
-    }),
-
-  setPermissions: (permissions: string[]) =>
-    set({
-      permissions,
-    }),
-
-  setUser: (user: User) =>
-    set({
-      user,
-      isAuthenticated: true,
-    }),
-
-  setIsLoading: (isLoading: boolean) =>
-    set({
-      isLoading,
-    }),
-
-  clearAuth: () =>
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       accessToken: null,
       permissions: [],
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
+
+      setAuth: (user: User, accessToken: string, permissions: string[] = []) =>
+        set({
+          user,
+          accessToken,
+          permissions,
+          isAuthenticated: true,
+          isLoading: false,
+        }),
+
+      setAccessToken: (accessToken: string) =>
+        set({
+          accessToken,
+          isAuthenticated: true,
+        }),
+
+      setPermissions: (permissions: string[]) =>
+        set({
+          permissions,
+        }),
+
+      setUser: (user: User) =>
+        set({
+          user,
+          isAuthenticated: true,
+        }),
+
+      setIsLoading: (isLoading: boolean) =>
+        set({
+          isLoading,
+        }),
+
+      clearAuth: () =>
+        set({
+          user: null,
+          accessToken: null,
+          permissions: [],
+          isAuthenticated: false,
+          isLoading: false,
+        }),
     }),
-}));
+    {
+      name: 'qindil_auth',
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        permissions: state.permissions,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
+

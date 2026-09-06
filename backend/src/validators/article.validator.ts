@@ -41,3 +41,12 @@ export const createArticleSchema = z.object({
   }),
 });
 
+export const reviewArticleSchema = z.object({
+  body: z.object({
+    decision: z.enum(['approve', 'requestChanges', 'publish'], {
+      required_error: 'Decision must be one of "approve", "requestChanges", or "publish".',
+    }),
+    reviewNotes: z.string().optional(),
+  }),
+});
+

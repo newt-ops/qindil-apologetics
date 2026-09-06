@@ -21,12 +21,14 @@ export interface ArticleItem {
   slug?: string;
   topic?: ArticleTopic | string;
   author: User | string;
+  lastEditedBy?: User | string;
   content?: string;
   excerpt?: string;
   coverImageUrl?: string;
   status: ArticleStatus;
   reviewNotes?: string;
   publishedAt?: string;
+  lastAutosavedAt?: string;
   viewCount: number;
   linkedTaskId?: string;
   createdAt: string;
@@ -64,10 +66,32 @@ export const updateArticleDraftApi = async (id: string, data: UpdateArticleDraft
   return response.data;
 };
 
+export const autosaveArticleApi = async (id: string, data: UpdateArticleDraftPayload) => {
+  const response = await apiClient.patch<{ success: boolean; data: ArticleItem }>(
+    `/articles/${id}/autosave`,
+    data
+  );
+  return response.data;
+};
+
 export const submitForReviewApi = async (id: string, data?: UpdateArticleDraftPayload) => {
   const response = await apiClient.patch<{ success: boolean; data: ArticleItem }>(
     `/articles/${id}/submit`,
     data || {}
+  );
+  return response.data;
+};
+
+export type ReviewDecision = 'approve' | 'requestChanges' | 'publish';
+
+export const reviewArticleApi = async (
+  id: string,
+  decision: ReviewDecision,
+  reviewNotes?: string
+) => {
+  const response = await apiClient.patch<{ success: boolean; data: ArticleItem }>(
+    `/articles/${id}/review`,
+    { decision, reviewNotes }
   );
   return response.data;
 };
@@ -156,5 +180,3 @@ export const deleteArticleDraftApi = async (id: string) => {
   );
   return response.data;
 };
-
-

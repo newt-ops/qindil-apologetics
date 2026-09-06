@@ -19,6 +19,8 @@ export interface IArticle extends Document {
   status: ArticleStatus;
   reviewNotes?: string;
   publishedAt?: Date;
+  lastAutosavedAt?: Date;
+  lastEditedBy?: Types.ObjectId;
   viewCount: number;
   linkedTaskId?: Types.ObjectId;
   createdAt: Date;
@@ -43,6 +45,8 @@ const articleSchema = new Schema<IArticle>(
     },
     reviewNotes: { type: String },
     publishedAt: { type: Date, index: true },
+    lastAutosavedAt: { type: Date },
+    lastEditedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     viewCount: { type: Number, default: 0 },
     linkedTaskId: { type: Schema.Types.ObjectId, ref: 'Task' },
   },

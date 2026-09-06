@@ -4,7 +4,7 @@ import { ArticleModel } from '../models/Article.model.js';
 import { TopicModel } from '../models/Topic.model.js';
 import { ContactMessageModel } from '../models/ContactMessage.model.js';
 import { EventModel } from '../models/Event.model.js';
-import { sendContactAutoReply } from '../services/email.js';
+import { sendContactAutoReply } from '../services/email/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 import { env } from '../config/env.js';

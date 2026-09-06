@@ -1,65 +1,57 @@
 import apiClient from './client';
 import { User } from '../stores/authStore';
 
-export type VideoBoardStage =
-  | 'idea'
-  | 'scripting'
-  | 'filming'
-  | 'editing'
-  | 'review'
-  | 'published';
-
-export interface StageHistoryItem {
-  stage: VideoBoardStage;
-  movedBy: User | string;
-  movedAt: string;
-}
-
-export interface VideoCategoryItem {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-export interface VideoTaskItem {
-  _id: string;
-  title: string;
-  description?: string;
-  dueDate: string;
-  status: string;
-}
+export type VideoType = 'refutation' | 'normal';
+export type VideoDestination = 'official' | 'personal';
+export type VideoStatus =
+  | 'draft'
+  | 'inProgress'
+  | 'submitted'
+  | 'changesRequested'
+  | 'approved'
+  | 'published'
+  | 'posted';
 
 export interface VideoLogItem {
   _id: string;
   title: string;
-  category?: VideoCategoryItem | string;
-  isRefutation: boolean;
+  creator: User | string;
+  videoType: VideoType;
+  destination: VideoDestination;
   targetVideoUrl?: string;
-  contentCreator: User | string;
-  editor: User | string;
-  task?: VideoTaskItem | string;
-  boardStage: VideoBoardStage;
-  stageHistory: StageHistoryItem[];
   posterUrl?: string;
+  notes?: string;
+  status: VideoStatus;
+  reviewNotes?: string;
+  submittedUrl?: string;
   publishedUrl?: string;
   publishedAt?: string;
-  notes?: string;
+  linkedTaskId?: any;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface UpdateVideoDetailsPayload {
   posterUrl?: string;
-  publishedUrl?: string;
   notes?: string;
+  submittedUrl?: string;
+  targetVideoUrl?: string;
+  destination?: VideoDestination;
+  videoType?: VideoType;
 }
 
-export const getBoardApi = async () => {
-  const response = await apiClient.get<{ success: boolean; data: VideoLogItem[] }>(
-    '/videos/board'
-  );
-  return response.data;
-};
+export interface SubmitVideoPayload {
+  submittedUrl?: string;
+}
+
+export interface ReviewVideoPayload {
+  decision: 'approve' | 'requestChanges';
+  reviewNotes?: string;
+}
+
+export interface PostVideoPayload {
+  publishedUrl: string;
+}
 
 export const getVideoByIdApi = async (id: string) => {
   const response = await apiClient.get<{ success: boolean; data: VideoLogItem }>(
@@ -68,14 +60,12 @@ export const getVideoByIdApi = async (id: string) => {
   return response.data;
 };
 
-export const moveStageApi = async (id: string, stage: VideoBoardStage) => {
+export const acceptVideoTaskApi = async (id: string) => {
   const response = await apiClient.patch<{ success: boolean; data: VideoLogItem }>(
-    `/videos/${id}/stage`,
-    { stage }
+    `/videos/${id}/accept`
   );
   return response.data;
 };
-
 
 export const updateVideoDetailsApi = async (
   id: string,
@@ -87,3 +77,37 @@ export const updateVideoDetailsApi = async (
   );
   return response.data;
 };
+
+export const submitVideoTaskApi = async (
+  id: string,
+  data?: SubmitVideoPayload
+) => {
+  const response = await apiClient.patch<{ success: boolean; data: VideoLogItem }>(
+    `/videos/${id}/submit`,
+    data
+  );
+  return response.data;
+};
+
+export const reviewVideoTaskApi = async (
+  id: string,
+  data: ReviewVideoPayload
+) => {
+  const response = await apiClient.patch<{ success: boolean; data: VideoLogItem }>(
+    `/videos/${id}/review`,
+    data
+  );
+  return response.data;
+};
+
+export const postVideoTaskApi = async (
+  id: string,
+  data: PostVideoPayload
+) => {
+  const response = await apiClient.patch<{ success: boolean; data: VideoLogItem }>(
+    `/videos/${id}/post`,
+    data
+  );
+  return response.data;
+};
+

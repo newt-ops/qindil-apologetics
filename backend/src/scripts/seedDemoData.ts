@@ -285,31 +285,45 @@ export const seedDemoData = async (): Promise<void> => {
     }
     console.log(`  ✓ 12 Articles seeded (2 per status: draft, inReview, changesRequested, approved, published, archived)`);
 
-    // 5. Tasks + VideoLogs pairs across Kanban board stages (scripting, filming, editing, review, published)
+    // 5. Tasks + VideoLogs pairs across video production pipeline
     const taskVideoPairs = [
       {
-        stage: 'scripting',
         videoTitle: 'فيديو: إثبات وجود الخالق بدليل الضبط الدقيق للكون',
         taskTitle: 'كتابة سيناريو فيديو الضبط الدقيق',
         taskStatus: 'inProgress',
+        videoStatus: 'inProgress' as const,
+        videoType: 'normal' as const,
+        destination: 'official' as const,
       },
       {
-        stage: 'filming',
         videoTitle: 'فيديو: الرد على شبهة عدم عدالة توزيع الثروات',
         taskTitle: 'تصوير الحلقة الثالثة من برنامج الردود',
-        taskStatus: 'inProgress',
+        taskStatus: 'inReview',
+        videoStatus: 'submitted' as const,
+        videoType: 'refutation' as const,
+        destination: 'personal' as const,
+        targetVideoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        submittedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       },
       {
-        stage: 'editing',
         videoTitle: 'فيديو: هل المنهج التجريبي هو المصدر الوحيد للمعرفة؟',
         taskTitle: 'مونتاج وإخراج فيديو العلموية',
         taskStatus: 'inReview',
+        videoStatus: 'approved' as const,
+        videoType: 'normal' as const,
+        destination: 'personal' as const,
+        submittedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       },
       {
-        stage: 'published',
         videoTitle: 'فيديو: دلائل النبوة في القرآن والسنة',
         taskTitle: 'نشر ومراجعة التصدير النهائي للبرنامج',
         taskStatus: 'done',
+        videoStatus: 'posted' as const,
+        videoType: 'refutation' as const,
+        destination: 'official' as const,
+        targetVideoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        publishedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       },
     ];
 
@@ -320,11 +334,14 @@ export const seedDemoData = async (): Promise<void> => {
         task = await TaskModel.create({
           type: 'video',
           title: pair.taskTitle,
-          description: `مهمة مرتبطة بعمل إنتاجي مرئي المرحلة: ${pair.stage}`,
+          description: `مهمة مرتبطة بعمل إنتاجي مرئي (${pair.videoType})`,
           assignedTo: [adminUsers[1]._id],
           createdBy: superAdminUser._id,
           dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
           status: pair.taskStatus as any,
+          videoType: pair.videoType,
+          destination: pair.destination,
+          targetVideoUrl: (pair as any).targetVideoUrl,
         });
       }
 
@@ -333,19 +350,16 @@ export const seedDemoData = async (): Promise<void> => {
       if (!video) {
         video = await VideoLogModel.create({
           title: pair.videoTitle,
-          isRefutation: true,
-          contentCreator: adminUsers[0]._id,
-          editor: adminUsers[1]._id,
-          task: task._id,
-          boardStage: pair.stage as any,
-          stageHistory: [
-            {
-              stage: pair.stage as any,
-              movedBy: superAdminUser._id,
-              movedAt: new Date(),
-            },
-          ],
-          notes: `تم إنشاؤه عبر البذر التوضيحي للمرحلة: ${pair.stage}`,
+          creator: adminUsers[0]._id,
+          videoType: pair.videoType,
+          destination: pair.destination,
+          targetVideoUrl: (pair as any).targetVideoUrl,
+          submittedUrl: (pair as any).submittedUrl,
+          publishedUrl: (pair as any).publishedUrl,
+          publishedAt: (pair as any).publishedAt,
+          status: pair.videoStatus,
+          linkedTaskId: task._id,
+          notes: `Created via demo seeding`,
         });
 
         // Link Task back to VideoLog
@@ -353,7 +367,7 @@ export const seedDemoData = async (): Promise<void> => {
         await task.save();
       }
     }
-    console.log(`  ✓ 4 Task & VideoLog pairs seeded across Kanban board stages (scripting, filming, editing, published)`);
+    console.log(`  ✓ 4 Task & VideoLog pairs seeded across video production pipeline (inProgress, submitted, approved, posted)`);
 
     // 6. Events (3 events with public and team visibility)
     const eventsData = [

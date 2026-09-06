@@ -3,8 +3,10 @@ import {
   getMyArticles,
   getArticleForEdit,
   updateArticleDraft,
+  autosaveArticle,
   submitForReview,
   listReviewQueue,
+  reviewArticle,
   requestChanges,
   approveArticle,
   publishArticle,
@@ -21,6 +23,7 @@ import {
   submitArticleSchema,
   requestChangesSchema,
   createArticleSchema,
+  reviewArticleSchema,
 } from '../validators/article.validator.js';
 
 const router = Router();
@@ -41,6 +44,14 @@ router.get('/mine', getMyArticles);
 // --- SuperAdmin Only Review Queue Endpoints ---
 // GET /api/v1/articles/review-queue — List all articles waiting for review
 router.get('/review-queue', requireRole('superAdmin'), listReviewQueue);
+
+// PATCH /api/v1/articles/:id/review — Unified review decision endpoint (SuperAdmin)
+router.patch(
+  '/:id/review',
+  requireRole('superAdmin'),
+  validate(reviewArticleSchema),
+  reviewArticle
+);
 
 // PATCH /api/v1/articles/:id/request-changes — Request changes on article
 router.patch(
@@ -63,15 +74,16 @@ router.patch('/:id/archive', requireRole('superAdmin'), archiveArticle);
 // GET /api/v1/articles/:id/edit — Fetch article for editing/reviewing
 router.get('/:id/edit', getArticleForEdit);
 
+// PATCH /api/v1/articles/:id/autosave — Fast autosave endpoint for author drafts
+router.patch('/:id/autosave', autosaveArticle);
+
 // PATCH /api/v1/articles/:id/submit — Submit article for review
 router.patch('/:id/submit', validate(submitArticleSchema), submitForReview);
 
-// PATCH /api/v1/articles/:id — Update article draft (autosave endpoint)
+// PATCH /api/v1/articles/:id — Update article draft
 router.patch('/:id', validate(updateArticleSchema), updateArticleDraft);
 
 // DELETE /api/v1/articles/:id — Delete article draft
 router.delete('/:id', deleteArticleDraft);
 
 export default router;
-
-
