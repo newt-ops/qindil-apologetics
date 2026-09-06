@@ -33,13 +33,19 @@ const envSchema = z.object({
   TELEGRAM_OFFICIAL_CHANNEL_ID: z.string().optional(),
 });
 
-const _env = envSchema.safeParse(process.env);
-
-if (!_env.success) {
-  console.error('❌ Invalid environment variables:');
-  console.error(JSON.stringify(_env.error.format(), null, 2));
+let parsedEnv: z.infer<typeof envSchema>;
+try {
+  parsedEnv = envSchema.parse(process.env);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    console.error('❌ Invalid environment variables:');
+    console.error(JSON.stringify(error.format(), null, 2));
+  } else {
+    console.error('❌ Error parsing environment variables:', error);
+  }
   process.exit(1);
 }
 
-export const env = _env.data;
+export const env: z.infer<typeof envSchema> = parsedEnv;
 export type Env = z.infer<typeof envSchema>;
+
