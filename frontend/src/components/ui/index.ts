@@ -9,3 +9,4 @@ export * from './Badge';
 export * from './Tabs';
 export * from './Toast';
 export * from './EmptyState';
+export * from './Skeleton';

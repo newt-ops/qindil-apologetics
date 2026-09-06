@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useActiveTopics } from '../../../hooks/usePublicData';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
+import { TopicCardSkeleton } from '../../../components/ui/Skeleton';
 
 export function TopicsPage() {
   const { data: topics, isLoading, isError } = useActiveTopics();
@@ -40,10 +41,7 @@ export function TopicsPage() {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div
-                key={n}
-                className="h-40 sm:h-64 animate-pulse rounded-2xl sm:rounded-3xl border border-stone-200 dark:border-zinc-800 bg-stone-100/70 dark:bg-zinc-900/60"
-              />
+              <TopicCardSkeleton key={n} />
             ))}
           </div>
         ) : isError ? (

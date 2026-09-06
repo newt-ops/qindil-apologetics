@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import Table, { Column } from '../ui/Table';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import Spinner from '../ui/Spinner';
 import Icon from '../icons/Icon';
 import EmptyState from '../ui/EmptyState';
+import { DataTableSkeleton } from '../ui/Skeleton';
 
 export interface DataTableProps<T> {
   columns: Column<T>[];
@@ -125,10 +125,7 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table Container */}
       <div className="relative">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-surface p-12 text-gold space-y-3">
-            <Spinner size="lg" />
-            <span className="text-xs font-semibold text-textMuted">Loading records...</span>
-          </div>
+          <DataTableSkeleton columns={columns.length || 4} rows={5} />
         ) : sortedData.length === 0 ? (
           emptyState || (
             <EmptyState

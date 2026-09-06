@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { usePublicEvents } from '../../../hooks/usePublicData';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
+import { EventCardSkeleton } from '../../../components/ui/Skeleton';
 
 export function EventsPage() {
   const [includePast, setIncludePast] = useState(false);
@@ -155,11 +156,8 @@ export function EventsPage() {
         {/* Events List - Prompt 42: Compact list rows on mobile */}
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((n) => (
-              <div
-                key={n}
-                className="h-24 sm:h-32 animate-pulse rounded-xl border border-border bg-surface/50 p-4 sm:p-6"
-              />
+            {[1, 2, 3, 4].map((n) => (
+              <EventCardSkeleton key={n} />
             ))}
           </div>
         ) : isError ? (

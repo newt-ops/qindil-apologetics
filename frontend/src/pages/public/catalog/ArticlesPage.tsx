@@ -5,6 +5,7 @@ import ArticleCard from '../../../components/public/ArticleCard';
 import Pagination from '../../../components/public/Pagination';
 import SearchBar from '../../../components/public/SearchBar';
 import EmptyState from '../../../components/ui/EmptyState';
+import { ArticleCardSkeleton } from '../../../components/ui/Skeleton';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
 
@@ -163,10 +164,7 @@ export function ArticlesPage() {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div
-                key={n}
-                className="h-56 sm:h-96 animate-pulse rounded-2xl border border-stone-200 dark:border-zinc-800 bg-stone-100/70 dark:bg-zinc-900/60"
-              />
+              <ArticleCardSkeleton key={n} />
             ))}
           </div>
         ) : isError ? (

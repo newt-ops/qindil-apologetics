@@ -8,6 +8,7 @@ import NotificationBell from '../../../components/shared/NotificationBell';
 import TelegramLinkCard from '../../../components/shared/TelegramLinkCard';
 import { uploadToCloudinary } from '../../../lib/cloudinary';
 import Seo from '../../../components/shared/Seo';
+import { NotificationSkeleton } from '../../../components/ui/Skeleton';
 
 export function MiniDashboardPage() {
   const { user, permissions } = useAuthStore();
@@ -410,10 +411,7 @@ export function MiniDashboardPage() {
                     {isNotificationsLoading ? (
                       <div className="space-y-2.5">
                         {[1, 2, 3].map((n) => (
-                          <div
-                            key={n}
-                            className="h-16 animate-pulse rounded-2xl border border-border/80 bg-bg/50 p-4"
-                          />
+                          <NotificationSkeleton key={n} />
                         ))}
                       </div>
                     ) : notifications && notifications.length > 0 ? (

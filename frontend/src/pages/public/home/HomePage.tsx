@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useFeaturedArticles, useActiveTopics } from '../../../hooks/usePublicData';
 import { useSettings } from '../../../hooks/useSettings';
 import ArticleCard from '../../../components/public/ArticleCard';
+import { ArticleCardSkeleton, TopicCardSkeleton } from '../../../components/ui/Skeleton';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
 
@@ -149,10 +150,7 @@ export function HomePage() {
           {isTopicsLoading ? (
             <div className="flex overflow-x-auto gap-3 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:pb-0 scrollbar-none">
               {[1, 2, 3, 4].map((n) => (
-                <div
-                  key={n}
-                  className="h-28 w-[200px] shrink-0 sm:w-auto animate-pulse rounded-2xl border border-stone-200 dark:border-zinc-800 bg-stone-100/70 dark:bg-zinc-900/60"
-                />
+                <TopicCardSkeleton key={n} className="h-28 w-[200px] shrink-0 sm:w-auto" />
               ))}
             </div>
           ) : topics && topics.length > 0 ? (
@@ -224,10 +222,9 @@ export function HomePage() {
           {isArticlesLoading ? (
             <div className="flex overflow-x-auto gap-3 pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:pb-0 scrollbar-none">
               {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="h-64 w-[240px] shrink-0 sm:w-auto animate-pulse rounded-3xl border border-border/70 bg-stone-100/70 dark:bg-zinc-900/60"
-                />
+                <div key={n} className="w-[240px] shrink-0 sm:w-auto h-full">
+                  <ArticleCardSkeleton />
+                </div>
               ))}
             </div>
           ) : isArticlesError ? (

@@ -6,6 +6,7 @@ import ContentRenderer from '../../../components/public/ContentRenderer';
 import ArticleCard from '../../../components/public/ArticleCard';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
+import { ArticleDetailSkeleton } from '../../../components/ui/Skeleton';
 
 export function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -66,20 +67,7 @@ export function ArticleDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bg text-text font-sans py-16">
-        <div className="mx-auto max-w-4xl px-4 space-y-6 animate-pulse">
-          <div className="h-6 w-36 bg-stone-200 dark:bg-zinc-800 rounded-lg" />
-          <div className="h-12 w-4/5 bg-stone-200 dark:bg-zinc-800 rounded-xl" />
-          <div className="h-72 w-full bg-stone-200 dark:bg-zinc-800 rounded-2xl" />
-          <div className="space-y-3 pt-6">
-            <div className="h-4 w-full bg-stone-200 dark:bg-zinc-800 rounded" />
-            <div className="h-4 w-full bg-stone-200 dark:bg-zinc-800 rounded" />
-            <div className="h-4 w-3/4 bg-stone-200 dark:bg-zinc-800 rounded" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ArticleDetailSkeleton />;
   }
 
   // Friendly 404 Page (Master §17 Rule 7 Security Boundary)
