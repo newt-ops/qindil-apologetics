@@ -171,99 +171,114 @@ export function MiniDashboardPage() {
         </div>
 
         {/* Personal Metrics Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
-              <Icon name="Bookmark" size={12} className="text-gold" />
-              <span>Saved Articles</span>
-            </span>
-            <p className="text-lg sm:text-2xl font-black font-mono text-gold">
+        {/* Personal Metrics Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 flex flex-col items-center text-center justify-between shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gold/15 text-gold mb-2 border border-gold/30 shadow-apple-sm">
+              <Icon name="Bookmark" size={16} />
+            </div>
+            <p className="text-xl sm:text-2xl font-black font-mono text-gold leading-none">
               {bookmarks.length}
             </p>
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-textMuted mt-1.5">
+              Saved Articles
+            </span>
           </div>
 
-          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
-              <Icon name="Clock" size={12} className="text-gold" />
-              <span>Reading Time</span>
-            </span>
-            <p className="text-lg sm:text-2xl font-black font-mono text-text">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 flex flex-col items-center text-center justify-between shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gold/15 text-gold mb-2 border border-gold/30 shadow-apple-sm">
+              <Icon name="Clock" size={16} />
+            </div>
+            <p className="text-xl sm:text-2xl font-black font-mono text-text leading-none">
               {totalReadingMinutes} <span className="text-xs font-sans font-normal text-textMuted">min</span>
             </p>
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-textMuted mt-1.5">
+              Reading Time
+            </span>
           </div>
 
-          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
-              <Icon name="FileText" size={12} className="text-gold" />
-              <span>History</span>
-            </span>
-            <p className="text-lg sm:text-2xl font-black font-mono text-text">
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 flex flex-col items-center text-center justify-between shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gold/15 text-gold mb-2 border border-gold/30 shadow-apple-sm">
+              <Icon name="FileText" size={16} />
+            </div>
+            <p className="text-xl sm:text-2xl font-black font-mono text-text leading-none">
               {readingHistory.length}
             </p>
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-textMuted mt-1.5">
+              History
+            </span>
           </div>
 
-          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 text-center space-y-1 shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center justify-center gap-1">
-              <Icon name="Send" size={12} className="text-gold" />
-              <span>Telegram Sync</span>
-            </span>
-            <p className={`text-xs sm:text-sm font-black truncate pt-1 ${user?.telegramChatId ? 'text-emerald-500' : 'text-textMuted'}`}>
+          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 flex flex-col items-center text-center justify-between shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 transition-all">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gold/15 text-gold mb-2 border border-gold/30 shadow-apple-sm">
+              <Icon name="Send" size={16} />
+            </div>
+            <p className={`text-xs sm:text-sm font-black truncate leading-none ${user?.telegramChatId ? 'text-emerald-500' : 'text-textMuted'}`}>
               {user?.telegramChatId ? 'Connected' : 'Not Linked'}
             </p>
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-textMuted mt-1.5">
+              Telegram Sync
+            </span>
           </div>
         </div>
 
         {/* Interactive Tabs Container */}
         <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl shadow-apple-card overflow-hidden">
-          {/* Navigation Tab Bar */}
-          <div className="flex items-center border-b border-border/70 bg-bg/40 px-3 sm:px-6 pt-3 overflow-x-auto scrollbar-none gap-2 sm:gap-6">
-            <button
-              onClick={() => setActiveTab('bookmarks')}
-              className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                activeTab === 'bookmarks'
-                  ? 'border-gold text-gold'
-                  : 'border-transparent text-textMuted hover:text-text'
-              }`}
-            >
-              <Icon name="Bookmark" size={14} />
-              <span>Saved Articles ({bookmarks.length})</span>
-            </button>
+          {/* Navigation Tab Bar — Apple Segmented Control Style */}
+          <div className="p-2 sm:p-3 border-b border-border/70 bg-bg/40">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-surface/70 border border-border/70">
+              <button
+                type="button"
+                onClick={() => setActiveTab('bookmarks')}
+                className={`rounded-xl px-3.5 sm:px-5 py-2 text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+                  activeTab === 'bookmarks'
+                    ? 'bg-gold text-zinc-950 shadow-apple-sm font-extrabold'
+                    : 'text-textMuted hover:text-text hover:bg-surface/60'
+                }`}
+              >
+                <Icon name="Bookmark" size={14} />
+                <span>Saved Articles ({bookmarks.length})</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                activeTab === 'history'
-                  ? 'border-gold text-gold'
-                  : 'border-transparent text-textMuted hover:text-text'
-              }`}
-            >
-              <Icon name="Clock" size={14} />
-              <span>Reading History ({readingHistory.length})</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('history')}
+                className={`rounded-xl px-3.5 sm:px-5 py-2 text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+                  activeTab === 'history'
+                    ? 'bg-gold text-zinc-950 shadow-apple-sm font-extrabold'
+                    : 'text-textMuted hover:text-text hover:bg-surface/60'
+                }`}
+              >
+                <Icon name="Clock" size={14} />
+                <span>Reading History ({readingHistory.length})</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                activeTab === 'notifications'
-                  ? 'border-gold text-gold'
-                  : 'border-transparent text-textMuted hover:text-text'
-              }`}
-            >
-              <Icon name="Bell" size={14} />
-              <span>Notifications {unreadCount > 0 && `(${unreadCount})`}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('notifications')}
+                className={`rounded-xl px-3.5 sm:px-5 py-2 text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+                  activeTab === 'notifications'
+                    ? 'bg-gold text-zinc-950 shadow-apple-sm font-extrabold'
+                    : 'text-textMuted hover:text-text hover:bg-surface/60'
+                }`}
+              >
+                <Icon name="Bell" size={14} />
+                <span>Notifications {unreadCount > 0 && `(${unreadCount})`}</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                activeTab === 'profile'
-                  ? 'border-gold text-gold'
-                  : 'border-transparent text-textMuted hover:text-text'
-              }`}
-            >
-              <Icon name="User" size={14} />
-              <span>Profile &amp; Settings</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('profile')}
+                className={`rounded-xl px-3.5 sm:px-5 py-2 text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 ${
+                  activeTab === 'profile'
+                    ? 'bg-gold text-zinc-950 shadow-apple-sm font-extrabold'
+                    : 'text-textMuted hover:text-text hover:bg-surface/60'
+                }`}
+              >
+                <Icon name="User" size={14} />
+                <span>Profile &amp; Settings</span>
+              </button>
+            </div>
           </div>
 
           {/* Tab Content Panels */}
@@ -283,55 +298,87 @@ export function MiniDashboardPage() {
                     />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
                     {bookmarks.map((b) => (
                       <div
                         key={b.slug}
-                        className="group flex flex-col justify-between rounded-2xl border border-border/80 bg-surface/90 p-4 shadow-apple-sm hover:shadow-apple-md hover:border-gold/50 transition-all space-y-3"
+                        className="group rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl shadow-apple-card hover:shadow-apple-elevated hover:border-gold/50 transition-all duration-300 overflow-hidden flex flex-col justify-between"
                       >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            {b.topic && (
-                              <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold truncate max-w-[130px]">
-                                {b.topic.name}
-                              </span>
-                            )}
-                            <button
-                              onClick={() => removeBookmark(b.slug)}
-                              className="text-textMuted hover:text-danger text-xs transition p-1"
-                              title="Remove bookmark"
+                        <div className="p-3.5 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+                          <div className="flex flex-row gap-3.5 items-start">
+                            {/* Cover Image Thumbnail (or topic icon placeholder) */}
+                            <Link
+                              to={`/articles/${b.slug}`}
+                              className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl overflow-hidden bg-bg/80 border border-border/70 shrink-0 shadow-apple-sm group-hover:border-gold/40 transition-colors"
                             >
-                              <Icon name="Trash2" size={13} />
-                            </button>
+                              {b.coverImageUrl ? (
+                                <img
+                                  src={b.coverImageUrl}
+                                  alt={b.title}
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gold/10 text-gold">
+                                  <Icon name="BookOpen" size={22} />
+                                </div>
+                              )}
+                            </Link>
+
+                            {/* Text & Meta Details */}
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center justify-between gap-1">
+                                {b.topic ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 text-[10px] font-semibold text-gold truncate max-w-[120px]">
+                                    <Icon name="Tag" size={9} className="text-gold/80 shrink-0" />
+                                    <span className="truncate">{b.topic.name}</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border border-border/80 bg-bg/60 px-2 py-0.5 text-[10px] font-medium text-textMuted">
+                                    Article
+                                  </span>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeBookmark(b.slug)}
+                                  className="rounded-full p-1.5 text-textMuted hover:text-danger hover:bg-danger/10 active:scale-90 transition-all shrink-0"
+                                  title="Remove from saved articles"
+                                  aria-label="Remove bookmark"
+                                >
+                                  <Icon name="Trash2" size={14} />
+                                </button>
+                              </div>
+
+                              <Link
+                                to={`/articles/${b.slug}`}
+                                className="block text-xs sm:text-sm font-bold text-text group-hover:text-gold transition-colors leading-snug line-clamp-2"
+                              >
+                                {b.title}
+                              </Link>
+
+                              {b.excerpt && (
+                                <p className="hidden sm:block text-[11px] text-textMuted line-clamp-2 leading-relaxed">
+                                  {b.excerpt}
+                                </p>
+                              )}
+                            </div>
                           </div>
 
-                          <Link
-                            to={`/articles/${b.slug}`}
-                            className="block text-xs sm:text-sm font-bold text-text group-hover:text-gold transition-colors line-clamp-2"
-                          >
-                            {b.title}
-                          </Link>
+                          {/* Card Footer Bar: Read Duration + Action CTA */}
+                          <div className="pt-2.5 border-t border-border/60 flex items-center justify-between text-xs">
+                            <div className="flex items-center space-x-1.5 text-[11px] text-textMuted">
+                              <Icon name="Clock" size={12} className="text-gold" />
+                              <span>{b.estimatedReadTime || 3} min read</span>
+                            </div>
 
-                          {b.excerpt && (
-                            <p className="text-[11px] text-textMuted line-clamp-2 leading-relaxed">
-                              {b.excerpt}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[10px] text-textMuted">
-                          <div className="flex items-center space-x-1">
-                            <Icon name="Clock" size={11} className="text-gold" />
-                            <span>{b.estimatedReadTime || 3} min read</span>
+                            <Link
+                              to={`/articles/${b.slug}`}
+                              className="inline-flex items-center space-x-1.5 rounded-full bg-gold/15 hover:bg-gold hover:text-zinc-950 text-gold px-3.5 py-1 text-xs font-bold active:scale-95 transition-all shadow-apple-sm"
+                            >
+                              <span>Read</span>
+                              <Icon name="ChevronRight" size={12} />
+                            </Link>
                           </div>
-
-                          <Link
-                            to={`/articles/${b.slug}`}
-                            className="inline-flex items-center space-x-1 font-semibold text-gold hover:underline"
-                          >
-                            <span>Read</span>
-                            <Icon name="ChevronRight" size={11} />
-                          </Link>
                         </div>
                       </div>
                     ))}
@@ -349,8 +396,9 @@ export function MiniDashboardPage() {
                   </p>
                   {readingHistory.length > 0 && (
                     <button
+                      type="button"
                       onClick={clearHistory}
-                      className="text-[11px] font-semibold text-danger hover:underline inline-flex items-center gap-1"
+                      className="text-[11px] font-semibold text-danger hover:underline inline-flex items-center gap-1 p-1 rounded active:scale-95"
                     >
                       <Icon name="Trash2" size={12} />
                       <span>Clear History</span>
@@ -370,41 +418,77 @@ export function MiniDashboardPage() {
                     />
                   </div>
                 ) : (
-                  <div className="divide-y divide-border/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                     {readingHistory.map((item) => (
                       <div
                         key={`${item.slug}-${item.readAt}`}
-                        className="py-3 flex items-center justify-between gap-4 group"
+                        className="group rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-3.5 sm:p-4 shadow-apple-card hover:shadow-apple-elevated hover:border-gold/50 transition-all duration-300 flex flex-col justify-between space-y-3"
                       >
-                        <div className="space-y-1 min-w-0">
+                        <div className="flex flex-row gap-3.5 items-start">
+                          {/* Thumbnail */}
                           <Link
                             to={`/articles/${item.slug}`}
-                            className="text-xs sm:text-sm font-bold text-text group-hover:text-gold transition-colors truncate block"
+                            className="relative h-18 w-18 sm:h-20 sm:w-20 rounded-2xl overflow-hidden bg-bg/80 border border-border/70 shrink-0 shadow-apple-sm group-hover:border-gold/40 transition-colors"
                           >
-                            {item.title}
-                          </Link>
-                          <div className="flex items-center space-x-2 text-[10px] text-textMuted">
-                            {item.topicName && (
-                              <span className="text-gold font-medium">{item.topicName}</span>
+                            {item.coverImageUrl ? (
+                              <img
+                                src={item.coverImageUrl}
+                                alt={item.title}
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-gold/10 text-gold">
+                                <Icon name="FileText" size={20} />
+                              </div>
                             )}
-                            <span>•</span>
-                            <span>
-                              {new Date(item.readAt).toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
+                          </Link>
+
+                          {/* History Details */}
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center justify-between gap-1.5 text-[10px] text-textMuted">
+                              {item.topicName ? (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 font-semibold text-gold truncate max-w-[120px]">
+                                  <Icon name="Tag" size={9} className="text-gold/80 shrink-0" />
+                                  <span className="truncate">{item.topicName}</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full border border-border/80 bg-bg/60 px-2 py-0.5 font-medium text-textMuted">
+                                  Article
+                                </span>
+                              )}
+
+                              <span className="shrink-0 text-[10px] text-textMuted">
+                                {new Date(item.readAt).toLocaleDateString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+
+                            <Link
+                              to={`/articles/${item.slug}`}
+                              className="block text-xs sm:text-sm font-bold text-text group-hover:text-gold transition-colors leading-snug line-clamp-2"
+                            >
+                              {item.title}
+                            </Link>
                           </div>
                         </div>
 
-                        <Link
-                          to={`/articles/${item.slug}`}
-                          className="rounded-full border border-border/80 bg-surface/80 px-3 py-1 text-[11px] font-semibold text-gold hover:bg-gold hover:text-bg transition shadow-sm shrink-0"
-                        >
-                          Revisit
-                        </Link>
+                        {/* Footer Bar: Read Duration + Revisit Button */}
+                        <div className="pt-2.5 border-t border-border/60 flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-1.5 text-[11px] text-textMuted">
+                            <Icon name="Clock" size={12} className="text-gold" />
+                            <span>{item.estimatedReadTime || 3} min read</span>
+                          </div>
+
+                          <Link
+                            to={`/articles/${item.slug}`}
+                            className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 hover:border-gold hover:text-gold px-3.5 py-1 text-xs font-semibold text-text active:scale-95 transition-all shadow-apple-sm"
+                          >
+                            <span>Revisit</span>
+                            <Icon name="ArrowRight" size={12} className="text-gold" />
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>

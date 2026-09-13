@@ -31,7 +31,7 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
     >
       <Link to={`/articles/${article.slug}`} className="flex flex-col flex-1">
         {/* Visual Cover Banner — Prompt 42 mobile density scaling */}
-        <div className="relative h-28 sm:h-44 md:h-48 w-full overflow-hidden bg-stone-100 dark:bg-zinc-950 border-b border-border/60 shrink-0">
+        <div className="relative h-32 sm:h-44 md:h-48 w-full overflow-hidden bg-stone-100 dark:bg-zinc-950 border-b border-border/60 shrink-0">
           {article.coverImageUrl ? (
             <img
               src={article.coverImageUrl}
@@ -70,8 +70,8 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
           </div>
         </div>
 
-        {/* Card Body — Scaled for mobile 2-col density */}
-        <div className="flex flex-col flex-1 justify-between p-2.5 sm:p-4 md:p-5">
+        {/* Card Body — Roomy and uncompressed on mobile */}
+        <div className="flex flex-col flex-1 justify-between p-3 sm:p-4 md:p-5">
           <div className="space-y-1 sm:space-y-2">
             <h3 className="text-xs sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-gold transition-colors line-clamp-2">
               {article.title}
@@ -98,7 +98,7 @@ export function ArticleCard({ article, index = 0 }: ArticleCardProps) {
                   {article.author?.name ? article.author.name.charAt(0).toUpperCase() : 'Q'}
                 </div>
               )}
-              <span className="font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[65px] sm:max-w-none">
+              <span className="font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[85px] sm:max-w-none">
                 {article.author?.name ? article.author.name.split(' ')[0] : 'Qindil'}
               </span>
             </div>
