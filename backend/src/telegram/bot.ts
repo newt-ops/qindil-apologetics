@@ -32,12 +32,30 @@ export const registerBotCommands = (botInstance: Telegraf): void => {
   botInstance.command('contact', handleContactCommand);
 };
 
+let cachedBotUsername = env.TELEGRAM_BOT_USERNAME || '';
+
+export const getBotUsername = async (): Promise<string> => {
+  if (cachedBotUsername) return cachedBotUsername;
+  if (bot) {
+    try {
+      const me = await bot.telegram.getMe();
+      if (me?.username) {
+        cachedBotUsername = me.username;
+        return cachedBotUsername;
+      }
+    } catch {
+      // fallback to env or default
+    }
+  }
+  return env.TELEGRAM_BOT_USERNAME || 'QindilBot';
+};
+
 /**
  * Initialize and launch the Telegram Bot
  */
 export const initTelegramBot = async (): Promise<void> => {
   if (!bot) {
-    console.log('ℹ️ Telegram bot token not configured. Skipping bot startup.');
+    console.log('Telegram bot token not configured. Skipping bot startup.');
     return;
   }
 
@@ -48,14 +66,18 @@ export const initTelegramBot = async (): Promise<void> => {
   registerBotActions(bot);
 
   bot.catch((err, ctx) => {
-    console.error(`❌ Telegraf error for ${ctx.updateType}:`, err);
+    console.error(`Telegraf error for ${ctx.updateType}:`, err);
   });
 
   try {
+    const me = await bot.telegram.getMe();
+    if (me?.username) {
+      cachedBotUsername = me.username;
+    }
     await bot.launch();
-    console.log('🤖 Telegram Bot launched successfully');
+    console.log(`Telegram Bot launched successfully (@${cachedBotUsername || 'unknown'})`);
   } catch (err) {
-    console.error('❌ Failed to launch Telegram Bot:', err);
+    console.error('Failed to launch Telegram Bot:', err);
   }
 };
 

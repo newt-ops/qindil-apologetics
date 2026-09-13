@@ -6,7 +6,7 @@ import { useMyTasks } from '../../../hooks/useTasks';
 import { TaskItem, TaskType } from '../../../api/task';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Spinner } from '../../../components/ui/Spinner';
+import { TaskCardSkeleton } from '../../../components/ui/Skeleton';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
 import { useAuthStore } from '../../../stores/authStore';
 
@@ -400,8 +400,10 @@ export const WorkspacePage: React.FC = () => {
 
       {/* Task Cards Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center p-16 text-gold">
-          <Spinner size="lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TaskCardSkeleton key={i} />
+          ))}
         </div>
       ) : displayedTasks.length === 0 ? (
         <EmptyState

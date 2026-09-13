@@ -7,7 +7,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
-import { Spinner } from '../../../components/ui/Spinner';
+import { CalendarGridSkeleton } from '../../../components/ui/Skeleton';
 
 export const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -255,9 +255,7 @@ export const CalendarPage: React.FC = () => {
 
           {/* Calendar Cells Grid (Prompt 42 compliant responsive cell heights) */}
           {isLoading ? (
-            <div className="h-80 flex items-center justify-center text-gold">
-              <Spinner size="lg" />
-            </div>
+            <CalendarGridSkeleton />
           ) : (
             <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-border/60 bg-bg/10">
               {gridDays.map((day, idx) => (

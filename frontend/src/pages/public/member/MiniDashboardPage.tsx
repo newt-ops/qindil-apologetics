@@ -11,11 +11,13 @@ import { uploadToCloudinary } from '../../../lib/cloudinary';
 import Seo from '../../../components/shared/Seo';
 import EmptyState from '../../../components/ui/EmptyState';
 import { NotificationSkeleton } from '../../../components/ui/Skeleton';
+import { useConfirm } from '../../../hooks/useConfirm';
 
 export function MiniDashboardPage() {
   const { user } = useAuthStore();
   const isSuperAdmin = useHasRole('superAdmin');
   const isAdmin = useHasRole('admin');
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   // Personal Reader Store State
   const bookmarks = useReaderStore((state) => state.bookmarks);
@@ -23,6 +25,32 @@ export function MiniDashboardPage() {
   const readingHistory = useReaderStore((state) => state.readingHistory);
   const totalReadingMinutes = useReaderStore((state) => state.totalReadingMinutes);
   const clearHistory = useReaderStore((state) => state.clearHistory);
+
+  const handleRemoveBookmark = async (slug: string, title?: string) => {
+    const ok = await confirm({
+      title: 'Remove Saved Article?',
+      description: title
+        ? `Are you sure you want to remove "${title}" from your saved articles library?`
+        : 'Are you sure you want to remove this article from your saved articles library?',
+      confirmText: 'Remove',
+      cancelText: 'Keep',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    removeBookmark(slug);
+  };
+
+  const handleClearHistory = async () => {
+    const ok = await confirm({
+      title: 'Clear Reading History?',
+      description: 'Are you sure you want to clear your entire reading history? This will remove all cataloged reading timestamps and progress from your profile.',
+      confirmText: 'Clear All History',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    clearHistory();
+  };
 
   // Profile Form State
   const [name, setName] = useState(user?.name || '');
@@ -88,6 +116,7 @@ export function MiniDashboardPage() {
 
   return (
     <div className="relative min-h-[85vh] bg-bg text-text font-sans py-6 sm:py-12 selection:bg-gold/20 selection:text-gold transition-colors duration-200">
+      {ConfirmModalElement}
       <Seo
         title="My Profile & Saved Library"
         description="Manage your personal Qindil profile, bookmarked articles, reading history, and synchronized Telegram alerts."
@@ -340,7 +369,7 @@ export function MiniDashboardPage() {
 
                                 <button
                                   type="button"
-                                  onClick={() => removeBookmark(b.slug)}
+                                  onClick={() => handleRemoveBookmark(b.slug, b.title)}
                                   className="rounded-full p-1.5 text-textMuted hover:text-danger hover:bg-danger/10 active:scale-90 transition-all shrink-0"
                                   title="Remove from saved articles"
                                   aria-label="Remove bookmark"
@@ -397,7 +426,7 @@ export function MiniDashboardPage() {
                   {readingHistory.length > 0 && (
                     <button
                       type="button"
-                      onClick={clearHistory}
+                      onClick={handleClearHistory}
                       className="text-[11px] font-semibold text-danger hover:underline inline-flex items-center gap-1 p-1 rounded active:scale-95"
                     >
                       <Icon name="Trash2" size={12} />

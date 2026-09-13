@@ -328,4 +328,101 @@ export function NotificationSkeleton({ className = '' }: { className?: string })
   );
 }
 
+/**
+ * Composite Task Card Skeleton
+ * Accurately mirrors TaskCard in WorkspacePage.tsx
+ */
+export function TaskCardSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading task"
+      className={`rounded-xl border border-border bg-surface p-4 shadow-sm space-y-3 ${className}`}
+    >
+      {/* Header: Type and Status */}
+      <div className="flex items-center justify-between">
+        <div className="h-3.5 w-16 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+        <div className="h-5 w-20 rounded-full skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+      </div>
+
+      {/* Task Title */}
+      <div className="space-y-1.5 pt-1">
+        <div className="h-4 w-4/5 rounded skeleton-shimmer bg-stone-200/85 dark:bg-zinc-800/85" />
+        <div className="h-3.5 w-1/2 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-1 pt-1">
+        <div className="h-2.5 w-full rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        <div className="h-2.5 w-3/4 rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+      </div>
+
+      {/* Footer: Due date badge & action */}
+      <div className="pt-3 border-t border-border/60 flex items-center justify-between">
+        <div className="h-4 w-24 rounded-full skeleton-shimmer bg-gold/15" />
+        <div className="h-3.5 w-12 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Composite Calendar Grid Skeleton
+ * Matches CalendarPage.tsx month calendar layout
+ */
+export function CalendarGridSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading operations calendar"
+      className={`rounded-2xl border border-border bg-surface overflow-hidden shadow-apple-sm ${className}`}
+    >
+      {/* Day of week column headers */}
+      <div className="grid grid-cols-7 border-b border-border bg-stone-50/50 dark:bg-zinc-900/50 py-3 text-center">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+          <div key={d} className="flex justify-center">
+            <div className="h-3 w-8 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+          </div>
+        ))}
+      </div>
+
+      {/* 35 Calendar Cells (5 weeks x 7 days) */}
+      <div className="grid grid-cols-7 divide-x divide-y divide-border/60">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <div key={i} className="min-h-[90px] sm:min-h-[110px] p-2 space-y-1.5 flex flex-col justify-between">
+            <div className="h-4 w-4 rounded-full skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+            {i % 3 === 0 && (
+              <div className="h-4 w-full rounded-md skeleton-shimmer bg-gold/15" />
+            )}
+            {i % 5 === 0 && (
+              <div className="h-4 w-4/5 rounded-md skeleton-shimmer bg-blue-500/15" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Composite Stats Grid Skeleton
+ * Matches 4-KPI metrics strip across Workspace and Admin consoles
+ */
+export function StatsGridSkeleton({ count = 4, className = '' }: { count?: number; className?: string }) {
+  return (
+    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 ${className}`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="h-3 w-20 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+            <div className="h-7 w-7 rounded-lg skeleton-shimmer bg-gold/15" />
+          </div>
+          <div className="h-7 w-16 rounded skeleton-shimmer bg-stone-200/90 dark:bg-zinc-800/90" />
+          <div className="h-2.5 w-24 rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default Skeleton;

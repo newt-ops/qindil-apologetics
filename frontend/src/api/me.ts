@@ -33,6 +33,7 @@ export interface TelegramCodeResponse {
   linkCode: string;
   expiresAt: string;
   botUsername: string;
+  deepLink?: string;
 }
 
 export const getMyNotificationsApi = async (params?: { page?: number; limit?: number }) => {

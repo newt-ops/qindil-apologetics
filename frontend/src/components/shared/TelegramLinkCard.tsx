@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useGenerateTelegramCode, useUnlinkTelegram } from '../../hooks/useMeData';
 import { toast } from '../../hooks/useToast';
+import { useConfirm } from '../../hooks/useConfirm';
 import Icon from '../icons/Icon';
 
 export const TelegramLinkCard: React.FC = () => {
   const user = useAuthStore((state) => state.user);
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   const generateCodeMutation = useGenerateTelegramCode();
   const unlinkMutation = useUnlinkTelegram();
@@ -14,6 +16,7 @@ export const TelegramLinkCard: React.FC = () => {
     linkCode: string;
     expiresAt: string;
     botUsername: string;
+    deepLink?: string;
   } | null>(null);
 
   const [copied, setCopied] = useState(false);
@@ -25,7 +28,7 @@ export const TelegramLinkCard: React.FC = () => {
       const res = await generateCodeMutation.mutateAsync();
       if (res?.data) {
         setLinkData(res.data);
-        toast.info('Link Code Generated: Send this code to the Telegram bot.');
+        toast.info('Link Code Generated: Connect directly or send code to the Telegram bot.');
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.error?.message || 'Could not generate link code.');
@@ -33,10 +36,20 @@ export const TelegramLinkCard: React.FC = () => {
   };
 
   const handleUnlink = async () => {
+    const ok = await confirm({
+      title: 'Disconnect Telegram Account',
+      description: 'Are you sure you want to disconnect your Telegram account from Qindil? You will no longer receive instant task assignments, publication alerts, or deadline warnings.',
+      confirmText: 'Disconnect Account',
+      cancelText: 'Keep Connected',
+      variant: 'danger',
+    });
+
+    if (!ok) return;
+
     try {
       await unlinkMutation.mutateAsync();
       setLinkData(null);
-      toast.success('Telegram Notifications Disabled');
+      toast.success('Telegram notifications disabled.');
     } catch (err: any) {
       toast.error(err?.response?.data?.error?.message || 'Failed to unlink Telegram account.');
     }
@@ -50,8 +63,14 @@ export const TelegramLinkCard: React.FC = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const deepLinkUrl =
+    linkData?.deepLink ||
+    (linkData ? `https://t.me/${linkData.botUsername}?start=${linkData.linkCode}` : '#');
+
   return (
     <div className="bg-surface border border-border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden transition-colors duration-200">
+      {ConfirmModalElement}
+
       {/* Accent Top Border */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold/20 via-gold to-gold/20" />
 
@@ -97,7 +116,7 @@ export const TelegramLinkCard: React.FC = () => {
           <button
             onClick={handleUnlink}
             disabled={unlinkMutation.isPending}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/25 rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/25 rounded-lg transition-colors disabled:opacity-50 active:scale-95"
           >
             <Icon name="Unlink" size={13} />
             <span>{unlinkMutation.isPending ? 'Disconnecting...' : 'Unlink Telegram'}</span>
@@ -109,52 +128,51 @@ export const TelegramLinkCard: React.FC = () => {
             <button
               onClick={handleGenerateCode}
               disabled={generateCodeMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold bg-gold text-bg hover:bg-goldHover transition shadow-md disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold bg-gold text-bg hover:bg-goldHover transition shadow-md disabled:opacity-50 active:scale-95"
             >
               <Icon name="Send" size={14} />
               <span>{generateCodeMutation.isPending ? 'Generating Code...' : 'Connect Telegram Account'}</span>
             </button>
           ) : (
-            <div className="p-3.5 sm:p-4 rounded-xl bg-bg border border-border space-y-3">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-surface rounded-lg border border-gold/30">
-                <div className="text-center sm:text-left">
-                  <p className="text-[11px] text-textMuted">Your Temporary Link Code:</p>
-                  <p className="text-xl sm:text-2xl font-mono tracking-widest font-black text-gold">
-                    {linkData.linkCode}
-                  </p>
-                </div>
-                <button
-                  onClick={handleCopyCode}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text bg-bg hover:bg-surface border border-border rounded-lg transition shadow-sm"
+            <div className="p-3.5 sm:p-4 rounded-xl bg-bg border border-border space-y-3.5">
+              {/* Primary Instant Connect CTA Button */}
+              <div className="space-y-2">
+                <a
+                  href={deepLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-gold text-bg hover:bg-goldHover active:scale-[0.99] transition shadow-md group"
                 >
-                  <Icon name={copied ? 'Check' : 'Copy'} size={13} className={copied ? 'text-emerald-500' : ''} />
-                  <span>{copied ? 'Copied' : 'Copy Code'}</span>
-                </button>
+                  <Icon name="Send" size={16} />
+                  <span>Connect to Telegram (Instant Link)</span>
+                  <Icon name="ExternalLink" size={13} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+                <p className="text-[11px] text-center text-textMuted">
+                  Tapping above opens Telegram and automatically links your account with one click.
+                </p>
               </div>
 
-              <div className="space-y-1.5 text-xs text-textMuted">
-                <p className="font-semibold text-text text-[11px]">How to complete linking:</p>
-                <ol className="list-decimal list-inside space-y-1 text-[11px] text-textMuted pl-1">
-                  <li>
-                    Open Telegram &amp; search for{' '}
-                    <a
-                      href={`https://t.me/${linkData.botUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gold hover:underline font-mono inline-flex items-center gap-1"
-                    >
-                      @{linkData.botUsername}
-                      <Icon name="ExternalLink" size={11} />
-                    </a>
-                  </li>
-                  <li>
-                    Send this command message: <code className="bg-surface text-gold px-1.5 py-0.5 rounded font-mono border border-border text-[11px]">/link {linkData.linkCode}</code>
-                  </li>
-                  <li>You will receive immediate confirmation once verified!</li>
-                </ol>
-                <p className="text-[10px] text-amber-500 pt-1 flex items-center gap-1.5">
+              {/* Fallback Manual Code Section */}
+              <div className="border-t border-border/60 pt-3">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-surface rounded-lg border border-border">
+                  <div className="text-center sm:text-left">
+                    <p className="text-[10px] text-textMuted uppercase tracking-wider font-semibold">Or Enter Code Manually:</p>
+                    <p className="text-xl sm:text-2xl font-mono tracking-widest font-black text-gold">
+                      {linkData.linkCode}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCopyCode}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text bg-bg hover:bg-surface border border-border rounded-lg transition shadow-sm active:scale-95"
+                  >
+                    <Icon name={copied ? 'Check' : 'Copy'} size={13} className={copied ? 'text-emerald-500' : ''} />
+                    <span>{copied ? 'Copied' : 'Copy Code'}</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-amber-500 pt-2 flex items-center gap-1.5">
                   <Icon name="Clock" size={12} className="shrink-0 text-amber-500" />
-                  <span>This code expires in 10 minutes.</span>
+                  <span>Code expires in 10 minutes. Only one Telegram account can be linked at a time.</span>
                 </p>
               </div>
             </div>

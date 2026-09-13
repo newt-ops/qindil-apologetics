@@ -125,12 +125,23 @@ export const generateTelegramLinkCode = asyncHandler(
       metadata: { codeExpiresAt: expiresAt },
     });
 
-    const botUsername = env.TELEGRAM_BOT_USERNAME || 'QindilBot';
+    let botUsername = env.TELEGRAM_BOT_USERNAME || '';
+    if (!botUsername) {
+      try {
+        const { getBotUsername } = await import('../telegram/bot.js');
+        botUsername = await getBotUsername();
+      } catch {
+        botUsername = 'QindilBot';
+      }
+    }
+
+    const deepLink = `https://t.me/${botUsername}?start=${code}`;
 
     sendSuccess(res, {
       linkCode: code,
       expiresAt,
       botUsername,
+      deepLink,
     });
   }
 );

@@ -11,6 +11,7 @@ import {
   getUnlinkConfirmKeyboard,
   getUnlinkedKeyboard,
 } from './keyboards.js';
+import { renderDashboardByRole } from './templates/index.js';
 
 export interface TelegramViewResult {
   text: string;
@@ -19,120 +20,20 @@ export interface TelegramViewResult {
 
 /**
  * 1. Start / Main Menu View
+ * Dispatches to modular role template (superadmin, admin, user, or guest).
  */
 export const renderStartView = async (chatIdStr: string): Promise<TelegramViewResult> => {
   const user = await UserModel.findOne({ telegramChatId: chatIdStr }).populate('roles');
-
-  if (!user) {
-    const text =
-      `👋 *Welcome to Qindil Platform Bot!*\n\n` +
-      `Qindil Bot is your personal companion to the *Qindil Apologetics Platform*.\n\n` +
-      `⚠️ *Account Not Connected*\n` +
-      `To receive instant publication alerts, reading updates, and platform notifications, please link your website account.\n\n` +
-      `Click *How to Connect* below for quick step-by-step instructions!`;
-
-    return {
-      text,
-      keyboard: getMainMenuKeyboard(false),
-    };
-  }
-
-  const roleNames = Array.isArray(user.roles)
-    ? (user.roles as any[]).map((r: any) => (typeof r === 'string' ? r : r.name || ''))
-    : [];
-  const isAdmin = roleNames.includes('admin') || roleNames.includes('superAdmin');
-
-  const firstName = user.name ? user.name.split(' ')[0] : 'Member';
-  const text = isAdmin
-    ? `👋 *Welcome back, ${firstName}!*\n\n` +
-      `Your Telegram is linked to staff account: *${user.name}* (\`${user.email}\`).\n\n` +
-      `Use the interactive menu below to check assignments, view deadlines, or open the Qindil workspace:`
-    : `👋 *Welcome back, ${firstName}!*\n\n` +
-      `Your Telegram is linked to reader account: *${user.name}* (\`${user.email}\`).\n\n` +
-      `Use the menu below to view your reader profile, browse new research articles, or access your saved library:`;
-
-  return {
-    text,
-    keyboard: getMainMenuKeyboard(true, isAdmin),
-  };
+  return renderDashboardByRole(user);
 };
 
 /**
  * 2. Status & Overview View
+ * Dispatches to modular role template with refreshed status.
  */
 export const renderStatusView = async (chatIdStr: string): Promise<TelegramViewResult> => {
   const user = await UserModel.findOne({ telegramChatId: chatIdStr }).populate('roles');
-
-  if (!user) {
-    const text =
-      `⚠️ *Account Not Connected*\n\n` +
-      `Your Telegram chat is not connected to a Qindil account.\n` +
-      `Click *How to Connect* to link your account in 30 seconds.`;
-
-    return {
-      text,
-      keyboard: getHowToLinkKeyboard(),
-    };
-  }
-
-  const roleNames = Array.isArray(user.roles)
-    ? (user.roles as any[]).map((r: any) => (typeof r === 'string' ? r : r.name || ''))
-    : [];
-  const isAdmin = roleNames.includes('admin') || roleNames.includes('superAdmin');
-
-  // If regular user/reader, return clean reader profile (zero task jargon)
-  if (!isAdmin) {
-    const text =
-      `📊 *Qindil Reader Profile*\n\n` +
-      `👤 *Reader:* ${user.name}\n` +
-      `📧 *Email:* \`${user.email}\`\n` +
-      `🛡️ *Membership:* \`Verified Reader\`\n` +
-      `🔔 *Telegram Notifications:* *Active*\n` +
-      `📚 *Research Access:* *Full Access to Library & Symposia*\n\n` +
-      `🌐 Personal Library: [qindilapologetics.com/dashboard](https://qindilapologetics.com/dashboard)`;
-
-    return {
-      text,
-      keyboard: getReaderStatusKeyboard(),
-    };
-  }
-
-  // Admin / SuperAdmin Status View
-  const openTasks = await TaskModel.find({
-    assignedTo: user._id,
-    status: { $in: ['pending', 'inProgress', 'inReview'] },
-  }).sort({ dueDate: 1 });
-
-  const openCount = openTasks.length;
-  let nextDueStr = 'No pending deadlines';
-
-  if (openCount > 0 && openTasks[0].dueDate) {
-    nextDueStr = new Date(openTasks[0].dueDate).toLocaleDateString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-
-  const topTaskTitle = openCount > 0 ? openTasks[0].title : null;
-  const isSuperAdmin = roleNames.includes('superAdmin');
-  const roleFormatted = isSuperAdmin ? 'SUPER ADMINISTRATOR' : 'EDITORIAL ADMIN';
-
-  const text =
-    `📊 *Qindil Operations Status*\n\n` +
-    `👤 *Staff:* ${user.name}\n` +
-    `📧 *Email:* \`${user.email}\`\n` +
-    `🛡️ *Role:* \`${roleFormatted}\`\n` +
-    `📋 *Open Tasks:* *${openCount}*\n` +
-    `⏰ *Nearest Due Date:* ${nextDueStr}\n` +
-    `${topTaskTitle ? `\n📌 *Top Priority:* _${topTaskTitle}_\n` : '\n🎉 *All caught up!* No pending tasks.\n'}\n` +
-    `🌐 Direct workspace: [qindilapologetics.com/admin](https://qindilapologetics.com/admin)`;
-
-  return {
-    text,
-    keyboard: getStatusKeyboard(),
-  };
+  return renderDashboardByRole(user);
 };
 
 /**
