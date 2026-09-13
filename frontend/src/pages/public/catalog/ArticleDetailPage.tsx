@@ -57,6 +57,41 @@ export function ArticleDetailPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Calculate estimated reading time
+  const wordCount = article?.content
+    ? article.content.replace(/<[^>]*>?/gm, '').split(/\s+/).filter(Boolean).length
+    : 0;
+  const readingTimeMinutes = Math.max(2, Math.ceil(wordCount > 0 ? wordCount / 200 : 4));
+
+  // Reader Store Integration: Bookmarks & History (must be called unconditionally at top level)
+  const toggleBookmark = useReaderStore((state) => state.toggleBookmark);
+  const isBookmarked = useReaderStore((state) => (slug ? state.isBookmarked(slug) : false));
+  const recordRead = useReaderStore((state) => state.recordRead);
+
+  useEffect(() => {
+    if (article) {
+      recordRead({
+        slug: article.slug,
+        title: article.title,
+        topicName: article.topic?.name,
+        coverImageUrl: article.coverImageUrl,
+        estimatedReadTime: readingTimeMinutes,
+      });
+    }
+  }, [article, recordRead, readingTimeMinutes]);
+
+  const handleToggleBookmark = () => {
+    if (!article) return;
+    toggleBookmark({
+      slug: article.slug,
+      title: article.title,
+      topic: article.topic ? { name: article.topic.name, slug: article.topic.slug } : undefined,
+      excerpt: article.excerpt,
+      coverImageUrl: article.coverImageUrl,
+      estimatedReadTime: readingTimeMinutes,
+    });
+  };
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -102,39 +137,6 @@ export function ArticleDetailPage() {
         year: 'numeric',
       })
     : '';
-
-  // Calculate estimated reading time
-  const wordCount = article.content ? article.content.replace(/<[^>]*>?/gm, '').split(/\s+/).filter(Boolean).length : 0;
-  const readingTimeMinutes = Math.max(2, Math.ceil(wordCount > 0 ? wordCount / 200 : 4));
-
-  // Reader Store Integration: Bookmarks & History
-  const toggleBookmark = useReaderStore((state) => state.toggleBookmark);
-  const isBookmarked = useReaderStore((state) => (slug ? state.isBookmarked(slug) : false));
-  const recordRead = useReaderStore((state) => state.recordRead);
-
-  useEffect(() => {
-    if (article) {
-      recordRead({
-        slug: article.slug,
-        title: article.title,
-        topicName: article.topic?.name,
-        coverImageUrl: article.coverImageUrl,
-        estimatedReadTime: readingTimeMinutes,
-      });
-    }
-  }, [article, recordRead, readingTimeMinutes]);
-
-  const handleToggleBookmark = () => {
-    if (!article) return;
-    toggleBookmark({
-      slug: article.slug,
-      title: article.title,
-      topic: article.topic ? { name: article.topic.name, slug: article.topic.slug } : undefined,
-      excerpt: article.excerpt,
-      coverImageUrl: article.coverImageUrl,
-      estimatedReadTime: readingTimeMinutes,
-    });
-  };
 
   // Construct Article Schema JSON-LD for Search Engine Indexing
   const articleJsonLd = {
