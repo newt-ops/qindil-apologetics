@@ -204,27 +204,35 @@ export function ArticleDetailPage() {
         </nav>
 
         {/* Article Header & Editorial Details */}
-        <header className="space-y-3 sm:space-y-6">
-          <div className="flex flex-wrap items-center gap-2">
+        <header className="space-y-4 sm:space-y-6">
+          {/* Uncrowded Topic & Meta Line */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             {article.topic && (
               <Link
                 to={`/topics/${article.topic.slug}`}
-                className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-semibold text-gold transition hover:bg-gold/20"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold transition hover:bg-gold/20 shadow-apple-sm"
               >
-                <Icon name="Tag" size={11} className="sm:w-3 sm:h-3" />
+                <Icon name="Tag" size={11} />
                 <span>{article.topic.name}</span>
               </Link>
             )}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              <Icon name="Clock" size={11} className="text-gold sm:w-3 sm:h-3" />
-              <span>{readingTimeMinutes} min read</span>
-            </span>
-            {article.viewCount !== undefined && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                <Icon name="Eye" size={11} className="text-gold sm:w-3 sm:h-3" />
-                <span>{article.viewCount} views</span>
+
+            <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-medium text-xs">
+              <span className="inline-flex items-center gap-1">
+                <Icon name="Clock" size={12} className="text-gold" />
+                <span>{readingTimeMinutes} min read</span>
               </span>
-            )}
+
+              {article.viewCount !== undefined && article.viewCount > 0 && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name="Eye" size={12} className="text-gold" />
+                    <span>{article.viewCount.toLocaleString()} views</span>
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-[1.18]">
@@ -232,48 +240,49 @@ export function ArticleDetailPage() {
           </h1>
 
           {article.excerpt && (
-            <div className="border-l-2 border-gold pl-3 sm:pl-6 py-0.5 sm:py-1">
-              <p className="text-xs sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif italic">
+            <div className="border-l-2 border-gold pl-3.5 sm:pl-6 py-0.5">
+              <p className="text-sm sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif italic">
                 "{article.excerpt}"
               </p>
             </div>
           )}
 
-          {/* Author & Byline Meta Card */}
-          {/* Author & Byline Meta Card */}
-          <div className="rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl p-4 sm:p-6 shadow-apple-card flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center space-x-3">
+          {/* Clean & Uncrowded Author & Byline Meta Card */}
+          <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-3.5 sm:p-5 shadow-apple-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3.5">
               {article.author?.avatarUrl ? (
                 <img
                   src={article.author.avatarUrl}
                   alt={article.author.name}
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border-2 border-gold/40 shadow-sm shrink-0"
+                  className="h-11 w-11 sm:h-12 sm:w-12 rounded-full object-cover border-2 border-gold/40 shadow-sm shrink-0"
                 />
               ) : (
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gold/20 text-gold font-bold text-sm sm:text-base shrink-0 border border-gold/40 shadow-apple-sm">
+                <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gold/20 text-gold font-bold text-sm sm:text-base shrink-0 border border-gold/40 shadow-apple-sm">
                   {article.author?.name ? article.author.name.charAt(0).toUpperCase() : 'Q'}
                 </div>
               )}
-              <div>
-                <p className="font-bold text-text text-xs sm:text-base">
+              <div className="space-y-0.5">
+                <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">
                   {article.author?.name || 'Qindil Research Team'}
                 </p>
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-textMuted">
+                <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                   <span>{formattedDate}</span>
-                  <span>•</span>
-                  <span className="text-gold font-medium">Peer Reviewed</span>
+                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="inline-flex items-center gap-1 rounded-md bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">
+                    Peer Reviewed
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Actions: Bookmark & Share */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-200/80 dark:border-zinc-800/80 justify-end">
               <button
                 onClick={handleToggleBookmark}
-                className={`inline-flex items-center space-x-1.5 rounded-full border px-4 py-2 text-[11px] sm:text-xs font-semibold active:scale-95 transition-all shadow-apple-sm ${
+                className={`inline-flex items-center space-x-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold active:scale-95 transition-all shadow-apple-sm ${
                   isBookmarked
                     ? 'border-gold bg-gold/15 text-gold font-bold shadow-apple-sm'
-                    : 'border-border/80 bg-surface/80 text-text hover:text-gold hover:border-gold/50'
+                    : 'border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:text-gold hover:border-gold/50'
                 }`}
                 title={isBookmarked ? 'Remove from Saved Articles' : 'Save Article to Library'}
               >
@@ -283,7 +292,7 @@ export function ArticleDetailPage() {
 
               <button
                 onClick={handleCopyLink}
-                className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 px-4 py-2 text-[11px] sm:text-xs font-semibold text-text hover:text-gold hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"
+                className="inline-flex items-center space-x-1.5 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-gold hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"
                 title="Copy Article Link"
               >
                 <Icon name={copiedLink ? 'Check' : 'Share'} size={13} className="text-gold" />
