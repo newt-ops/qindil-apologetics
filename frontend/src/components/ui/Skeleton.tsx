@@ -65,26 +65,26 @@ export function ArticleCardSkeleton({ className = '' }: { className?: string }) 
     <div
       role="status"
       aria-label="Loading publication"
-      className={`flex flex-col justify-between rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl overflow-hidden shadow-apple-card h-full ${className}`}
+      className={`flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl overflow-hidden shadow-apple-card h-full ${className}`}
     >
       {/* Cover Banner Skeleton */}
-      <div className="relative h-28 sm:h-44 md:h-48 w-full overflow-hidden bg-stone-200/50 dark:bg-zinc-800/50 border-b border-border/60 skeleton-shimmer shrink-0">
-        {/* Topic Badge Skeleton */}
-        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-10">
-          <div className="h-4 sm:h-5 w-16 sm:w-20 rounded-full skeleton-shimmer bg-white/70 dark:bg-zinc-900/70" />
+      <div className="relative h-28 sm:h-48 w-full overflow-hidden bg-stone-200/50 dark:bg-zinc-800/50 border-b border-border/60 skeleton-shimmer shrink-0">
+        {/* Topic Badge Skeleton - hidden on mobile */}
+        <div className="hidden sm:block absolute top-3 left-3 z-10">
+          <div className="h-5 w-20 rounded-full skeleton-shimmer bg-white/70 dark:bg-zinc-900/70" />
         </div>
 
         {/* Reading Time Badge Skeleton */}
-        <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-10">
-          <div className="h-4 sm:h-5 w-10 sm:w-12 rounded-full skeleton-shimmer bg-black/30 dark:bg-black/50" />
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+          <div className="h-4 sm:h-5 w-8 sm:w-16 rounded-full skeleton-shimmer bg-black/30 dark:bg-black/50" />
         </div>
       </div>
 
       {/* Card Body Skeleton */}
-      <div className="flex flex-col flex-1 justify-between p-2.5 sm:p-4 md:p-5 space-y-3">
-        <div className="space-y-2">
-          <div className="h-3.5 sm:h-4 w-11/12 rounded-lg skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
-          <div className="h-3.5 sm:h-4 w-3/4 rounded-lg skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+      <div className="flex flex-col flex-1 justify-between p-2.5 sm:p-5 space-y-2 sm:space-y-3">
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="h-3.5 sm:h-4 w-11/12 rounded skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+          <div className="h-3.5 sm:h-4 w-3/4 rounded skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
 
           {/* Excerpt lines on larger viewports */}
           <div className="hidden sm:block space-y-1.5 pt-1.5">
@@ -94,16 +94,13 @@ export function ArticleCardSkeleton({ className = '' }: { className?: string }) 
         </div>
 
         {/* Card Footer Skeleton */}
-        <div className="mt-2.5 pt-2 sm:mt-4 sm:pt-3 border-t border-stone-200/80 dark:border-zinc-800/80 flex items-center justify-between">
+        <div className="pt-2 sm:pt-3 border-t border-stone-200/80 dark:border-zinc-800/80 flex items-center justify-between">
           <div className="flex items-center space-x-1.5 sm:space-x-2">
             <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80 shrink-0" />
-            <div className="h-3 sm:h-3.5 w-14 sm:w-20 rounded-md skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+            <div className="h-3 sm:h-3.5 w-12 sm:w-20 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="h-3 w-8 sm:w-12 rounded-md skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
-            <div className="h-3 w-8 sm:w-12 rounded-md skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
-          </div>
+          <div className="h-3 sm:h-3.5 w-4 sm:w-10 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
         </div>
       </div>
     </div>
