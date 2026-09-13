@@ -75,7 +75,7 @@ export function VerifyOtpPage() {
       if (res?.data?.user && res?.data?.accessToken) {
         setAuth(res.data.user, res.data.accessToken);
         toast.success('Registration completed! Welcome to your dashboard.');
-        navigate('/mini-dashboard', { replace: true });
+        navigate('/dashboard', { replace: true });
       } else {
         toast.success('Identity verified successfully. You can now access your account.');
         setTimeout(() => navigate('/login'), 1200);

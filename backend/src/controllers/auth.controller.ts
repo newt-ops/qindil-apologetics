@@ -84,7 +84,7 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
   });
 
   try {
-    await sendOtpEmail(email, otp, 'verification');
+    await sendOtpEmail(email, otp, 'verification', name);
   } catch (emailError) {
     console.error('[AUTH] Non-fatal error sending verification email:', emailError);
   }
@@ -214,11 +214,13 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
 
   let ticket;
   try {
+    const googleClientId = env.GOOGLE_CLIENT_ID;
     ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: env.GOOGLE_CLIENT_ID,
+      ...(googleClientId ? { audience: googleClientId } : {}),
     });
-  } catch (err) {
+  } catch (err: any) {
+    console.error('❌ Google ID Token Verification Failed:', err?.message || err);
     throw ApiError.unauthorized('Invalid Google ID token', 'INVALID_GOOGLE_TOKEN');
   }
 
@@ -229,6 +231,16 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
 
   const { email, name, sub: googleId, picture: avatarUrl } = payload;
 
+  // Ensure default user role exists
+  let userRole = await RoleModel.findOne({ name: { $regex: /^user$/i } });
+  if (!userRole) {
+    try {
+      userRole = await RoleModel.create({ name: 'user', permissions: ['read:articles', 'bookmark:articles'] });
+    } catch {
+      userRole = await RoleModel.findOne({ name: { $regex: /^user$/i } });
+    }
+  }
+
   let user = await UserModel.findOne({ $or: [{ googleId }, { email }] }).populate('roles');
 
   if (user) {
@@ -237,7 +249,6 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
       user.authProvider = user.passwordHash ? 'both' : 'google';
     }
     user.emailVerified = true;
-    // Set initial Google avatar if user has not set an avatar yet (preserves user updates)
     if (avatarUrl && !user.avatarUrl) {
       user.avatarUrl = avatarUrl;
     }
@@ -245,16 +256,13 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
       user.name = name;
     }
     if (!user.roles || user.roles.length === 0) {
-      const userRole = await RoleModel.findOne({ name: 'user' });
       if (userRole) {
         user.roles = [userRole._id as any];
       }
     }
     user.lastLoginAt = new Date();
     await user.save();
-    user = await user.populate('roles');
   } else {
-    const userRole = await RoleModel.findOne({ name: 'user' });
     const roles = userRole ? [userRole._id] : [];
 
     user = await UserModel.create({
@@ -267,10 +275,13 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
       emailVerified: true,
       lastLoginAt: new Date(),
     });
-    user = await user.populate('roles');
   }
 
-  const roleNames = user.roles ? user.roles.map((r: any) => (r as IRole).name || r.toString()) : [];
+  const populatedUser = await UserModel.findById(user._id).populate('roles');
+  const roleNames = populatedUser?.roles
+    ? populatedUser.roles.map((r: any) => (r as IRole).name || r.toString())
+    : ['user'];
+
   const accessToken = signAccessToken({ userId: user._id.toString(), roles: roleNames });
   const rawRefreshToken = signRefreshToken({ userId: user._id.toString() });
 
@@ -287,7 +298,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response): Pro
 
   sendSuccess(res, {
     accessToken,
-    user: sanitizeUser(user),
+    user: sanitizeUser(populatedUser || user),
   });
 });
 
