@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useVerifyOtp, useForgotPassword } from '../../../hooks/useAuth';
+import { useAuthStore } from '../../../stores/authStore';
 import { Button } from '../../../components/ui';
 import { useToast } from '../../../hooks/useToast';
 import Icon from '../../../components/icons/Icon';
@@ -24,6 +25,7 @@ export function VerifyOtpPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const initialEmail = (location.state as any)?.email || '';
 
   const [cooldown, setCooldown] = useState<number>(initialEmail ? 60 : 0);
@@ -69,9 +71,15 @@ export function VerifyOtpPage() {
 
   const onSubmit = async (data: VerifyOtpFormData) => {
     try {
-      await verifyOtpMutation.mutateAsync(data);
-      toast.success('Identity verified successfully. You can now access your account.');
-      setTimeout(() => navigate('/login'), 1200);
+      const res = await verifyOtpMutation.mutateAsync(data);
+      if (res?.data?.user && res?.data?.accessToken) {
+        setAuth(res.data.user, res.data.accessToken);
+        toast.success('Registration completed! Welcome to your dashboard.');
+        navigate('/mini-dashboard', { replace: true });
+      } else {
+        toast.success('Identity verified successfully. You can now access your account.');
+        setTimeout(() => navigate('/login'), 1200);
+      }
     } catch (err: any) {
       const msg =
         err?.response?.data?.error?.message || 'Verification failed. Please verify the code and try again.';

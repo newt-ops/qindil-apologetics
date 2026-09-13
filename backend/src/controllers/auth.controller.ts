@@ -59,7 +59,16 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
   const otpHash = await hashOtp(otp);
   const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  const userRole = await RoleModel.findOne({ name: 'user' });
+  // Ensure default user role exists
+  let userRole = await RoleModel.findOne({ name: { $regex: /^user$/i } });
+  if (!userRole) {
+    try {
+      userRole = await RoleModel.create({ name: 'user', permissions: ['read:articles', 'bookmark:articles'] });
+    } catch {
+      // Role creation fallback if concurrent
+      userRole = await RoleModel.findOne({ name: { $regex: /^user$/i } });
+    }
+  }
   const roles = userRole ? [userRole._id] : [];
 
   const user = await UserModel.create({
@@ -74,7 +83,11 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
     otpExpiresAt,
   });
 
-  await sendOtpEmail(email, otp, 'verification');
+  try {
+    await sendOtpEmail(email, otp, 'verification');
+  } catch (emailError) {
+    console.error('[AUTH] Non-fatal error sending verification email:', emailError);
+  }
 
   sendSuccess(
     res,
@@ -109,9 +122,32 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response): Promi
   user.emailVerified = true;
   user.otpHash = undefined;
   user.otpExpiresAt = undefined;
+  user.lastLoginAt = new Date();
   await user.save();
 
-  sendSuccess(res, { message: 'Email verified successfully.' });
+  const populatedUser = await UserModel.findById(user._id).populate('roles');
+  const roleNames = populatedUser?.roles
+    ? populatedUser.roles.map((r: any) => (r as IRole).name || r.toString())
+    : ['user'];
+  const accessToken = signAccessToken({ userId: user._id.toString(), roles: roleNames });
+  const rawRefreshToken = signRefreshToken({ userId: user._id.toString() });
+
+  const tokenHash = hashToken(rawRefreshToken);
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+  await RefreshTokenModel.create({
+    user: user._id,
+    tokenHash,
+    expiresAt,
+  });
+
+  res.cookie('refreshToken', rawRefreshToken, getCookieOptions());
+
+  sendSuccess(res, {
+    message: 'Email verified successfully.',
+    accessToken,
+    user: sanitizeUser(populatedUser || user),
+  });
 });
 
 // @desc    Login with local credentials

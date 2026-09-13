@@ -6,7 +6,8 @@ import ContentRenderer from '../../../components/public/ContentRenderer';
 import ArticleCard from '../../../components/public/ArticleCard';
 import Icon from '../../../components/icons/Icon';
 import Seo from '../../../components/shared/Seo';
-import { ArticleDetailSkeleton } from '../../../components/ui/Skeleton';
+import ArticleDetailSkeleton from '../../../components/ui/Skeleton';
+import ArticleShareModal from '../../../components/public/ArticleShareModal';
 import { useReaderStore } from '../../../stores/readerStore';
 
 export function ArticleDetailPage() {
@@ -42,15 +43,22 @@ export function ArticleDetailPage() {
     : undefined;
 
   const [readingProgress, setReadingProgress] = useState(0);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Track window scroll to calculate reading progress
+  // Track window scroll to calculate reading progress (optimized with rAF & threshold for 120fps)
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
-        setReadingProgress(progress);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+          if (totalHeight > 0) {
+            const progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
+            setReadingProgress((prev) => (Math.abs(prev - progress) > 0.5 ? progress : prev));
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -90,16 +98,6 @@ export function ArticleDetailPage() {
       coverImageUrl: article.coverImageUrl,
       estimatedReadTime: readingTimeMinutes,
     });
-  };
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    } catch {
-      // Fallback
-    }
   };
 
   if (isLoading) {
@@ -291,12 +289,12 @@ export function ArticleDetailPage() {
               </button>
 
               <button
-                onClick={handleCopyLink}
+                onClick={() => setIsShareModalOpen(true)}
                 className="inline-flex items-center space-x-1.5 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-gold hover:border-gold/50 active:scale-95 transition-all shadow-apple-sm"
-                title="Copy Article Link"
+                title="Share Publication"
               >
-                <Icon name={copiedLink ? 'Check' : 'Share'} size={13} className="text-gold" />
-                <span>{copiedLink ? 'Copied' : 'Share'}</span>
+                <Icon name="Share2" size={13} className="text-gold" />
+                <span>Share</span>
               </button>
             </div>
           </div>
@@ -364,6 +362,14 @@ export function ArticleDetailPage() {
           </section>
         )}
       </div>
+
+      {/* Share Widget Modal */}
+      <ArticleShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={article.title}
+        topicName={article.topic?.name}
+      />
     </article>
   );
 }
