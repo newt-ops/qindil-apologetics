@@ -90,9 +90,9 @@ export function ArticlesByTopicPage() {
           </div>
         </div>
 
-        {/* Articles Grid — Prompt 42: Compact 2-column grid on mobile */}
+        {/* Articles Grid — Clean, uncompressed, representative on mobile */}
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <ArticleCardSkeleton key={n} />
             ))}
@@ -113,10 +113,15 @@ export function ArticlesByTopicPage() {
                   transition: { staggerChildren: 0.05 },
                 },
               }}
-              className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
             >
               {articles.map((article, index) => (
-                <ArticleCard key={article._id} article={article} index={index} />
+                <ArticleCard
+                  key={article._id}
+                  article={article}
+                  index={index}
+                  hideTopicBadge={true}
+                />
               ))}
             </motion.div>
 
