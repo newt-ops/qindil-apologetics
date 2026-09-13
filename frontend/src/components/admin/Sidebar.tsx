@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, onClose, classNam
 
   return (
     <aside
-      className={`flex flex-col h-full bg-surface/95 dark:bg-zinc-950/95 backdrop-blur-xl border-r border-border/80 font-sans select-none ${className}`}
+      className={`flex flex-col h-full bg-surface dark:bg-zinc-950 md:backdrop-blur-xl border-r border-border/80 font-sans select-none ${className}`}
     >
       {/* Brand Header */}
       <div className="flex items-center justify-between border-b border-border/60 p-4">

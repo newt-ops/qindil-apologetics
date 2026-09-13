@@ -28,13 +28,16 @@ export const AdminLayout: React.FC = () => {
     }
   }, [location.pathname]);
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu is open without layout thrash
   useEffect(() => {
     if (mobileMenuOpen) {
       const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
       return () => {
         document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
       };
     }
   }, [mobileMenuOpen]);
@@ -105,31 +108,34 @@ export const AdminLayout: React.FC = () => {
         createPortal(
           <AnimatePresence>
             {mobileMenuOpen && (
-              <div className="fixed inset-0 z-50 md:hidden">
-                {/* Backdrop overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-                />
+              <motion.div
+                key="admin-drawer-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                onClick={() => setMobileMenuOpen(false)}
+                className="fixed inset-0 z-50 bg-black/65 dark:bg-black/80 md:hidden"
+                style={{ willChange: 'opacity' }}
+              />
+            )}
 
-                {/* Sliding Drawer */}
-                <motion.div
-                  initial={{ x: '-100%' }}
-                  animate={{ x: 0 }}
-                  exit={{ x: '-100%' }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-                  className="relative z-10 h-full w-72 max-w-[80vw]"
-                >
-                  <Sidebar
-                    onClose={() => setMobileMenuOpen(false)}
-                    onItemClick={() => setMobileMenuOpen(false)}
-                    className="w-full"
-                  />
-                </motion.div>
-              </div>
+            {mobileMenuOpen && (
+              <motion.div
+                key="admin-drawer-panel"
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+                className="fixed inset-y-0 left-0 z-50 h-full w-72 max-w-[80vw] md:hidden shadow-apple-float"
+                style={{ willChange: 'transform', WebkitOverflowScrolling: 'touch' }}
+              >
+                <Sidebar
+                  onClose={() => setMobileMenuOpen(false)}
+                  onItemClick={() => setMobileMenuOpen(false)}
+                  className="w-full"
+                />
+              </motion.div>
             )}
           </AnimatePresence>,
           document.body
