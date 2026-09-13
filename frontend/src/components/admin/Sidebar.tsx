@@ -36,10 +36,11 @@ const navItems: NavItemConfig[] = [
 
 export interface SidebarProps {
   onItemClick?: () => void;
+  onClose?: () => void;
   className?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, onClose, className = '' }) => {
   const location = useLocation();
   const isSuperAdmin = useHasRole('superAdmin');
   const user = useAuthStore((state) => state.user);
@@ -131,7 +132,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onItemClick, className = '' })
             <p className="text-[10px] font-mono text-textMuted mt-0.5">Team Workspace</p>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center space-x-1.5">
+          <ThemeToggle />
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-border/80 p-1.5 text-textMuted hover:bg-bg hover:text-text active:scale-90 transition-all"
+              aria-label="Close Mobile Sidebar"
+            >
+              <Icon name="X" size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Role Badge Indicator */}

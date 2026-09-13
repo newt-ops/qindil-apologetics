@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
@@ -20,6 +20,10 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [headerSearchTerm, setHeaderSearchTerm] = useState('');
+
+  const handleCloseMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
 
   const handleHeaderSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,6 +224,7 @@ export function Header() {
         <div className="flex md:hidden items-center space-x-1">
           <ThemeToggle />
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(true)}
             className="rounded-full p-2 text-textMuted transition hover:bg-surface hover:text-text active:scale-90"
             aria-label="Open Mobile Menu"
@@ -232,7 +237,7 @@ export function Header() {
       {/* Mobile Navigation Drawer */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={handleCloseMobileMenu}
         navItems={navItems}
       />
     </motion.header>

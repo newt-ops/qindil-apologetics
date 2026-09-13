@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../components/icons/Icon';
@@ -17,6 +18,37 @@ export const AdminLayout: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const logoutMutation = useLogout();
   const isSuperAdmin = useHasRole('superAdmin');
+
+  // Close mobile drawer when route changes
+  const prevPathname = useRef(location.pathname);
+  useEffect(() => {
+    if (prevPathname.current !== location.pathname) {
+      prevPathname.current = location.pathname;
+      setMobileMenuOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [mobileMenuOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    if (mobileMenuOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [mobileMenuOpen]);
 
   // Derive dynamic page title based on current path
   const getPageTitle = (pathname: string) => {
@@ -68,41 +100,40 @@ export const AdminLayout: React.FC = () => {
         <Sidebar className="w-full" />
       </div>
 
-      {/* Mobile Slide-in Drawer (Prompt 08 pattern) */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            {/* Backdrop overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-            />
+      {/* Mobile Slide-in Drawer via Portal */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <div className="fixed inset-0 z-50 md:hidden">
+                {/* Backdrop overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+                />
 
-            {/* Sliding Drawer */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-              className="relative z-10 h-full w-72 max-w-[80vw]"
-            >
-              <Sidebar onItemClick={() => setMobileMenuOpen(false)} className="w-full" />
-
-              {/* Close Button on Mobile Drawer Header */}
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="absolute top-3 right-3 rounded-md p-1.5 text-textMuted hover:bg-bg hover:text-text transition-colors"
-                aria-label="Close Mobile Sidebar"
-              >
-                <Icon name="X" size={20} />
-              </button>
-            </motion.div>
-          </div>
+                {/* Sliding Drawer */}
+                <motion.div
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+                  className="relative z-10 h-full w-72 max-w-[80vw]"
+                >
+                  <Sidebar
+                    onClose={() => setMobileMenuOpen(false)}
+                    onItemClick={() => setMobileMenuOpen(false)}
+                    className="w-full"
+                  />
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
       {/* Main Right Content Workspace Column */}
       <div className="flex flex-1 flex-col overflow-hidden">

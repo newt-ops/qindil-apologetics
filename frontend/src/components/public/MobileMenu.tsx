@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
@@ -26,22 +27,50 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
   const isSuperAdmin = useHasRole('superAdmin');
   const isAdmin = useHasRole('admin');
 
-  // Close mobile drawer automatically when route changes
+  // Close mobile drawer only when the route path actually changes
+  const prevPathname = useRef(location.pathname);
   useEffect(() => {
-    onClose();
+    if (prevPathname.current !== location.pathname) {
+      prevPathname.current = location.pathname;
+      onClose();
+    }
   }, [location.pathname, onClose]);
 
-  return (
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
           />
 
           {/* Slide-in Drawer */}
@@ -155,17 +184,18 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                   </Link>
                 </div>
               )}
-              {/* Theme Toggle section in Mobile Menu */}
               <div className="mt-4 flex items-center justify-between rounded-2xl bg-bg/80 p-2.5 border border-border/80 shadow-apple-sm">
                 <span className="text-xs text-textMuted font-medium">Theme Mode</span>
                 <ThemeToggle showLabel />
               </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
 export default MobileMenu;
+
