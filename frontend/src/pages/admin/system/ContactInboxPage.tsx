@@ -7,6 +7,7 @@ import {
 } from '../../../hooks/useContactMessages';
 import { ContactMessageItem, ContactMessageStatus } from '../../../api/contact';
 import { DataTable } from '../../../components/admin/DataTable';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -222,66 +223,59 @@ export const ContactInboxPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Shield" size={14} />
-            <span>SuperAdmin Console</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Contact Inbox
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Review inquiries, reader feedback, and correspondence submitted through the public website.
-          </p>
-        </div>
-
-        {unreadCount > 0 && (
-          <div className="inline-flex items-center space-x-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-bold text-gold">
-            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-            <Icon name="Mail" size={16} />
-            <span>{unreadCount} New Unread Message{unreadCount > 1 ? 's' : ''}</span>
-          </div>
-        )}
-      </div>
+      <AdminPageHeader
+        discipline="SuperAdmin Console"
+        title="Contact Inbox"
+        subtitle="Review inquiries, reader feedback, and correspondence submitted through the public website."
+        actions={
+          unreadCount > 0 ? (
+            <div className="inline-flex items-center space-x-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-bold text-gold shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+              <Icon name="Mail" size={16} />
+              <span>{unreadCount} New Unread Message{unreadCount > 1 ? 's' : ''}</span>
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* 4-Pillar Inbox KPI Metrics Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Received</span>
-            <Icon name="Inbox" size={15} className="text-gold" />
-          </div>
-          <div className="text-2xl font-extrabold text-text tracking-tight font-mono">{totalMessages}</div>
-          <p className="text-[10px] text-textMuted">Inquiries cataloged</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">New Unread</span>
-            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-          </div>
-          <div className="text-2xl font-extrabold text-gold tracking-tight font-mono">{unreadCount}</div>
-          <p className="text-[10px] text-textMuted">Awaiting review</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Processed</span>
-            <Icon name="CheckCircle" size={15} className="text-info" />
-          </div>
-          <div className="text-2xl font-extrabold text-info tracking-tight font-mono">{readCount}</div>
-          <p className="text-[10px] text-textMuted">Read inquiries</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Archived</span>
-            <Icon name="Archive" size={15} className="text-textMuted" />
-          </div>
-          <div className="text-2xl font-extrabold text-textMuted tracking-tight font-mono">{archivedCount}</div>
-          <p className="text-[10px] text-textMuted">Resolved correspondence</p>
-        </div>
+        <AdminStatCard
+          label="Total Received"
+          value={totalMessages}
+          helperText="Inquiries cataloged"
+          icon="Inbox"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('')}
+        />
+        <AdminStatCard
+          label="New Unread"
+          value={unreadCount}
+          helperText="Awaiting review"
+          icon="Mail"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('new')}
+        />
+        <AdminStatCard
+          label="Processed"
+          value={readCount}
+          helperText="Read inquiries"
+          icon="CheckCircle"
+          variant="info"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('read')}
+        />
+        <AdminStatCard
+          label="Archived"
+          value={archivedCount}
+          helperText="Resolved correspondence"
+          icon="Archive"
+          variant="default"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('archived')}
+        />
       </div>
 
       {/* 1-Touch Quick Status Filter Tabs */}

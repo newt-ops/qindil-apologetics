@@ -2,12 +2,14 @@ import React from 'react';
 import Icon, { IconName } from '../icons/Icon';
 import Skeleton from '../ui/Skeleton';
 
-export type AdminStatVariant = 'default' | 'gold' | 'danger' | 'success' | 'amber' | 'blue';
+export type AdminStatVariant = 'default' | 'gold' | 'danger' | 'success' | 'amber' | 'blue' | 'info' | 'warning';
 
 export interface AdminStatCardProps {
-  title: string;
+  title?: string;
+  label?: string; // alias for title
   value: string | number;
   description?: string;
+  helperText?: string; // alias for description
   icon: IconName;
   variant?: AdminStatVariant;
   trend?: {
@@ -65,7 +67,21 @@ const variantStyles: Record<
     activeBg: 'bg-amber-500/10',
     valueColor: 'text-amber-500',
   },
+  warning: {
+    iconBg: 'bg-amber-500/10 text-amber-500 border border-amber-500/25',
+    iconColor: 'text-amber-500',
+    activeBorder: 'border-amber-500',
+    activeBg: 'bg-amber-500/10',
+    valueColor: 'text-amber-500',
+  },
   blue: {
+    iconBg: 'bg-blue-500/10 text-blue-500 border border-blue-500/25',
+    iconColor: 'text-blue-500',
+    activeBorder: 'border-blue-500',
+    activeBg: 'bg-blue-500/10',
+    valueColor: 'text-blue-400',
+  },
+  info: {
     iconBg: 'bg-blue-500/10 text-blue-500 border border-blue-500/25',
     iconColor: 'text-blue-500',
     activeBorder: 'border-blue-500',
@@ -79,8 +95,10 @@ const variantStyles: Record<
  */
 export const AdminStatCard: React.FC<AdminStatCardProps> = ({
   title,
+  label,
   value,
   description,
+  helperText,
   icon,
   variant = 'default',
   trend,
@@ -90,6 +108,8 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
   className = '',
 }) => {
   const styles = variantStyles[variant] || variantStyles.default;
+  const displayTitle = title || label || '';
+  const displayDescription = description || helperText;
 
   if (isLoading) {
     return (
@@ -120,7 +140,7 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
       {/* Header: Label & Icon Badge */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted truncate">
-          {title}
+          {displayTitle}
         </span>
         <div className={`flex h-8 w-8 items-center justify-center rounded-xl shrink-0 ${styles.iconBg}`}>
           <Icon name={icon} size={15} className={styles.iconColor} />
@@ -133,9 +153,9 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
       </div>
 
       {/* Subtext: Description or Trend */}
-      {(description || trend) && (
+      {(displayDescription || trend) && (
         <div className="mt-1 flex items-center justify-between gap-1 text-[11px] text-textMuted">
-          {description && <span className="truncate">{description}</span>}
+          {displayDescription && <span className="truncate">{displayDescription}</span>}
 
           {trend && (
             <span

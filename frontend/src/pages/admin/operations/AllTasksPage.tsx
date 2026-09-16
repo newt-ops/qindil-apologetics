@@ -5,6 +5,7 @@ import { useAllTasks, useUpdateTaskStatus } from '../../../hooks/useTasks';
 import { TaskItem, TaskStatus } from '../../../api/task';
 import { DataTable } from '../../../components/admin/DataTable';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
@@ -196,108 +197,72 @@ export const AllTasksPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Activity" size={14} />
-            <span>Operations Task Board</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            All Operations Tasks
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Global administrative registry of article drafting, video production, and scholarly operational tasks.
-          </p>
-        </div>
-
-        <Link to="/admin/tasks/assign">
-          <Button variant="primary" size="md" leftIcon={<Icon name="Plus" size={16} />}>
-            Assign New Task
-          </Button>
-        </Link>
-      </div>
+      <AdminPageHeader
+        discipline="Operations Task Board"
+        title="All Operations Tasks"
+        subtitle="Global administrative registry of article drafting, video production, and scholarly operational tasks."
+        actions={
+          <Link to="/admin/tasks/assign">
+            <Button variant="primary" size="md" leftIcon={<Icon name="Plus" size={16} />}>
+              Assign New Task
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Task Metrics Strip (Prompt 42 density) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
-        {/* Total Tasks */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Total Board Tasks
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="Folder" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {totalTasks}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Operational pipeline</div>
-        </div>
-
-        {/* Overdue */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Overdue Tasks
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-danger/10 text-danger">
-              <Icon name="AlertCircle" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-danger">
-            {overdueCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-danger/80 font-medium">Past designated deadline</div>
-        </div>
-
-        {/* In Progress */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              In Progress
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Icon name="Activity" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-blue-400">
-            {inProgressCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Under active execution</div>
-        </div>
-
-        {/* In Review */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              In Review
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <Icon name="Inbox" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-amber-500">
-            {inReviewCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-amber-500/80 font-medium">Awaiting evaluation</div>
-        </div>
-
-        {/* Completed */}
-        <div className="col-span-2 sm:col-span-1 lg:col-span-1 rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Completed
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Icon name="CheckCircle" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-emerald-500">
-            {doneCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-emerald-500/80 font-medium">Successfully delivered</div>
-        </div>
+        <AdminStatCard
+          label="Total Board Tasks"
+          value={totalTasks}
+          helperText="Operational pipeline"
+          icon="Folder"
+          variant="gold"
+          onClick={() => {
+            setStatusFilter('');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="Overdue Tasks"
+          value={overdueCount}
+          helperText="Past designated deadline"
+          icon="AlertCircle"
+          variant="danger"
+        />
+        <AdminStatCard
+          label="In Progress"
+          value={inProgressCount}
+          helperText="Under active execution"
+          icon="Activity"
+          variant="info"
+          onClick={() => {
+            setStatusFilter('inProgress');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="In Review"
+          value={inReviewCount}
+          helperText="Awaiting evaluation"
+          icon="Inbox"
+          variant="warning"
+          onClick={() => {
+            setStatusFilter('inReview');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="Completed"
+          value={doneCount}
+          helperText="Successfully delivered"
+          icon="CheckCircle"
+          variant="success"
+          onClick={() => {
+            setStatusFilter('done');
+            setPage(1);
+          }}
+        />
       </div>
 
       {/* Quick Status Filter Tabs */}

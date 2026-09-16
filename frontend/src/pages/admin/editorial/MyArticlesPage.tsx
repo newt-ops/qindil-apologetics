@@ -6,6 +6,7 @@ import { useAdminTopics } from '../../../hooks/useTopics';
 import { ArticleItem } from '../../../api/article';
 import { DataTable } from '../../../components/admin/DataTable';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
@@ -163,72 +164,60 @@ export const MyArticlesPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="FileText" size={14} />
-            <span>Author Workspace</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            My Articles
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Author dashboard to draft, edit, and track peer review status of your apologetics papers.
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          size="md"
-          leftIcon={<Icon name="Plus" size={15} />}
-          onClick={() => setIsNewModalOpen(true)}
-          className="self-start sm:self-auto shadow-md"
-        >
-          Write New Article
-        </Button>
-      </div>
+      <AdminPageHeader
+        discipline="Author Workspace"
+        title="My Articles"
+        subtitle="Author dashboard to draft, edit, and track peer review status of your apologetics papers."
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            leftIcon={<Icon name="Plus" size={15} />}
+            onClick={() => setIsNewModalOpen(true)}
+            className="self-start sm:self-auto shadow-md"
+          >
+            Write New Article
+          </Button>
+        }
+      />
 
       {/* Production Stats Strip - Prompt 42: Compact 4-card strip on mobile */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-1 shadow-sm">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center gap-1.5">
-            <Icon name="Edit" size={13} className="text-gold" />
-            <span>Active Drafts</span>
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-text font-mono">
-            {draftCount + changesRequestedCount}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-1 shadow-sm">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center gap-1.5">
-            <Icon name="Clock" size={13} className="text-amber-500" />
-            <span>In Review Queue</span>
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-amber-500 font-mono">
-            {inReviewCount}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-1 shadow-sm">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center gap-1.5">
-            <Icon name="CheckCircle" size={13} className="text-emerald-500" />
-            <span>Published Live</span>
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-emerald-500 font-mono">
-            {publishedCount}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-1 shadow-sm">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-textMuted flex items-center gap-1.5">
-            <Icon name="Eye" size={13} className="text-gold" />
-            <span>Total Readers</span>
-          </span>
-          <p className="text-lg sm:text-2xl font-black text-gold font-mono">
-            {totalViews.toLocaleString()}
-          </p>
-        </div>
+        <AdminStatCard
+          label="Active Drafts"
+          value={draftCount + changesRequestedCount}
+          helperText="In progress or revisions"
+          icon="Edit"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('drafts')}
+        />
+        <AdminStatCard
+          label="In Review Queue"
+          value={inReviewCount}
+          helperText="Awaiting editorial evaluation"
+          icon="Clock"
+          variant="warning"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('review')}
+        />
+        <AdminStatCard
+          label="Published Live"
+          value={publishedCount}
+          helperText="Live on public platform"
+          icon="CheckCircle"
+          variant="success"
+          isLoading={isLoading}
+          onClick={() => setStatusFilter('published')}
+        />
+        <AdminStatCard
+          label="Total Readers"
+          value={totalViews.toLocaleString()}
+          helperText="Cumulative views"
+          icon="Eye"
+          variant="default"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Filter Tabs */}

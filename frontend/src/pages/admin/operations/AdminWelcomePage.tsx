@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../../../components/icons/Icon';
 import { useAuthStore } from '../../../stores/authStore';
 import { useHasRole } from '../../../hooks/useHasRole';
@@ -7,10 +7,13 @@ import { useMyTasks } from '../../../hooks/useTasks';
 import { useReviewQueue } from '../../../hooks/useArticles';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { Badge } from '../../../components/ui/Badge';
+import { AdminStatCard } from '../../../components/admin';
 
 export const AdminWelcomePage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = useHasRole('superAdmin');
+
+  const navigate = useNavigate();
 
   // Live operational data
   const { tasks: myTasks, overdueTasks } = useMyTasks();
@@ -49,9 +52,6 @@ export const AdminWelcomePage: React.FC = () => {
               <Badge variant="gold" size="md">
                 {isSuperAdmin ? 'Super Administrator' : 'Operations Admin'}
               </Badge>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
-                Active Session
-              </span>
             </div>
             <span className="text-xs font-mono text-textMuted">
               {user?.email}
@@ -62,106 +62,38 @@ export const AdminWelcomePage: React.FC = () => {
 
       {/* Real-Time Operational Overview Cards (Prompt 42: Compact 4-column responsive grid) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* 1. Personal Tasks */}
-        <Link
-          to="/admin/workspace"
-          className="group rounded-xl border border-border bg-surface p-4 sm:p-5 space-y-2 hover:border-gold/50 transition-all shadow-sm flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              My Active Tasks
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10 text-gold group-hover:scale-110 transition-transform">
-              <Icon name="Folder" size={16} />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-text group-hover:text-gold transition-colors">
-              {myTasks.length}
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-textMuted">Assigned to you</span>
-              {overdueTasks.length > 0 && (
-                <span className="text-danger font-bold flex items-center gap-1">
-                  <Icon name="AlertCircle" size={11} />
-                  {overdueTasks.length} overdue
-                </span>
-              )}
-            </div>
-          </div>
-        </Link>
-
-        {/* 2. Review Queue */}
-        <Link
-          to="/admin/review-queue"
-          className="group rounded-xl border border-border bg-surface p-4 sm:p-5 space-y-2 hover:border-gold/50 transition-all shadow-sm flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Review Queue
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
-              <Icon name="Inbox" size={16} />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-text group-hover:text-amber-500 transition-colors">
-              {reviewQueue.length}
-            </div>
-            <div className="mt-1 text-[11px] text-textMuted flex items-center justify-between">
-              <span>Pending review</span>
-              <span className="text-gold font-semibold">Inspect</span>
-            </div>
-          </div>
-        </Link>
-
-        {/* 3. Team Roster */}
-        <Link
-          to="/admin/team"
-          className="group rounded-xl border border-border bg-surface p-4 sm:p-5 space-y-2 hover:border-gold/50 transition-all shadow-sm flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Team Roster
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
-              <Icon name="Users" size={16} />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-text group-hover:text-blue-400 transition-colors">
-              {teamMembers.length}
-            </div>
-            <div className="mt-1 text-[11px] text-textMuted flex items-center justify-between">
-              <span>Scholarly personnel</span>
-              <span className="text-blue-400 font-semibold">Manage</span>
-            </div>
-          </div>
-        </Link>
-
-        {/* 4. Schedule Calendar */}
-        <Link
-          to="/admin/calendar"
-          className="group rounded-xl border border-border bg-surface p-4 sm:p-5 space-y-2 hover:border-gold/50 transition-all shadow-sm flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Operations Calendar
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-              <Icon name="Calendar" size={16} />
-            </div>
-          </div>
-          <div>
-            <div className="text-xl sm:text-2xl font-black text-text group-hover:text-purple-400 transition-colors">
-              Schedule
-            </div>
-            <div className="mt-1 text-[11px] text-textMuted flex items-center justify-between">
-              <span>Deadlines & syncs</span>
-              <span className="text-purple-400 font-semibold">View</span>
-            </div>
-          </div>
-        </Link>
+        <AdminStatCard
+          label="My Active Tasks"
+          value={myTasks.length}
+          helperText={overdueTasks.length > 0 ? `${overdueTasks.length} overdue` : 'Assigned to you'}
+          icon="Folder"
+          variant={overdueTasks.length > 0 ? 'danger' : 'gold'}
+          onClick={() => navigate('/admin/workspace')}
+        />
+        <AdminStatCard
+          label="Review Queue"
+          value={reviewQueue.length}
+          helperText="Pending review"
+          icon="Inbox"
+          variant="warning"
+          onClick={() => navigate('/admin/review-queue')}
+        />
+        <AdminStatCard
+          label="Team Roster"
+          value={teamMembers.length}
+          helperText="Scholarly personnel"
+          icon="Users"
+          variant="info"
+          onClick={() => navigate('/admin/team')}
+        />
+        <AdminStatCard
+          label="Operations Calendar"
+          value="Schedule"
+          helperText="Deadlines & syncs"
+          icon="Calendar"
+          variant="default"
+          onClick={() => navigate('/admin/calendar')}
+        />
       </div>
 
       {/* Fast Command Actions & Shortcuts */}

@@ -12,6 +12,8 @@ import { useHasRole } from '../../../hooks/useHasRole';
 import { ArticleItem } from '../../../api/article';
 import { DataTable } from '../../../components/admin/DataTable';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -23,6 +25,7 @@ import { toast } from '../../../hooks/useToast';
 export const ArticlesListPage: React.FC = () => {
   const navigate = useNavigate();
   const isSuperAdmin = useHasRole('superAdmin');
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   // Filter Bar State
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -36,9 +39,6 @@ export const ArticlesListPage: React.FC = () => {
   const [newTopic, setNewTopic] = useState('');
   const [newAuthor, setNewAuthor] = useState('');
   const [createError, setCreateError] = useState('');
-
-  // Delete Draft Modal State
-  const [deleteTarget, setDeleteTarget] = useState<ArticleItem | null>(null);
 
   // Global Unfiltered Query for Master KPIs
   const { data: globalArticlesData } = useArticlesAdmin({});
@@ -97,13 +97,18 @@ export const ArticlesListPage: React.FC = () => {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+  const handleDeleteArticle = async (item: ArticleItem) => {
+    const ok = await confirm({
+      title: 'Delete Article Draft',
+      description: `Are you sure you want to permanently delete "${item.title}"? This draft will be removed from the database.`,
+      confirmText: 'Delete Draft',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
-      await deleteMutation.mutateAsync(deleteTarget._id);
-      toast.success(`Draft "${deleteTarget.title}" deleted.`);
-      setDeleteTarget(null);
+      await deleteMutation.mutateAsync(item._id);
+      toast.success(`Draft "${item.title}" deleted.`);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to delete article draft.');
     }
@@ -268,7 +273,7 @@ export const ArticlesListPage: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 className="text-danger hover:bg-danger/10 hover:text-danger"
-                onClick={() => setDeleteTarget(item)}
+                onClick={() => handleDeleteArticle(item)}
                 title="Delete draft article"
               >
                 <Icon name="Trash2" size={13} />
@@ -323,113 +328,67 @@ export const ArticlesListPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="FileText" size={14} />
-            <span>{isSuperAdmin ? 'Editorial Subsystem' : 'Author Workspace'}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            {isSuperAdmin ? 'Articles Management' : 'My Articles'}
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            {isSuperAdmin
-              ? 'Master registry of all scholarly works, peer reviews, drafts, and published papers.'
-              : 'Your workspace to author, edit, track review decisions, and manage article drafts.'}
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          size="md"
-          leftIcon={<Icon name="Plus" size={16} />}
-          onClick={() => setIsNewModalOpen(true)}
-        >
-          New Article
-        </Button>
-      </div>
+      <AdminPageHeader
+        discipline={isSuperAdmin ? 'Editorial Subsystem' : 'Author Workspace'}
+        title={isSuperAdmin ? 'Articles Management' : 'My Articles'}
+        subtitle={
+          isSuperAdmin
+            ? 'Master registry of all scholarly works, peer reviews, drafts, and published papers.'
+            : 'Your workspace to author, edit, track review decisions, and manage article drafts.'
+        }
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            leftIcon={<Icon name="Plus" size={16} />}
+            onClick={() => setIsNewModalOpen(true)}
+          >
+            New Article
+          </Button>
+        }
+      />
 
       {/* Production KPI Metrics Strip (Prompt 42 density) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
-        {/* Total Articles */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Catalog Total
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="FileText" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {totalArticles}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Scholarly papers</div>
-        </div>
-
-        {/* Published */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Published Live
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Icon name="Globe" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {publishedCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-emerald-500/80 font-medium">Publicly accessible</div>
-        </div>
-
-        {/* Review Queue */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              In Review
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <Icon name="Inbox" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {inReviewCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-amber-500/80 font-medium">Awaiting decision</div>
-        </div>
-
-        {/* Active Drafts */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Drafts
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Icon name="Edit" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {draftCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">In preparation</div>
-        </div>
-
-        {/* Readership Views */}
-        <div className="col-span-2 sm:col-span-1 lg:col-span-1 rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Readership
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
-              <Icon name="Eye" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {totalReadership.toLocaleString()}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Cumulative impressions</div>
-        </div>
+        <AdminStatCard
+          label="Catalog Total"
+          value={totalArticles}
+          helperText="Scholarly papers"
+          icon="FileText"
+          variant="gold"
+          onClick={() => setStatusFilter('')}
+        />
+        <AdminStatCard
+          label="Published Live"
+          value={publishedCount}
+          helperText="Publicly accessible"
+          icon="Globe"
+          variant="success"
+          onClick={() => setStatusFilter('published')}
+        />
+        <AdminStatCard
+          label="In Review"
+          value={inReviewCount}
+          helperText="Awaiting decision"
+          icon="Inbox"
+          variant="warning"
+          onClick={() => setStatusFilter('inReview')}
+        />
+        <AdminStatCard
+          label="Drafts"
+          value={draftCount}
+          helperText="In preparation"
+          icon="Edit"
+          variant="info"
+          onClick={() => setStatusFilter('draft')}
+        />
+        <AdminStatCard
+          label="Readership"
+          value={totalReadership.toLocaleString()}
+          helperText="Cumulative impressions"
+          icon="Eye"
+          variant="default"
+        />
       </div>
 
       {/* Quick Status Filter Tabs */}
@@ -497,6 +456,41 @@ export const ArticlesListPage: React.FC = () => {
         data={articlesList}
         isLoading={isLoading}
         searchPlaceholder="Search in current view..."
+        selectable={isSuperAdmin}
+        bulkActions={(selectedIds, clearSelection) => (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="danger"
+              size="sm"
+              leftIcon={<Icon name="Trash2" size={13} />}
+              onClick={async () => {
+                const selectedArticles = articlesList.filter((a: ArticleItem) => selectedIds.includes(a._id));
+                const draftItems = selectedArticles.filter(
+                  (a: ArticleItem) => a.status === 'draft' || a.status === 'changesRequested'
+                );
+                if (draftItems.length === 0) {
+                  toast.info('Only draft articles can be bulk deleted.');
+                  return;
+                }
+                const ok = await confirm({
+                  title: 'Bulk Delete Drafts',
+                  description: `Are you sure you want to permanently delete ${draftItems.length} draft article(s)?`,
+                  confirmText: `Delete ${draftItems.length} Drafts`,
+                  variant: 'danger',
+                });
+                if (!ok) return;
+
+                for (const item of draftItems) {
+                  await deleteMutation.mutateAsync(item._id);
+                }
+                toast.success(`${draftItems.length} drafts deleted successfully.`);
+                clearSelection();
+              }}
+            >
+              Delete Selected Drafts
+            </Button>
+          </div>
+        )}
       />
 
       {/* New Article Modal */}
@@ -560,49 +554,8 @@ export const ArticlesListPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Delete Draft Confirmation Modal */}
-      {deleteTarget && (
-        <Modal
-          isOpen={Boolean(deleteTarget)}
-          onClose={() => setDeleteTarget(null)}
-          title="Confirm Draft Deletion"
-          size="sm"
-        >
-          <div className="space-y-4 font-sans">
-            <div className="flex items-start space-x-3 text-danger bg-danger/10 p-3.5 rounded-xl border border-danger/30 text-xs">
-              <Icon name="AlertTriangle" size={18} className="shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold block">Permanent Deletion Warning</span>
-                <span className="text-text/80">
-                  This action cannot be reversed. The draft article "
-                  <strong className="text-text font-bold">{deleteTarget.title}</strong>" will be permanently deleted from the database.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                isLoading={deleteMutation.isPending}
-                onClick={handleDeleteConfirm}
-                leftIcon={<Icon name="Trash2" size={14} />}
-              >
-                Delete Draft
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

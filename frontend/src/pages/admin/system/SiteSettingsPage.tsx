@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/icons/Icon';
 import { useSettings, useUpdateSettings } from '../../../hooks/useSettings';
+import { AdminPageHeader } from '../../../components/admin';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
-import Modal from '../../../components/ui/Modal';
 import { toast } from '../../../hooks/useToast';
 
 export const SiteSettingsPage: React.FC = () => {
@@ -24,7 +25,7 @@ export const SiteSettingsPage: React.FC = () => {
 
   // Maintenance Mode State
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [pendingMaintenanceToggle, setPendingMaintenanceToggle] = useState<boolean | null>(null);
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   // Populate form fields when settings load
   useEffect(() => {
@@ -44,20 +45,20 @@ export const SiteSettingsPage: React.FC = () => {
     }
   }, [settings]);
 
-  const handleMaintenanceToggleClick = () => {
+  const handleMaintenanceToggleClick = async () => {
     const nextState = !maintenanceMode;
     if (nextState === true) {
-      // Enabling maintenance mode requires confirmation
-      setPendingMaintenanceToggle(true);
+      const ok = await confirm({
+        title: 'Confirm Maintenance Mode Activation',
+        description: 'Activating Maintenance Mode will block public visitor access to the site immediately and render the Maintenance Page. Admin operations and workspace pages will remain accessible.',
+        confirmText: 'Enable Maintenance Mode',
+        variant: 'danger',
+      });
+      if (!ok) return;
+      setMaintenanceMode(true);
     } else {
-      // Disabling maintenance mode can happen directly
       setMaintenanceMode(false);
     }
-  };
-
-  const confirmEnableMaintenance = () => {
-    setMaintenanceMode(true);
-    setPendingMaintenanceToggle(null);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -96,18 +97,11 @@ export const SiteSettingsPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans max-w-4xl">
       {/* Page Header */}
-      <div className="border-b border-border pb-6">
-        <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-          <Icon name="Settings" size={14} />
-          <span>SuperAdmin Governance</span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-          Site Settings & Platform Config
-        </h1>
-        <p className="text-xs sm:text-sm text-textMuted mt-1">
-          Manage public platform branding, institutional contact email, social media presence, and maintenance mode status.
-        </p>
-      </div>
+      <AdminPageHeader
+        discipline="SuperAdmin Governance"
+        title="Site Settings & Platform Config"
+        subtitle="Manage public platform branding, institutional contact email, social media presence, and maintenance mode status."
+      />
 
       {/* Live Brand Identity Preview Card */}
       <div className="rounded-2xl border border-gold/30 bg-gold/5 p-5 space-y-4 shadow-sm">
@@ -321,48 +315,8 @@ export const SiteSettingsPage: React.FC = () => {
         </div>
       </form>
 
-      {/* Maintenance Mode Confirmation Modal */}
-      {pendingMaintenanceToggle && (
-        <Modal
-          isOpen={Boolean(pendingMaintenanceToggle)}
-          onClose={() => setPendingMaintenanceToggle(null)}
-          title="Confirm Maintenance Mode Activation"
-          size="sm"
-        >
-          <div className="space-y-4 font-sans text-xs">
-            <div className="flex items-center space-x-3 text-danger bg-danger/10 p-3 rounded-lg border border-danger/30">
-              <Icon name="AlertTriangle" size={24} className="shrink-0" />
-              <span>
-                Activating Maintenance Mode will block public visitor access to the site immediately and render the Maintenance Page.
-              </span>
-            </div>
-
-            <p className="text-textMuted">
-              Admin operations and workspace pages will remain fully available to you to make necessary system updates.
-            </p>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setPendingMaintenanceToggle(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={confirmEnableMaintenance}
-                leftIcon={<Icon name="AlertTriangle" size={14} />}
-              >
-                Enable Maintenance Mode
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

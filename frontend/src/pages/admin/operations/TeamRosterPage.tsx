@@ -4,6 +4,7 @@ import Icon from '../../../components/icons/Icon';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { User } from '../../../stores/authStore';
 import { DataTable } from '../../../components/admin/DataTable';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
@@ -143,106 +144,77 @@ export const TeamRosterPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Users" size={14} />
-            <span>Personnel &amp; Roles</span>
+      <AdminPageHeader
+        discipline="Personnel & Roles"
+        title="Team Roster Management"
+        subtitle="SuperAdmin central dashboard to inspect member credentials, manage RBAC privileges, and monitor operational status."
+        actions={
+          <div className="flex items-center space-x-3 rounded-xl border border-border bg-surface px-4 py-2 shadow-sm">
+            <label
+              htmlFor="includeUsersToggle"
+              className="flex items-center space-x-2 cursor-pointer select-none text-xs font-semibold text-text"
+            >
+              <input
+                id="includeUsersToggle"
+                type="checkbox"
+                checked={includeUsers}
+                onChange={(e) => {
+                  setIncludeUsers(e.target.checked);
+                  setPage(1);
+                }}
+                className="h-4 w-4 rounded border-border text-gold focus:ring-gold accent-gold"
+              />
+              <span>Include Public Members</span>
+            </label>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Team Roster Management
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            SuperAdmin central dashboard to inspect member credentials, manage RBAC privileges, and monitor operational status.
-          </p>
-        </div>
-
-        {/* Include Public Registrants Checkbox */}
-        <div className="flex items-center space-x-3 rounded-xl border border-border bg-surface px-4 py-2.5 shadow-sm self-start sm:self-auto">
-          <label
-            htmlFor="includeUsersToggle"
-            className="flex items-center space-x-2 cursor-pointer select-none text-xs font-semibold text-text"
-          >
-            <input
-              id="includeUsersToggle"
-              type="checkbox"
-              checked={includeUsers}
-              onChange={(e) => {
-                setIncludeUsers(e.target.checked);
-                setPage(1);
-              }}
-              className="h-4 w-4 rounded border-border text-gold focus:ring-gold accent-gold"
-            />
-            <span>Include Public Members</span>
-          </label>
-        </div>
-      </div>
+        }
+      />
 
       {/* Team Metrics Strip (Prompt 42 density) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Staff */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Team Staff
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="Users" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {staffCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Administrators &amp; scholars</div>
-        </div>
-
-        {/* Super Admins */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Super Admins
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold">
-              <Icon name="Shield" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-gold">
-            {superAdminCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-gold/80 font-medium">Full access tier</div>
-        </div>
-
-        {/* Operations Admins */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Operations Admins
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Icon name="User" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-blue-400">
-            {adminCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Content &amp; task managers</div>
-        </div>
-
-        {/* Active Accounts */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Active Status
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Icon name="CheckCircle" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-emerald-500">
-            {activeCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-emerald-500/80 font-medium">Verified active</div>
-        </div>
+        <AdminStatCard
+          label="Team Staff"
+          value={staffCount}
+          helperText="Administrators & scholars"
+          icon="Users"
+          variant="gold"
+          onClick={() => {
+            setIncludeUsers(false);
+            setRoleFilter('');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="Super Admins"
+          value={superAdminCount}
+          helperText="Full access tier"
+          icon="Shield"
+          variant="gold"
+          onClick={() => {
+            setIncludeUsers(false);
+            setRoleFilter('superAdmin');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="Operations Admins"
+          value={adminCount}
+          helperText="Content & task managers"
+          icon="User"
+          variant="info"
+          onClick={() => {
+            setIncludeUsers(false);
+            setRoleFilter('admin');
+            setPage(1);
+          }}
+        />
+        <AdminStatCard
+          label="Active Status"
+          value={activeCount}
+          helperText="Verified active"
+          icon="CheckCircle"
+          variant="success"
+        />
       </div>
 
       {/* Quick Role Filter Tabs */}

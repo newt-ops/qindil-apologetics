@@ -9,6 +9,7 @@ import {
 } from '../../../hooks/useArticles';
 import RichTextEditor from '../../../components/editor/RichTextEditor';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
@@ -30,6 +31,7 @@ function extractTextFromContent(node: any): string {
 export const ArticleReviewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   const { data: article, isLoading, error } = useArticleForEdit(id);
   const requestChangesMutation = useRequestChanges();
@@ -41,9 +43,6 @@ export const ArticleReviewPage: React.FC = () => {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [reviewNotes, setReviewNotes] = useState('');
   const [notesError, setNotesError] = useState('');
-
-  // Archive Confirm Modal State
-  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -109,6 +108,14 @@ export const ArticleReviewPage: React.FC = () => {
   };
 
   const handlePublish = async () => {
+    const ok = await confirm({
+      title: 'Publish Article Live',
+      description: `Are you sure you want to publish "${article.title}" live? It will become publicly visible immediately.`,
+      confirmText: 'Publish Live',
+      variant: 'primary',
+    });
+    if (!ok) return;
+
     try {
       await publishMutation.mutateAsync(article._id);
       toast.success('Article published! It is now live in the public catalog.');
@@ -117,10 +124,17 @@ export const ArticleReviewPage: React.FC = () => {
     }
   };
 
-  const handleArchiveConfirm = async () => {
+  const handleArchive = async () => {
+    const ok = await confirm({
+      title: 'Confirm Article Archival',
+      description: `This will unpublish "${article.title}" and remove it from the public catalog. It will remain preserved in the admin archives.`,
+      confirmText: 'Archive Article',
+      variant: 'warning',
+    });
+    if (!ok) return;
+
     try {
       await archiveMutation.mutateAsync(article._id);
-      setIsArchiveModalOpen(false);
       toast.success('Article archived. It has been removed from the public catalog.');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to archive article.');
@@ -225,7 +239,7 @@ export const ArticleReviewPage: React.FC = () => {
                 size="sm"
                 className="text-amber-500 hover:text-amber-400"
                 leftIcon={<Icon name="Archive" size={14} />}
-                onClick={() => setIsArchiveModalOpen(true)}
+                onClick={handleArchive}
                 isLoading={archiveMutation.isPending}
               >
                 Archive
@@ -411,49 +425,8 @@ export const ArticleReviewPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Confirm Archive Modal */}
-      {isArchiveModalOpen && (
-        <Modal
-          isOpen={isArchiveModalOpen}
-          onClose={() => setIsArchiveModalOpen(false)}
-          title="Confirm Article Archival"
-          size="sm"
-        >
-          <div className="space-y-4 font-sans">
-            <div className="flex items-start space-x-3 text-amber-500 bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/30 text-xs">
-              <Icon name="Archive" size={18} className="shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold block">Archive Confirmation</span>
-                <span className="text-text/80">
-                  This will unpublish "
-                  <strong className="text-text font-bold">{article.title}</strong>" and remove it from the public catalog. It will remain preserved in the admin archives.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsArchiveModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                isLoading={archiveMutation.isPending}
-                onClick={handleArchiveConfirm}
-                leftIcon={<Icon name="Archive" size={14} />}
-              >
-                Archive Article
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

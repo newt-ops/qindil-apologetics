@@ -8,6 +8,8 @@ import {
 } from '../../../hooks/useEvents';
 import { CalendarEventItem, EventType, EventVisibility } from '../../../api/event';
 import { DataTable } from '../../../components/admin/DataTable';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -26,6 +28,8 @@ const toDateTimeLocalString = (dateStr?: string) => {
 };
 
 export const EventsManagementPage: React.FC = () => {
+  const { confirm, ConfirmModalElement } = useConfirm();
+
   // Filter Bar State
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -45,9 +49,6 @@ export const EventsManagementPage: React.FC = () => {
   const [visibility, setVisibility] = useState<EventVisibility>('team');
   const [location, setLocation] = useState('');
   const [formError, setFormError] = useState('');
-
-  // Delete Confirm Modal State
-  const [deleteTarget, setDeleteTarget] = useState<CalendarEventItem | null>(null);
 
   // Queries & Mutations
   const { data: eventsData, isLoading } = useEventsAdmin({
@@ -139,19 +140,23 @@ export const EventsManagementPage: React.FC = () => {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
-
-    if (deleteTarget.relatedTask) {
+  const handleDeleteEvent = async (event: CalendarEventItem) => {
+    if (event.relatedTask) {
       toast.error('Task-linked events cannot be deleted directly.');
-      setDeleteTarget(null);
       return;
     }
 
+    const ok = await confirm({
+      title: 'Confirm Event Deletion',
+      description: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
+      confirmText: 'Delete Event',
+      variant: 'danger',
+    });
+    if (!ok) return;
+
     try {
-      await deleteMutation.mutateAsync(deleteTarget._id);
-      toast.success(`Event "${deleteTarget.title}" deleted successfully.`);
-      setDeleteTarget(null);
+      await deleteMutation.mutateAsync(event._id);
+      toast.success(`Event "${event.title}" deleted successfully.`);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to delete event.';
       toast.error(msg);
@@ -296,7 +301,7 @@ export const EventsManagementPage: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 className="text-danger hover:bg-danger/10 hover:text-danger"
-                onClick={() => setDeleteTarget(item)}
+                onClick={() => handleDeleteEvent(item)}
                 title="Delete event"
               >
                 <Icon name="Trash2" size={14} />
@@ -400,67 +405,60 @@ export const EventsManagementPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Shield" size={14} />
-            <span>SuperAdmin Console</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Events Management
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Create public events for the platform website or schedule internal team calendar events.
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          size="md"
-          leftIcon={<Icon name="Plus" size={16} />}
-          onClick={handleOpenCreateModal}
-        >
-          New Event
-        </Button>
-      </div>
+      <AdminPageHeader
+        discipline="SuperAdmin Console"
+        title="Events Management"
+        subtitle="Create public events for the platform website or schedule internal team calendar events."
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            leftIcon={<Icon name="Plus" size={16} />}
+            onClick={handleOpenCreateModal}
+          >
+            New Event
+          </Button>
+        }
+      />
 
       {/* 4-Pillar Events KPI Metrics Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Scheduled</span>
-            <Icon name="Calendar" size={15} className="text-gold" />
-          </div>
-          <div className="text-2xl font-extrabold text-text tracking-tight font-mono">{totalEvents}</div>
-          <p className="text-[10px] text-textMuted">All entries</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Public Symposia</span>
-            <Icon name="Globe" size={15} className="text-gold" />
-          </div>
-          <div className="text-2xl font-extrabold text-gold tracking-tight font-mono">{publicEventsCount}</div>
-          <p className="text-[10px] text-textMuted">Live on website</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Team Assemblies</span>
-            <Icon name="Users" size={15} className="text-info" />
-          </div>
-          <div className="text-2xl font-extrabold text-info tracking-tight font-mono">{meetingsCount}</div>
-          <p className="text-[10px] text-textMuted">Internal meetings</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Deadlines</span>
-            <Icon name="Clock" size={15} className="text-danger" />
-          </div>
-          <div className="text-2xl font-extrabold text-danger tracking-tight font-mono">{deadlinesCount}</div>
-          <p className="text-[10px] text-textMuted">Project targets</p>
-        </div>
+        <AdminStatCard
+          label="Total Scheduled"
+          value={totalEvents}
+          helperText="All entries"
+          icon="Calendar"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setTypeFilter('')}
+        />
+        <AdminStatCard
+          label="Public Symposia"
+          value={publicEventsCount}
+          helperText="Live on website"
+          icon="Globe"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setTypeFilter('publicEvent')}
+        />
+        <AdminStatCard
+          label="Team Assemblies"
+          value={meetingsCount}
+          helperText="Internal meetings"
+          icon="Users"
+          variant="info"
+          isLoading={isLoading}
+          onClick={() => setTypeFilter('meeting')}
+        />
+        <AdminStatCard
+          label="Deadlines"
+          value={deadlinesCount}
+          helperText="Project targets"
+          icon="Clock"
+          variant="danger"
+          isLoading={isLoading}
+          onClick={() => setTypeFilter('deadline')}
+        />
       </div>
 
       {/* 1-Touch Quick Event Type Filter Tabs */}
@@ -632,45 +630,8 @@ export const EventsManagementPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <Modal
-          isOpen={Boolean(deleteTarget)}
-          onClose={() => setDeleteTarget(null)}
-          title="Confirm Event Deletion"
-          size="sm"
-        >
-          <div className="space-y-4 font-sans">
-            <div className="flex items-center space-x-3 text-danger bg-danger/10 p-3 rounded-lg border border-danger/30 text-xs">
-              <Icon name="AlertTriangle" size={20} className="shrink-0" />
-              <span>
-                This action cannot be undone. Event "<strong>{deleteTarget.title}</strong>" will be permanently deleted.
-              </span>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                isLoading={deleteMutation.isPending}
-                onClick={handleDeleteConfirm}
-                leftIcon={<Icon name="Trash2" size={14} />}
-              >
-                Delete Event
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

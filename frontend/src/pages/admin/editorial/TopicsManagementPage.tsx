@@ -9,6 +9,8 @@ import {
 } from '../../../hooks/useTopics';
 import { TopicItem } from '../../../api/topic';
 import { DataTable } from '../../../components/admin/DataTable';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -20,6 +22,7 @@ import { toast } from '../../../hooks/useToast';
 
 export const TopicsManagementPage: React.FC = () => {
   const { data: topics = [], isLoading } = useAdminTopics();
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   const createTopicMutation = useCreateTopic();
   const updateTopicMutation = useUpdateTopic();
@@ -29,9 +32,6 @@ export const TopicsManagementPage: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState<TopicItem | null>(null);
-
-  // Deactivate Modal State
-  const [deactivateTarget, setDeactivateTarget] = useState<TopicItem | null>(null);
 
   // Form State
   const [name, setName] = useState('');
@@ -124,13 +124,18 @@ export const TopicsManagementPage: React.FC = () => {
     }
   };
 
-  const handleDeactivateConfirm = async () => {
-    if (!deactivateTarget) return;
+  const handleDeactivateTopic = async (topic: TopicItem) => {
+    const ok = await confirm({
+      title: 'Confirm Discipline Deactivation',
+      description: `Are you sure you want to deactivate "${topic.name}"? It will be hidden from the public topics catalog.`,
+      confirmText: 'Deactivate',
+      variant: 'warning',
+    });
+    if (!ok) return;
 
     try {
-      await deleteTopicMutation.mutateAsync(deactivateTarget._id);
-      toast.success(`Discipline "${deactivateTarget.name}" deactivated.`);
-      setDeactivateTarget(null);
+      await deleteTopicMutation.mutateAsync(topic._id);
+      toast.success(`Discipline "${topic.name}" deactivated.`);
     } catch (err: any) {
       toast.error('Failed to deactivate topic.');
     }
@@ -282,7 +287,7 @@ export const TopicsManagementPage: React.FC = () => {
             <Button
               variant="danger"
               size="sm"
-              onClick={() => setDeactivateTarget(item)}
+              onClick={() => handleDeactivateTopic(item)}
               title="Deactivate Discipline"
             >
               <Icon name="Trash2" size={13} />
@@ -296,76 +301,48 @@ export const TopicsManagementPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Tag" size={14} />
-            <span>Taxonomy Management</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Research Disciplines
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            SuperAdmin dashboard to organize, reorder, curate, and catalog research disciplines across Qindil.
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleOpenCreateModal}
-          leftIcon={<Icon name="Plus" size={16} />}
-        >
-          New Discipline
-        </Button>
-      </div>
+      <AdminPageHeader
+        discipline="Taxonomy Management"
+        title="Research Disciplines"
+        subtitle="SuperAdmin dashboard to organize, reorder, curate, and catalog research disciplines across Qindil."
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleOpenCreateModal}
+            leftIcon={<Icon name="Plus" size={16} />}
+          >
+            New Discipline
+          </Button>
+        }
+      />
 
       {/* Metrics Strip (Prompt 42 compliant) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Active Disciplines
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Icon name="CheckCircle" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {activeTopics}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Publicly accessible in catalog</div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Total Disciplines
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="Tag" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {totalTopics}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Taxonomy catalog entries</div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Cataloged Papers
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
-              <Icon name="FileText" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {totalArticles}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Articles across all disciplines</div>
-        </div>
+        <AdminStatCard
+          label="Active Disciplines"
+          value={activeTopics}
+          helperText="Publicly accessible in catalog"
+          icon="CheckCircle"
+          variant="success"
+          isLoading={isLoading}
+        />
+        <AdminStatCard
+          label="Total Disciplines"
+          value={totalTopics}
+          helperText="Taxonomy catalog entries"
+          icon="Tag"
+          variant="gold"
+          isLoading={isLoading}
+        />
+        <AdminStatCard
+          label="Cataloged Papers"
+          value={totalArticles}
+          helperText="Articles across all disciplines"
+          icon="FileText"
+          variant="info"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Topics DataTable */}
@@ -440,49 +417,8 @@ export const TopicsManagementPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Deactivate Confirmation Modal */}
-      {deactivateTarget && (
-        <Modal
-          isOpen={Boolean(deactivateTarget)}
-          onClose={() => setDeactivateTarget(null)}
-          title="Confirm Discipline Deactivation"
-          size="sm"
-        >
-          <div className="space-y-4 font-sans">
-            <div className="flex items-start space-x-3 text-amber-500 bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/30 text-xs">
-              <Icon name="AlertTriangle" size={18} className="shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-bold block">Deactivation Warning</span>
-                <span className="text-text/80">
-                  Are you sure you want to deactivate "
-                  <strong className="text-text font-bold">{deactivateTarget.name}</strong>"? It will be hidden from the public topics catalog.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setDeactivateTarget(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                isLoading={deleteTopicMutation.isPending}
-                onClick={handleDeactivateConfirm}
-                leftIcon={<Icon name="Trash2" size={14} />}
-              >
-                Deactivate
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

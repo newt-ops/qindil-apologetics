@@ -5,6 +5,8 @@ import { useReviewQueue, useReviewArticle } from '../../../hooks/useArticles';
 import { ArticleItem } from '../../../api/article';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { AdminPageHeader } from '../../../components/admin';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { Button } from '../../../components/ui/Button';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Spinner } from '../../../components/ui/Spinner';
@@ -25,6 +27,7 @@ export const ReviewQueuePage: React.FC = () => {
   const navigate = useNavigate();
   const { data: queue = [], isLoading, refetch } = useReviewQueue();
   const reviewMutation = useReviewArticle();
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
 
@@ -145,7 +148,16 @@ export const ReviewQueuePage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handleDecision(selectedArticle._id, 'publish')}
+              onClick={async () => {
+                const ok = await confirm({
+                  title: 'Publish Article Live',
+                  description: `Are you sure you want to approve and publish "${selectedArticle.title}" live? It will be immediately accessible on the public platform.`,
+                  confirmText: 'Publish Live',
+                  variant: 'primary',
+                });
+                if (!ok) return;
+                handleDecision(selectedArticle._id, 'publish');
+              }}
               isLoading={reviewMutation.isPending}
               leftIcon={<Icon name="Globe" size={14} />}
             >
@@ -329,6 +341,9 @@ export const ReviewQueuePage: React.FC = () => {
             </div>
           </Modal>
         )}
+
+        {/* Sensitive Confirmation Dialog */}
+        {ConfirmModalElement}
       </div>
     );
   }
@@ -337,21 +352,26 @@ export const ReviewQueuePage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans max-w-6xl mx-auto pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="flex items-center space-x-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-              Peer Review Queue
-            </h1>
-            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gold/20 text-gold border border-gold/30">
+      <AdminPageHeader
+        discipline="Editorial Subsystem"
+        title="Peer Review Queue"
+        subtitle="SuperAdmin editorial oversight for vetting, approving, requesting revisions, and publishing research papers."
+        actions={
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-gold/20 text-gold border border-gold/30">
               {queue.length} Pending
             </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Icon name="RefreshCw" size={13} />}
+              onClick={() => refetch()}
+            >
+              Refresh
+            </Button>
           </div>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            SuperAdmin editorial oversight for vetting, approving, requesting revisions, and publishing research papers.
-          </p>
-        </div>
-      </div>
+        }
+      />
 
       {/* Peer Review Guidelines Banner */}
       <div className="rounded-xl border border-border bg-surface p-4 sm:p-5 shadow-sm">
@@ -462,6 +482,9 @@ export const ReviewQueuePage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Sensitive Confirmation Dialog */}
+      {ConfirmModalElement}
     </div>
   );
 };

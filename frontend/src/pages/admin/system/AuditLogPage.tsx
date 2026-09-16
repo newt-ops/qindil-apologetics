@@ -5,6 +5,7 @@ import { useAuditLog } from '../../../hooks/useAuditLog';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { AuditLogItem } from '../../../api/audit';
 import { DataTable } from '../../../components/admin/DataTable';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -334,58 +335,50 @@ export const AuditLogPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Shield" size={14} />
-            <span>SuperAdmin Governance</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            System Audit Log & Activity Feed
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Chronological audit trail of all security changes, content lifecycle transitions, and administrative actions.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        discipline="SuperAdmin Governance"
+        title="System Audit Log & Activity Feed"
+        subtitle="Chronological audit trail of all security changes, content lifecycle transitions, and administrative actions."
+      />
 
       {/* 4-Pillar Governance KPI Metrics Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Recorded</span>
-            <Icon name="Activity" size={15} className="text-gold" />
-          </div>
-          <div className="text-2xl font-extrabold text-text tracking-tight font-mono">{totalEvents}</div>
-          <p className="text-[10px] text-textMuted">Cumulative events</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Editorial Actions</span>
-            <Icon name="FileText" size={15} className="text-info" />
-          </div>
-          <div className="text-2xl font-extrabold text-info tracking-tight font-mono">{editorialCount}</div>
-          <p className="text-[10px] text-textMuted">Articles & topics</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Task Operations</span>
-            <Icon name="CheckSquare" size={15} className="text-gold" />
-          </div>
-          <div className="text-2xl font-extrabold text-gold tracking-tight font-mono">{taskCount}</div>
-          <p className="text-[10px] text-textMuted">Tasks & video logs</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Governance</span>
-            <Icon name="Shield" size={15} className="text-success" />
-          </div>
-          <div className="text-2xl font-extrabold text-success tracking-tight font-mono">{governanceCount}</div>
-          <p className="text-[10px] text-textMuted">Access & settings</p>
-        </div>
+        <AdminStatCard
+          label="Total Recorded"
+          value={totalEvents}
+          helperText="Cumulative events"
+          icon="Activity"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setTargetTypeFilter('')}
+        />
+        <AdminStatCard
+          label="Editorial Actions"
+          value={editorialCount}
+          helperText="Articles & topics"
+          icon="FileText"
+          variant="info"
+          isLoading={isLoading}
+          onClick={() => setTargetTypeFilter('Article')}
+        />
+        <AdminStatCard
+          label="Task Operations"
+          value={taskCount}
+          helperText="Tasks & video logs"
+          icon="CheckSquare"
+          variant="gold"
+          isLoading={isLoading}
+          onClick={() => setTargetTypeFilter('Task')}
+        />
+        <AdminStatCard
+          label="Governance"
+          value={governanceCount}
+          helperText="Access & settings"
+          icon="Shield"
+          variant="success"
+          isLoading={isLoading}
+          onClick={() => setTargetTypeFilter('User')}
+        />
       </div>
 
       {/* 1-Touch Target Resource Filter Tabs */}

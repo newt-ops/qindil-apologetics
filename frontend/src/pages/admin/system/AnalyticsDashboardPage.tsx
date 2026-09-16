@@ -18,6 +18,7 @@ import {
   useArticlesOverTime,
   useTeamActivity,
 } from '../../../hooks/useAnalytics';
+import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { useThemeStore } from '../../../stores/themeStore';
 
@@ -187,97 +188,63 @@ export const AnalyticsDashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans pb-16">
       {/* Page Header & Range Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Activity" size={14} />
-            <span>Platform Governance</span>
+      <AdminPageHeader
+        discipline="Platform Governance"
+        title="Analytics & Intelligence"
+        subtitle="System performance telemetry, article readership metrics, and operational throughput."
+        actions={
+          <div className="flex items-center bg-surface border border-border p-1 rounded-xl space-x-1 shrink-0">
+            {(['30d', '90d', '1y'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 ${
+                  range === r
+                    ? 'bg-gold text-bg shadow-sm'
+                    : 'text-textMuted hover:text-text hover:bg-bg/50'
+                }`}
+              >
+                {r === '30d' ? '30 Days' : r === '90d' ? '90 Days' : '1 Year'}
+              </button>
+            ))}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Analytics &amp; Intelligence
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            System performance telemetry, article readership metrics, and operational throughput.
-          </p>
-        </div>
-
-        {/* Range Selector Controls */}
-        <div className="flex items-center bg-surface border border-border p-1 rounded-xl space-x-1 shrink-0 self-start md:self-auto">
-          {(['30d', '90d', '1y'] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 ${
-                range === r
-                  ? 'bg-gold text-bg shadow-sm'
-                  : 'text-textMuted hover:text-text hover:bg-bg/50'
-              }`}
-            >
-              {r === '30d' ? '30 Days' : r === '90d' ? '90 Days' : '1 Year'}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       {/* Top Metric Cards (Prompt 42 Density: 2-col on mobile, 4-col on desktop) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Published Articles */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-2 relative overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Published Articles</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="FileText" size={15} />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-text">
-            {isOverviewLoading ? '...' : overview?.totalPublishedArticles || 0}
-          </div>
-          <div className="text-[10px] text-textMuted">Cataloged on platform</div>
-        </div>
-
-        {/* Total Views */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-2 relative overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Readership</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Icon name="Eye" size={15} />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-text">
-            {isOverviewLoading
-              ? '...'
-              : (overview?.totalViews || 0).toLocaleString()}
-          </div>
-          <div className="text-[10px] text-textMuted">Cumulative impressions</div>
-        </div>
-
-        {/* Active Tasks */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-2 relative overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Active Pipeline</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <Icon name="CheckCircle" size={15} />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-text">
-            {isOverviewLoading ? '...' : overview?.activeTasksCount || 0}
-          </div>
-          <div className="text-[10px] text-amber-500/80 font-medium">Pending, progress, or review</div>
-        </div>
-
-        {/* Published Videos */}
-        <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-4 space-y-2 relative overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between text-textMuted">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Video Productions</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Icon name="Video" size={15} />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-text">
-            {isOverviewLoading ? '...' : overview?.videosByStage?.published || 0}
-          </div>
-          <div className="text-[10px] text-emerald-500/80 font-medium">Live digital media</div>
-        </div>
+        <AdminStatCard
+          label="Published Articles"
+          value={overview?.totalPublishedArticles || 0}
+          helperText="Cataloged on platform"
+          icon="FileText"
+          variant="gold"
+          isLoading={isOverviewLoading}
+        />
+        <AdminStatCard
+          label="Total Readership"
+          value={(overview?.totalViews || 0).toLocaleString()}
+          helperText="Cumulative impressions"
+          icon="Eye"
+          variant="info"
+          isLoading={isOverviewLoading}
+        />
+        <AdminStatCard
+          label="Active Pipeline"
+          value={overview?.activeTasksCount || 0}
+          helperText="Pending, progress, or review"
+          icon="CheckCircle"
+          variant="warning"
+          isLoading={isOverviewLoading}
+        />
+        <AdminStatCard
+          label="Video Productions"
+          value={overview?.videosByStage?.published || 0}
+          helperText="Live digital media"
+          icon="Video"
+          variant="success"
+          isLoading={isOverviewLoading}
+        />
       </div>
 
       {/* Main Charts Grid */}

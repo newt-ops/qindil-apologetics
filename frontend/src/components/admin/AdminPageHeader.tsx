@@ -5,7 +5,9 @@ import AdminBreadcrumbs, { BreadcrumbItem } from './AdminBreadcrumbs';
 export interface AdminPageHeaderProps {
   title: string;
   description?: string;
+  subtitle?: string; // alias for description
   badge?: string;
+  discipline?: string; // alias for badge
   badgeIcon?: IconName;
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
@@ -20,13 +22,17 @@ export interface AdminPageHeaderProps {
 export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   title,
   description,
+  subtitle,
   badge,
+  discipline,
   badgeIcon,
   breadcrumbs,
   actions,
   children,
   className = '',
 }) => {
+  const displayBadge = badge || discipline;
+  const displayDescription = description || subtitle;
   return (
     <div className={`space-y-4 border-b border-border/70 pb-5 font-sans ${className}`}>
       {/* Optional Breadcrumb Trail */}
@@ -36,10 +42,10 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0 flex-1">
           {/* Category / Discipline Pill Badge */}
-          {badge && (
+          {displayBadge && (
             <div className="inline-flex items-center space-x-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-0.5 text-xs font-semibold text-gold mb-1 shadow-apple-sm">
               {badgeIcon && <Icon name={badgeIcon} size={13} />}
-              <span>{badge}</span>
+              <span>{displayBadge}</span>
             </div>
           )}
 
@@ -49,9 +55,9 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
           </h1>
 
           {/* Descriptive Subtitle */}
-          {description && (
+          {displayDescription && (
             <p className="text-xs sm:text-sm text-textMuted max-w-3xl leading-relaxed">
-              {description}
+              {displayDescription}
             </p>
           )}
         </div>
