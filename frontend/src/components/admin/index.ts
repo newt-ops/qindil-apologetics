@@ -5,3 +5,7 @@ export * from './FileUpload';
 export * from './DataTable';
 export * from './Sidebar';
 export * from './VideoEmbed';
+export * from './AdminCommandPalette';
+export * from './AdminBreadcrumbs';
+export * from './AdminPageHeader';
+export * from './AdminStatCard';

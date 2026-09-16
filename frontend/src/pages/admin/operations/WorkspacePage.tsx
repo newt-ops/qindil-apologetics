@@ -7,7 +7,7 @@ import { TaskItem, TaskType } from '../../../api/task';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { TaskCardSkeleton } from '../../../components/ui/Skeleton';
-import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { StatusBadge, AdminPageHeader, AdminStatCard } from '../../../components/admin';
 import { useAuthStore } from '../../../stores/authStore';
 
 // Helper to format due dates with relative countdown
@@ -198,131 +198,76 @@ export const WorkspacePage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Workspace Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Folder" size={14} />
-            <span>Personal Operations Workspace</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Assigned Operations Tasks
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Welcome, <span className="text-gold font-semibold">{user?.name}</span>. Track your active task assignments, deadlines, and workflow drafts.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2 shrink-0">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => refetch()}
-            leftIcon={<Icon name="RefreshCw" size={14} />}
-          >
-            Refresh
-          </Button>
-
-          <Link to="/admin/articles/mine">
-            <Button variant="primary" size="sm" leftIcon={<Icon name="FileText" size={14} />}>
-              My Drafts
+      <AdminPageHeader
+        badge="Personal Operations Workspace"
+        badgeIcon="Folder"
+        title="Assigned Operations Tasks"
+        description={`Welcome, ${user?.name || 'Staff'}. Track your active task assignments, deadlines, and workflow drafts.`}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => refetch()}
+              leftIcon={<Icon name="RefreshCw" size={14} />}
+            >
+              Refresh
             </Button>
-          </Link>
-        </div>
-      </div>
 
-      {/* Production KPI Metrics Strip (Prompt 42 density) */}
+            <Link to="/admin/articles">
+              <Button variant="primary" size="sm" leftIcon={<Icon name="FileText" size={14} />}>
+                My Drafts
+              </Button>
+            </Link>
+          </>
+        }
+      />
+
+      {/* Production KPI Metrics Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Assigned */}
-        <div
+        <AdminStatCard
+          title="Assigned Tasks"
+          value={tasks.length}
+          description="Total in your queue"
+          icon="Folder"
+          variant="gold"
+          isActive={filterTab === 'all'}
           onClick={() => setFilterTab('all')}
-          className={`rounded-xl border p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all ${
-            filterTab === 'all'
-              ? 'border-gold bg-gold/10 shadow-md'
-              : 'border-border bg-surface hover:border-gold/40'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Assigned Tasks
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold">
-              <Icon name="Folder" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-text">
-            {tasks.length}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Total in your queue</div>
-        </div>
+          isLoading={isLoading}
+        />
 
-        {/* Overdue */}
-        <div
+        <AdminStatCard
+          title="Overdue"
+          value={overdueTasks.length}
+          description="Requires immediate action"
+          icon="AlertCircle"
+          variant="danger"
+          isActive={filterTab === 'overdue'}
           onClick={() => setFilterTab('overdue')}
-          className={`rounded-xl border p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all ${
-            filterTab === 'overdue'
-              ? 'border-danger bg-danger/10 shadow-md'
-              : 'border-border bg-surface hover:border-danger/40'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Overdue
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-danger/10 text-danger">
-              <Icon name="AlertCircle" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-danger">
-            {overdueTasks.length}
-          </div>
-          <div className="mt-0.5 text-[10px] text-danger/80 font-medium">Requires immediate action</div>
-        </div>
+          isLoading={isLoading}
+        />
 
-        {/* Due Soon (7d) */}
-        <div
+        <AdminStatCard
+          title="Due Soon (7d)"
+          value={dueSoonTasks.length}
+          description="Upcoming deadlines"
+          icon="Calendar"
+          variant="amber"
+          isActive={filterTab === 'dueSoon'}
           onClick={() => setFilterTab('dueSoon')}
-          className={`rounded-xl border p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all ${
-            filterTab === 'dueSoon'
-              ? 'border-amber-500 bg-amber-500/10 shadow-md'
-              : 'border-border bg-surface hover:border-amber-500/40'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              Due Soon (7d)
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <Icon name="Calendar" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-amber-500">
-            {dueSoonTasks.length}
-          </div>
-          <div className="mt-0.5 text-[10px] text-amber-500/80 font-medium">Upcoming deadlines</div>
-        </div>
+          isLoading={isLoading}
+        />
 
-        {/* In Progress */}
-        <div
+        <AdminStatCard
+          title="In Progress"
+          value={inProgressTasks.length}
+          description="Active assignments"
+          icon="Activity"
+          variant="blue"
+          isActive={filterTab === 'inProgress'}
           onClick={() => setFilterTab('inProgress')}
-          className={`rounded-xl border p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all ${
-            filterTab === 'inProgress'
-              ? 'border-blue-500 bg-blue-500/10 shadow-md'
-              : 'border-border bg-surface hover:border-blue-500/40'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
-              In Progress
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Icon name="Activity" size={14} />
-            </div>
-          </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-blue-400">
-            {inProgressTasks.length}
-          </div>
-          <div className="mt-0.5 text-[10px] text-textMuted">Active assignments</div>
-        </div>
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Quick Filter Tabs */}

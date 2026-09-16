@@ -6,7 +6,7 @@ import { CalendarEventItem, EventType } from '../../../api/event';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
-import { StatusBadge } from '../../../components/admin/StatusBadge';
+import { StatusBadge, AdminPageHeader } from '../../../components/admin';
 import { CalendarGridSkeleton } from '../../../components/ui/Skeleton';
 
 export const CalendarPage: React.FC = () => {
@@ -117,83 +117,75 @@ export const CalendarPage: React.FC = () => {
   return (
     <div className="space-y-6 font-sans pb-16">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold mb-2">
-            <Icon name="Calendar" size={14} />
-            <span>Operations Schedule</span>
+      <AdminPageHeader
+        badge="Operations Schedule"
+        badgeIcon="Calendar"
+        title="Team Operations Calendar"
+        description="Track task deadlines, team research syncs, and publication milestones."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {/* View toggle */}
+            <div className="flex items-center rounded-lg border border-border bg-surface p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('month')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'month'
+                    ? 'bg-gold text-bg font-bold shadow-xs'
+                    : 'text-textMuted hover:text-text'
+                }`}
+              >
+                Month View
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('agenda')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'agenda'
+                    ? 'bg-gold text-bg font-bold shadow-xs'
+                    : 'text-textMuted hover:text-text'
+                }`}
+              >
+                Agenda View
+              </button>
+            </div>
+
+            {/* Month Navigation Controls */}
+            <div className="flex items-center space-x-1.5 bg-surface p-1 rounded-xl border border-border">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePrevMonth}
+                className="!px-2 text-textMuted hover:text-gold"
+                title="Previous Month"
+              >
+                <Icon name="ChevronLeft" size={15} />
+              </Button>
+
+              <button
+                onClick={handleToday}
+                className="px-2.5 py-1 text-xs font-bold text-text hover:text-gold transition-colors"
+              >
+                Today
+              </button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNextMonth}
+                className="!px-2 text-textMuted hover:text-gold"
+                title="Next Month"
+              >
+                <Icon name="ChevronRight" size={15} />
+              </Button>
+
+              <span className="text-xs sm:text-sm font-extrabold text-gold px-2 text-center whitespace-nowrap">
+                {currentDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+              </span>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Team Operations Calendar
-          </h1>
-          <p className="text-xs sm:text-sm text-textMuted mt-1">
-            Track task deadlines, team research syncs, and publication milestones.
-          </p>
-        </div>
-
-        {/* View Mode & Month Navigation */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View toggle */}
-          <div className="flex items-center rounded-lg border border-border bg-surface p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode('month')}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
-                viewMode === 'month'
-                  ? 'bg-gold text-bg font-bold shadow-xs'
-                  : 'text-textMuted hover:text-text'
-              }`}
-            >
-              Month View
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('agenda')}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
-                viewMode === 'agenda'
-                  ? 'bg-gold text-bg font-bold shadow-xs'
-                  : 'text-textMuted hover:text-text'
-              }`}
-            >
-              Agenda View
-            </button>
-          </div>
-
-          {/* Month Navigation Controls */}
-          <div className="flex items-center space-x-1.5 bg-surface p-1 rounded-xl border border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handlePrevMonth}
-              className="!px-2 text-textMuted hover:text-gold"
-              title="Previous Month"
-            >
-              <Icon name="ChevronLeft" size={15} />
-            </Button>
-
-            <button
-              onClick={handleToday}
-              className="px-2.5 py-1 text-xs font-bold text-text hover:text-gold transition-colors"
-            >
-              Today
-            </button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNextMonth}
-              className="!px-2 text-textMuted hover:text-gold"
-              title="Next Month"
-            >
-              <Icon name="ChevronRight" size={15} />
-            </Button>
-
-            <span className="text-xs sm:text-sm font-extrabold text-gold px-2 text-center whitespace-nowrap">
-              {currentDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-            </span>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Event Type Filter Strip */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
