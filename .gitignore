@@ -28,3 +28,7 @@ Thumbs.db
 # IDE Folders
 .vscode/
 .idea/
+
+# Local Brand & Logo Raw Assets
+/logo/
+
