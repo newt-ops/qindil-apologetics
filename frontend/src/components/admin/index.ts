@@ -9,3 +9,4 @@ export * from './AdminCommandPalette';
 export * from './AdminBreadcrumbs';
 export * from './AdminPageHeader';
 export * from './AdminStatCard';
+export { AdminPageSkeleton } from '../ui/Skeleton';

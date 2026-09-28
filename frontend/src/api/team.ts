@@ -1,5 +1,10 @@
 import apiClient from './client';
 import { User } from '../stores/authStore';
+import { MemberWorkStats } from './me';
+
+export interface TeamMemberItem extends User {
+  workStats?: MemberWorkStats;
+}
 
 export interface ListTeamParams {
   page?: number;
@@ -11,7 +16,7 @@ export interface ListTeamParams {
 
 export interface ListTeamResponse {
   success: boolean;
-  data: User[];
+  data: TeamMemberItem[];
   meta: {
     page: number;
     limit: number;
@@ -37,7 +42,7 @@ export const listTeamApi = async (params?: ListTeamParams) => {
 };
 
 export const getTeamMemberApi = async (id: string) => {
-  const response = await apiClient.get<{ success: boolean; data: User }>(
+  const response = await apiClient.get<{ success: boolean; data: TeamMemberItem }>(
     `/team/${id}`
   );
   return response.data;

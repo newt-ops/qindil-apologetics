@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   listTeam,
   getTeamMember,
+  getMemberWorkStats,
   updateMemberRole,
   updateMemberStatus,
 } from '../controllers/team.controller.js';
@@ -18,6 +19,9 @@ router.use(requireRole('superAdmin'));
 
 // GET /api/v1/team — List team members
 router.get('/', listTeam);
+
+// GET /api/v1/team/:id/stats — Get member performance & output metrics
+router.get('/:id/stats', getMemberWorkStats);
 
 // GET /api/v1/team/:id — Get member profile
 router.get('/:id', getTeamMember);

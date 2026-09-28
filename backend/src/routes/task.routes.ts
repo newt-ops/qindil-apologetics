@@ -24,8 +24,8 @@ router.get('/mine', requireRole('admin'), getMyTasks);
 // POST /api/v1/tasks — Assign a new task (superAdmin only)
 router.post('/', requireRole('superAdmin'), validate(assignTaskSchema), assignTask);
 
-// GET /api/v1/tasks — List all tasks with filters (superAdmin only)
-router.get('/', requireRole('superAdmin'), listTasks);
+// GET /api/v1/tasks — List tasks with filters (superAdmin sees all team tasks; admin sees assigned tasks)
+router.get('/', requireRole('admin'), listTasks);
 
 // GET /api/v1/tasks/:id — Get task details by ID
 router.get('/:id', requireRole('admin'), getTaskById);

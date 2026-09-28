@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Icon from '../../../components/icons/Icon';
 import {
   useArticleForEdit,
   useUpdateArticleDraft,
-  useAutosaveArticle,
   useSubmitForReview,
+  usePublishArticle,
+  useDeleteArticle,
 } from '../../../hooks/useArticles';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { useAdminTopics } from '../../../hooks/useTopics';
+import { useActiveTopics } from '../../../hooks/usePublicData';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import FileUpload from '../../../components/admin/FileUpload';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
@@ -15,7 +18,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Select } from '../../../components/ui/Select';
-import { Spinner } from '../../../components/ui/Spinner';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 import { toast } from '../../../hooks/useToast';
 import { useAuthStore } from '../../../stores/authStore';
 
@@ -35,11 +38,15 @@ export const ArticleEditorPage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
 
   const { data: article, isLoading: isLoadingArticle, isError, error } = useArticleForEdit(id);
-  const { data: topics = [] } = useAdminTopics();
+  const { data: adminTopics = [] } = useAdminTopics();
+  const { data: publicTopics = [] } = useActiveTopics();
+  const rawTopics = adminTopics.length > 0 ? adminTopics : publicTopics;
 
   const updateDraftMutation = useUpdateArticleDraft();
-  const autosaveMutation = useAutosaveArticle();
   const submitReviewMutation = useSubmitForReview();
+  const publishMutation = usePublishArticle();
+  const deleteMutation = useDeleteArticle();
+  const { confirm, ConfirmModalElement } = useConfirm();
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -48,12 +55,11 @@ export const ArticleEditorPage: React.FC = () => {
   const [excerpt, setExcerpt] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [slug, setSlug] = useState('');
-
-  // Autosave & Dirty State
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const isInitialLoadRef = useRef(true);
-  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isSuperAdmin = user?.roles?.some((r: any) =>
+    typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
+  );
 
   // Sync state when article data is loaded
   useEffect(() => {
@@ -63,7 +69,7 @@ export const ArticleEditorPage: React.FC = () => {
         (article as any).linkedTaskStatus ||
         (typeof linkedTask === 'object' ? linkedTask?.status : undefined);
 
-      if (linkedTaskStatus === 'pending') {
+      if (linkedTaskStatus === 'pending' && !isSuperAdmin) {
         const taskId = typeof linkedTask === 'object' ? linkedTask._id : linkedTask;
         toast.info('Please accept and start your assigned task before accessing the writing workspace.');
         if (taskId) {
@@ -75,33 +81,28 @@ export const ArticleEditorPage: React.FC = () => {
       setTitle(article.title || '');
       const tId =
         typeof article.topic === 'object' && article.topic
-          ? article.topic._id
-          : article.topic || '';
+          ? (article.topic as any)._id?.toString() || (article.topic as any).id?.toString() || ''
+          : article.topic ? String(article.topic) : '';
       setTopicId(tId);
       setContent(article.content || '');
       setExcerpt(article.excerpt || '');
       setCoverImageUrl(article.coverImageUrl || '');
       setSlug(article.slug || '');
-      setLastSavedAt(article.lastAutosavedAt ? new Date(article.lastAutosavedAt) : new Date(article.updatedAt));
-      setSaveStatus('saved');
-
-      // Reset initial load flag after hydration
-      setTimeout(() => {
-        isInitialLoadRef.current = false;
-      }, 400);
+      setLastSavedAt(new Date(article.updatedAt));
     }
-  }, [article, navigate]);
+  }, [article, navigate, isSuperAdmin]);
 
-  const isSuperAdmin = user?.roles?.some((r: any) =>
-    typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
-  );
   const isAuthor = article
     ? typeof article.author === 'object'
       ? article.author._id === user?._id
       : article.author === user?._id
     : false;
 
-  const isEditable = Boolean(isSuperAdmin || (isAuthor && article?.status !== 'inReview'));
+  // SuperAdmin can edit at any time; Authors can edit unless actively under review ('inReview')
+  const isEditable = Boolean(
+    (isAuthor || isSuperAdmin) &&
+    (isSuperAdmin || article?.status !== 'inReview')
+  );
 
   // Live Metrics Calculation
   const plainText = extractTextFromContent(content);
@@ -123,98 +124,29 @@ export const ArticleEditorPage: React.FC = () => {
   const isMetadataComplete =
     isTitleValid && isTopicValid && isExcerptValid && isCoverImageValid && isContentValid;
 
-  // Cleanup debounced timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-      }
-    };
-  }, []);
-
-  // Debounced 3s Autosave Trigger
-  const triggerAutosave = (
-    overrides?: Partial<{
-      title: string;
-      topicId: string;
-      content: any;
-      excerpt: string;
-      coverImageUrl: string;
-      slug: string;
-    }>
-  ) => {
-    if (!id || !isEditable || isInitialLoadRef.current) return;
-
-    setSaveStatus('unsaved');
-
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-    }
-
-    autosaveTimerRef.current = setTimeout(async () => {
-      setSaveStatus('saving');
-      try {
-        const payload = {
-          title: overrides?.title !== undefined ? overrides.title : title,
-          topic: (overrides?.topicId !== undefined ? overrides.topicId : topicId) || undefined,
-          content: overrides?.content !== undefined ? overrides.content : content,
-          excerpt: overrides?.excerpt !== undefined ? overrides.excerpt : excerpt,
-          coverImageUrl: overrides?.coverImageUrl !== undefined ? overrides.coverImageUrl : coverImageUrl,
-          slug: (overrides?.slug !== undefined ? overrides.slug : slug) || undefined,
-        };
-
-        const res = await autosaveMutation.mutateAsync({
-          id,
-          data: payload,
-        });
-
-        setSaveStatus('saved');
-        const savedTime = res.data?.lastAutosavedAt ? new Date(res.data.lastAutosavedAt) : new Date();
-        setLastSavedAt(savedTime);
-      } catch (err) {
-        console.error('Autosave error:', err);
-        setSaveStatus('unsaved');
-      }
-    }, 3000);
-  };
-
-  // Field change wrappers with debounced autosave trigger
-  const handleTitleChange = (val: string) => {
-    setTitle(val);
-    triggerAutosave({ title: val });
-  };
-
-  const handleTopicChange = (val: string) => {
-    setTopicId(val);
-    triggerAutosave({ topicId: val });
-  };
-
-  const handleContentChange = (json: any) => {
-    setContent(json);
-    triggerAutosave({ content: json });
-  };
-
-  const handleExcerptChange = (val: string) => {
-    setExcerpt(val);
-    triggerAutosave({ excerpt: val });
-  };
-
+  // Simple state setters (NO background autosave!)
+  const handleTitleChange = (val: string) => setTitle(val);
+  const handleTopicChange = (val: string) => setTopicId(val);
+  const handleContentChange = (json: any) => setContent(json);
+  const handleExcerptChange = (val: string) => setExcerpt(val);
   const handleCoverImageChange = (url: string) => {
     setCoverImageUrl(url);
-    triggerAutosave({ coverImageUrl: url });
+    if (url) {
+      toast.info('Cover banner uploaded. Click "Save Draft" to keep your updates.');
+    } else {
+      toast.info('Cover banner removed. Click "Save Draft" to keep your updates.');
+    }
+  };
+  const handleSlugChange = (val: string) => setSlug(val);
+
+  const handleGoBack = () => {
+    navigate('/admin/articles');
   };
 
-  const handleSlugChange = (val: string) => {
-    setSlug(val);
-    triggerAutosave({ slug: val });
-  };
-
-  // Immediate Manual Save
+  // Explicit Manual Save Draft
   const handleManualSave = async () => {
     if (!id || !isEditable) return;
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
 
-    setSaveStatus('saving');
     try {
       const res = await updateDraftMutation.mutateAsync({
         id,
@@ -227,18 +159,16 @@ export const ArticleEditorPage: React.FC = () => {
           slug: slug || undefined,
         },
       });
-      setSaveStatus('saved');
-      const savedTime = res.data?.lastAutosavedAt ? new Date(res.data.lastAutosavedAt) : new Date();
+      const savedTime = res.data?.updatedAt ? new Date(res.data.updatedAt) : new Date();
       setLastSavedAt(savedTime);
       toast.success('Draft saved successfully.');
     } catch (err: any) {
-      const msg = err?.response?.data?.error?.message || 'Failed to save draft.';
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to save draft.';
       toast.error(msg);
-      setSaveStatus('unsaved');
     }
   };
 
-  // Submit for Review
+  // Submit for Peer Review
   const handleSubmitForReview = async () => {
     if (!id || !isEditable) return;
 
@@ -246,8 +176,6 @@ export const ArticleEditorPage: React.FC = () => {
       toast.error('All metadata (Title, Topic, Summary, Cover Image, Content) must be completed before submitting.');
       return;
     }
-
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
 
     try {
       await submitReviewMutation.mutateAsync({
@@ -264,17 +192,44 @@ export const ArticleEditorPage: React.FC = () => {
       toast.success('Article submitted for SuperAdmin review!');
       navigate('/admin/workspace');
     } catch (err: any) {
-      const msg = err?.response?.data?.error?.message || 'Failed to submit article for review.';
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to submit article for review.';
+      toast.error(msg);
+    }
+  };
+
+  const handlePublishNow = async () => {
+    if (!id) return;
+    try {
+      await publishMutation.mutateAsync(id);
+      toast.success('🎉 Article successfully published live!');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to publish article.';
+      toast.error(msg);
+    }
+  };
+
+  const handleDeleteArticle = async () => {
+    if (!id) return;
+    const ok = await confirm({
+      title: 'Delete Article Permanently',
+      description: `Are you sure you want to permanently delete "${title || article?.title || 'this article'}"? This action cannot be undone.`,
+      confirmText: 'Delete Article',
+      variant: 'danger',
+    });
+    if (!ok) return;
+
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Article deleted successfully.');
+      navigate('/admin/articles');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to delete article.';
       toast.error(msg);
     }
   };
 
   if (isLoadingArticle) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="form" />;
   }
 
   if (isError || !article) {
@@ -308,12 +263,23 @@ export const ArticleEditorPage: React.FC = () => {
     );
   }
 
+  const existingTopic = typeof article?.topic === 'object' && article?.topic ? article.topic : null;
+  const existingTopicId = existingTopic
+    ? ((existingTopic as any)._id?.toString() || (existingTopic as any).id?.toString())
+    : null;
+  const hasExisting =
+    existingTopic &&
+    !rawTopics.some(
+      (t: any) => ((t as any)._id?.toString() || (t as any).id?.toString()) === existingTopicId
+    );
+  const combinedTopics = hasExisting ? [existingTopic, ...rawTopics] : rawTopics;
+
   const topicOptions = [
     { value: '', label: 'Select a Topic...' },
-    ...topics
-      .filter((t) => t.isActive)
-      .map((t) => ({
-        value: t._id,
+    ...combinedTopics
+      .filter((t: any) => t.isActive !== false)
+      .map((t: any) => ({
+        value: (t as any)._id?.toString() || (t as any).id?.toString() || '',
         label: t.name,
       })),
   ];
@@ -324,39 +290,15 @@ export const ArticleEditorPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => navigate('/admin/articles')}
+            onClick={handleGoBack}
             className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border bg-surface text-textMuted hover:text-gold hover:border-gold/50 transition-colors shrink-0"
-            title="Back to Articles List"
+            title="Back to Articles"
           >
             <Icon name="ArrowLeft" size={16} />
           </button>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={article.status} />
-
-              {/* Autosave Status Indicator */}
-              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border border-border bg-bg/80 text-[11px] font-mono">
-                {saveStatus === 'saving' && (
-                  <>
-                    <Spinner size="sm" />
-                    <span className="text-gold">Saving...</span>
-                  </>
-                )}
-                {saveStatus === 'saved' && (
-                  <>
-                    <Icon name="Check" size={12} className="text-success" />
-                    <span className="text-textMuted">
-                      Saved {lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                    </span>
-                  </>
-                )}
-                {saveStatus === 'unsaved' && (
-                  <>
-                    <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
-                    <span className="text-gold">Unsaved changes</span>
-                  </>
-                )}
-              </div>
 
               {/* Live Reading Metrics Pill */}
               <div className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border border-border bg-bg/80 text-[11px] font-mono text-textMuted">
@@ -389,32 +331,64 @@ export const ArticleEditorPage: React.FC = () => {
           )}
 
           {isEditable && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleManualSave}
-                isLoading={updateDraftMutation.isPending}
-                leftIcon={<Icon name="Save" size={14} />}
-              >
-                Save Draft
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSubmitForReview}
-                isLoading={submitReviewMutation.isPending}
-                disabled={!isMetadataComplete}
-                rightIcon={<Icon name="Send" size={14} />}
-                title={
-                  !isMetadataComplete
-                    ? 'Complete all metadata fields (Title, Topic, Excerpt, Cover Image, Content) to submit.'
-                    : 'Submit for SuperAdmin Review'
-                }
-              >
-                Submit for Review
-              </Button>
-            </>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleManualSave}
+              isLoading={updateDraftMutation.isPending}
+              disabled={submitReviewMutation.isPending || publishMutation.isPending}
+              leftIcon={<Icon name="Save" size={14} />}
+              className="border-gold/40 text-gold hover:bg-gold/10 font-bold"
+            >
+              {article.status === 'published' ? 'Save Changes' : 'Save Draft'}
+            </Button>
+          )}
+
+          {article.status === 'approved' && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handlePublishNow}
+              isLoading={publishMutation.isPending}
+              disabled={updateDraftMutation.isPending}
+              leftIcon={<Icon name="Globe" size={14} />}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md"
+            >
+              Publish Article Now
+            </Button>
+          )}
+
+          {isEditable && (article.status === 'draft' || article.status === 'changesRequested') && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSubmitForReview}
+              isLoading={submitReviewMutation.isPending}
+              disabled={!isMetadataComplete || updateDraftMutation.isPending}
+              rightIcon={<Icon name="Send" size={14} />}
+              title={
+                !isMetadataComplete
+                  ? 'Complete all metadata fields (Title, Topic, Excerpt, Cover Image, Content) to submit.'
+                  : 'Submit for SuperAdmin Review'
+              }
+            >
+              Submit for Review
+            </Button>
+          )}
+
+          {(isAuthor || isSuperAdmin) && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDeleteArticle}
+              isLoading={deleteMutation.isPending}
+              disabled={updateDraftMutation.isPending || submitReviewMutation.isPending || publishMutation.isPending}
+              leftIcon={<Icon name="Trash2" size={14} />}
+              className="bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/30 font-semibold"
+              title="Delete this article permanently"
+            >
+              Delete
+            </Button>
           )}
         </div>
       </div>
@@ -427,29 +401,11 @@ export const ArticleEditorPage: React.FC = () => {
             <span>Reviewer Requested Revisions</span>
           </div>
           <p className="text-xs sm:text-sm text-text leading-relaxed whitespace-pre-wrap pl-6 bg-surface/60 p-3.5 rounded-lg border border-gold/20 font-serif italic">
-            "{article.reviewNotes}"
+            &quot;{article.reviewNotes}&quot;
           </p>
           <p className="text-[11px] text-textMuted pl-6">
-            Make the requested edits below and click "Submit for Review" when finished.
+            Make the requested edits below, save draft, and click &quot;Submit for Review&quot; when finished.
           </p>
-        </div>
-      )}
-
-      {/* Read-Only Locked Banner (If In Review or Published) */}
-      {!isEditable && (
-        <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-400 text-xs font-semibold shadow-sm">
-          <div className="flex items-center space-x-3">
-            <Icon name="Info" size={20} className="shrink-0" />
-            <div>
-              <p className="font-bold text-text">Editing Locked (Read-Only Mode)</p>
-              <p className="text-textMuted text-[11px] mt-0.5">
-                This article is currently <span className="text-gold font-bold">{article.status}</span>. Author editing is restricted during review.
-              </p>
-            </div>
-          </div>
-          <Button variant="secondary" size="sm" onClick={() => navigate('/admin/workspace')}>
-            Back to Workspace
-          </Button>
         </div>
       )}
 
@@ -528,7 +484,7 @@ export const ArticleEditorPage: React.FC = () => {
                   )}
                 </li>
                 <li className="flex items-center justify-between">
-                  <span className="text-textMuted">Discipline Taxonomy</span>
+                  <span className="text-textMuted">Topic Taxonomy</span>
                   {isTopicValid ? (
                     <span className="text-success flex items-center gap-1 font-semibold">
                       <Icon name="Check" size={12} /> Valid
@@ -581,7 +537,7 @@ export const ArticleEditorPage: React.FC = () => {
             {/* Topic Select */}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider">
-                Discipline Category <span className="text-danger">*</span>
+                Topic Category <span className="text-danger">*</span>
               </label>
               <Select
                 value={topicId}
@@ -608,6 +564,7 @@ export const ArticleEditorPage: React.FC = () => {
                 folder="qindil/articles"
                 value={coverImageUrl}
                 onUploadComplete={handleCoverImageChange}
+                disabled={!isEditable}
               />
             </div>
           </div>
@@ -615,7 +572,7 @@ export const ArticleEditorPage: React.FC = () => {
           {/* Article Provenance Summary */}
           <div className="rounded-xl border border-border bg-surface p-5 space-y-3 text-xs text-textMuted shadow-sm">
             <h4 className="font-bold text-text uppercase tracking-wider text-[11px] border-b border-border pb-2">
-              Article Provenance
+              Article Details
             </h4>
             <div className="flex justify-between">
               <span>Author:</span>
@@ -623,14 +580,6 @@ export const ArticleEditorPage: React.FC = () => {
                 {typeof article.author === 'object' ? article.author.name : 'You'}
               </span>
             </div>
-            {article.lastEditedBy && (
-              <div className="flex justify-between">
-                <span>Last Edited By:</span>
-                <span className="font-semibold text-gold">
-                  {typeof article.lastEditedBy === 'object' ? article.lastEditedBy.name : 'SuperAdmin'}
-                </span>
-              </div>
-            )}
             <div className="flex justify-between">
               <span>Status:</span>
               <StatusBadge status={article.status} size="sm" />
@@ -650,7 +599,7 @@ export const ArticleEditorPage: React.FC = () => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span>Last Autosaved:</span>
+              <span>Last Saved:</span>
               <span className="font-mono text-text">
                 {lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A'}
               </span>
@@ -658,6 +607,8 @@ export const ArticleEditorPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {ConfirmModalElement}
     </div>
   );
 };

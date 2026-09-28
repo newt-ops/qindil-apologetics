@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/icons/Icon';
 import { useSettings, useUpdateSettings } from '../../../hooks/useSettings';
-import { AdminPageHeader } from '../../../components/admin';
+import { AdminPageHeader, AdminPageSkeleton } from '../../../components/admin';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -25,6 +25,7 @@ export const SiteSettingsPage: React.FC = () => {
 
   // Maintenance Mode State
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [isTogglingMaintenance, setIsTogglingMaintenance] = useState(false);
   const { confirm, ConfirmModalElement } = useConfirm();
 
   // Populate form fields when settings load
@@ -55,9 +56,32 @@ export const SiteSettingsPage: React.FC = () => {
         variant: 'danger',
       });
       if (!ok) return;
-      setMaintenanceMode(true);
     } else {
-      setMaintenanceMode(false);
+      const ok = await confirm({
+        title: 'Deactivate Maintenance Mode',
+        description: 'Deactivating Maintenance Mode will restore live public visitor access immediately.',
+        confirmText: 'Turn Off Maintenance Mode',
+        variant: 'primary',
+      });
+      if (!ok) return;
+    }
+
+    setIsTogglingMaintenance(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        maintenanceMode: nextState,
+      });
+      setMaintenanceMode(nextState);
+      if (nextState) {
+        toast.info('⚠️ Maintenance Mode is now ACTIVE. Public visitors are blocked.');
+      } else {
+        toast.success('✅ Maintenance Mode deactivated. Platform is live.');
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error?.message || 'Failed to update maintenance mode.';
+      toast.error(msg);
+    } finally {
+      setIsTogglingMaintenance(false);
     }
   };
 
@@ -86,19 +110,15 @@ export const SiteSettingsPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="py-12 text-center text-xs text-textMuted font-sans">
-        Loading site settings...
-      </div>
-    );
+  if (isLoading && !settings) {
+    return <AdminPageSkeleton variant="form" />;
   }
 
   return (
     <div className="space-y-6 font-sans max-w-4xl">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="SuperAdmin Governance"
+        badge="SuperAdmin Governance"
         title="Site Settings & Platform Config"
         subtitle="Manage public platform branding, institutional contact email, social media presence, and maintenance mode status."
       />
@@ -191,34 +211,55 @@ export const SiteSettingsPage: React.FC = () => {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleMaintenanceToggleClick}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                maintenanceMode ? 'bg-danger' : 'bg-border'
-              }`}
-              role="switch"
-              aria-checked={maintenanceMode}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  maintenanceMode ? 'translate-x-5' : 'translate-x-0'
+            <div className="flex items-center space-x-3">
+              {isTogglingMaintenance && (
+                <span className="text-xs text-textMuted font-mono animate-pulse">
+                  Updating server...
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleMaintenanceToggleClick}
+                disabled={isTogglingMaintenance || updateSettingsMutation.isPending}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                  maintenanceMode ? 'bg-danger' : 'bg-border'
                 }`}
-              />
-            </button>
+                role="switch"
+                aria-checked={maintenanceMode}
+                title="Click to toggle Maintenance Mode instantly"
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    maintenanceMode ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-semibold">
-            <span className="text-textMuted">Platform Status: </span>
-            {maintenanceMode ? (
-              <span className="text-danger bg-danger/20 px-2 py-0.5 rounded text-[11px] font-mono font-bold">
-                Maintenance Mode Active (Public Site Blocked)
-              </span>
-            ) : (
-              <span className="text-success bg-success/20 px-2 py-0.5 rounded text-[11px] font-mono font-bold">
-                Live Public Platform (Normal Operation)
-              </span>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-semibold pt-2 border-t border-border/40">
+            <div className="flex items-center space-x-2">
+              <span className="text-textMuted">Platform Status: </span>
+              {maintenanceMode ? (
+                <span className="text-danger bg-danger/20 px-2 py-0.5 rounded text-[11px] font-mono font-bold">
+                  Maintenance Mode Active (Public Site Blocked)
+                </span>
+              ) : (
+                <span className="text-success bg-success/20 px-2 py-0.5 rounded text-[11px] font-mono font-bold">
+                  Live Public Platform (Normal Operation)
+                </span>
+              )}
+            </div>
+
+            <a
+              href="/?preview=maintenance"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-1.5 text-gold hover:underline font-mono text-xs"
+            >
+              <Icon name="ExternalLink" size={13} />
+              <span>Preview Visitor Screen</span>
+            </a>
           </div>
         </div>
 

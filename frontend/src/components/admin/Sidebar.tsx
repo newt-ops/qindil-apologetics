@@ -10,28 +10,34 @@ export interface NavItemConfig {
   label: string;
   path: string;
   icon: IconName;
+  category: 'workspace' | 'operations' | 'system';
   superAdminOnly?: boolean;
   implemented?: boolean;
 }
 
 const navItems: NavItemConfig[] = [
-  // Workspace & Editorial
-  { label: 'Workspace', path: '/admin/workspace', icon: 'Folder', implemented: true },
-  { label: 'Articles', path: '/admin/articles', icon: 'FileText', implemented: true },
-  { label: 'Calendar', path: '/admin/calendar', icon: 'Calendar', implemented: true },
+  // 1. Workspace
+  { label: 'Dashboard', path: '/admin', icon: 'Compass', category: 'workspace', implemented: true },
+  { label: 'Workspace', path: '/admin/workspace', icon: 'Folder', category: 'workspace', implemented: true },
+  { label: 'Articles', path: '/admin/articles', icon: 'FileText', category: 'workspace', implemented: true },
+  { label: 'Calendar', path: '/admin/calendar', icon: 'Calendar', category: 'workspace', implemented: true },
 
-  // Operations & Management (SuperAdmin)
-  { label: 'All Tasks', path: '/admin/tasks', icon: 'CheckSquare', superAdminOnly: true, implemented: true },
-  { label: 'Assign Task', path: '/admin/tasks/assign', icon: 'Plus', superAdminOnly: true, implemented: true },
-  { label: 'Team Roster', path: '/admin/team', icon: 'Users', superAdminOnly: true, implemented: true },
-  { label: 'Topics', path: '/admin/topics', icon: 'Tag', superAdminOnly: true, implemented: true },
-  { label: 'Review Queue', path: '/admin/review-queue', icon: 'Eye', superAdminOnly: true, implemented: true },
-  { label: 'Events', path: '/admin/events', icon: 'Calendar', superAdminOnly: true, implemented: true },
-  { label: 'Analytics', path: '/admin/analytics', icon: 'Activity', superAdminOnly: true, implemented: true },
-  { label: 'Contact Inbox', path: '/admin/contact-inbox', icon: 'Mail', superAdminOnly: true, implemented: true },
-  { label: 'Audit Log', path: '/admin/audit-log', icon: 'Shield', superAdminOnly: true, implemented: true },
-  { label: 'Site Settings', path: '/admin/settings', icon: 'Settings', superAdminOnly: true, implemented: true },
+  // 2. Operations & Workflow
+  { label: 'All Tasks', path: '/admin/tasks', icon: 'CheckSquare', category: 'operations', implemented: true },
+  { label: 'Assign Task', path: '/admin/tasks/assign', icon: 'Plus', category: 'operations', superAdminOnly: true, implemented: true },
+  { label: 'Review Queue', path: '/admin/review-queue', icon: 'Eye', category: 'operations', superAdminOnly: true, implemented: true },
+  { label: 'Topics', path: '/admin/topics', icon: 'Tag', category: 'operations', superAdminOnly: true, implemented: true },
+  { label: 'Events', path: '/admin/events', icon: 'Calendar', category: 'operations', superAdminOnly: true, implemented: true },
+
+  // 3. System & Administration
+  { label: 'Team Roster', path: '/admin/team', icon: 'Users', category: 'system', superAdminOnly: true, implemented: true },
+  { label: 'Analytics', path: '/admin/analytics', icon: 'Activity', category: 'system', superAdminOnly: true, implemented: true },
+  { label: 'Contact Inbox', path: '/admin/contact-inbox', icon: 'Mail', category: 'system', superAdminOnly: false, implemented: true },
+  { label: 'Audit Log', path: '/admin/audit-log', icon: 'Shield', category: 'system', superAdminOnly: false, implemented: true },
+  { label: 'Site Settings', path: '/admin/settings', icon: 'Settings', category: 'system', superAdminOnly: true, implemented: true },
 ];
+
+
 
 export interface SidebarProps {
   onItemClick?: () => void;
@@ -55,36 +61,81 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { data: contactData } = useContactMessages({ limit: 1 });
   const unreadContactCount = isSuperAdmin ? contactData?.unreadCount || 0 : 0;
 
+  // Active route matching helper supporting nested sub-routes
+  const isItemActive = (itemPath: string) => {
+    if (location.pathname === itemPath) return true;
+    if (itemPath === '/admin') {
+      return location.pathname === '/admin' || location.pathname === '/admin/';
+    }
+    if (itemPath === '/admin/articles' && location.pathname.startsWith('/admin/proposals')) {
+      return true;
+    }
+    if (location.pathname.startsWith(`${itemPath}/`)) {
+      const moreSpecificMatch = navItems.some(
+        (other) =>
+          other.path !== itemPath &&
+          other.path.startsWith(itemPath) &&
+          (location.pathname === other.path || location.pathname.startsWith(`${other.path}/`))
+      );
+      return !moreSpecificMatch;
+    }
+    return false;
+  };
+
   // Filter items according to role permissions and dynamic labels
   const visibleItems = navItems
     .map((item) => {
+      if (item.path === '/admin/tasks') {
+        return {
+          ...item,
+          category: (isSuperAdmin ? 'operations' : 'workspace') as 'workspace' | 'operations' | 'system',
+          label: isSuperAdmin ? 'All Tasks' : 'My Tasks',
+        };
+      }
       if (item.path === '/admin/articles') {
         return {
           ...item,
           label: isSuperAdmin ? 'All Articles' : 'My Articles',
         };
       }
+      if (item.path === '/admin') {
+        return {
+          ...item,
+          label: isSuperAdmin ? 'Executive Dashboard' : 'My Workspace',
+        };
+      }
       return item;
     })
     .filter((item) => {
+      // SuperAdmin has Executive Dashboard and All Tasks; hide personal workspace workbench
+      if (item.path === '/admin/workspace' && isSuperAdmin) {
+        return false;
+      }
+      // Non-superadmin uses Workspace; hide redundant generic dashboard item
+      if (item.path === '/admin' && !isSuperAdmin) {
+        return false;
+      }
       if (item.superAdminOnly) {
         return isSuperAdmin;
       }
       return true;
     });
 
-  const activeItems = visibleItems.filter((item) => !item.superAdminOnly);
-  const superAdminItems = visibleItems.filter((item) => item.superAdminOnly);
+  const categories = [
+    { id: 'workspace', title: isSuperAdmin ? 'Management' : 'Workspace' },
+    { id: 'operations', title: 'Operations' },
+    { id: 'system', title: 'Administration' },
+  ] as const;
 
   const renderNavGroup = (items: NavItemConfig[], title?: string) => (
-    <div className="space-y-1 py-1">
+    <div className="space-y-1">
       {title && !isCollapsed && (
-        <div className="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-textMuted/60 font-mono">
+        <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-textMuted/60 font-mono">
           {title}
         </div>
       )}
       {items.map((item) => {
-        const isActive = location.pathname === item.path;
+        const isActive = isItemActive(item.path);
         const hasBadge = item.path === '/admin/contact-inbox' && unreadContactCount > 0;
 
         if (!item.implemented && !isActive) {
@@ -121,14 +172,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title={item.label}
             className={`relative flex h-10 w-10 mx-auto items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
               isActive
-                ? 'bg-gold/15 text-gold border border-gold/40 shadow-apple-sm'
-                : 'text-textMuted hover:bg-surface/90 hover:text-text'
+                ? 'bg-gold/20 text-gold border border-gold/40 shadow-[0_0_12px_rgba(201,168,76,0.25)] font-bold'
+                : 'text-textMuted hover:bg-surface/90 hover:text-text border border-transparent'
             }`}
           >
             <Icon
               name={item.icon}
               size={18}
-              className={isActive ? 'text-gold' : 'text-textMuted'}
+              className={isActive ? 'text-gold drop-shadow-[0_0_6px_rgba(201,168,76,0.5)]' : 'text-textMuted'}
             />
             {hasBadge && (
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold animate-pulse" />
@@ -141,8 +192,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onItemClick}
             className={`group relative flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 active:scale-[0.99] ${
               isActive
-                ? 'bg-gold/15 text-gold font-bold shadow-apple-sm'
-                : 'text-textMuted hover:bg-surface/90 hover:text-text'
+                ? 'bg-gold/[0.14] text-gold dark:text-[#dfc377] font-bold border border-gold/30 shadow-[0_2px_10px_rgba(201,168,76,0.12)]'
+                : 'text-textMuted hover:bg-surface/90 hover:text-text border border-transparent'
             }`}
           >
             <div className="flex items-center space-x-2.5 min-w-0">
@@ -150,20 +201,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 name={item.icon}
                 size={16}
                 className={`shrink-0 transition-colors ${
-                  isActive ? 'text-gold' : 'text-textMuted group-hover:text-text'
+                  isActive ? 'text-gold drop-shadow-[0_0_6px_rgba(201,168,76,0.4)]' : 'text-textMuted group-hover:text-text'
                 }`}
               />
               <span className="truncate">{item.label}</span>
             </div>
 
             {hasBadge && (
-              <span className="rounded-full bg-gold/20 text-gold font-extrabold text-[10px] px-2 py-0.5 border border-gold/40 animate-pulse shrink-0">
+              <span
+                className={`rounded-full text-[10px] px-2 py-0.5 shrink-0 transition-all ${
+                  isActive
+                    ? 'bg-gold text-bg font-extrabold shadow-sm'
+                    : 'bg-gold/20 text-gold font-extrabold border border-gold/40 animate-pulse'
+                }`}
+              >
                 {unreadContactCount}
               </span>
-            )}
-
-            {isActive && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-gold shadow-[0_0_8px_rgba(201,168,76,0.6)]" />
             )}
           </Link>
         );
@@ -183,17 +236,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isCollapsed ? 'justify-center' : 'justify-between'
         }`}
       >
-        <Link to="/admin" onClick={onItemClick} className="flex items-center space-x-3 group">
+        <Link to="/admin" onClick={onItemClick} className="flex items-center space-x-3 group py-0.5">
           <Logo variant="mark" height={32} />
           {!isCollapsed && (
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-gold tracking-tight leading-none group-hover:text-goldHover transition-colors">
-                Qindil Ops
-              </h2>
-              <p className="text-[10px] font-mono text-textMuted/80 mt-1">
-                Internal Workspace
-              </p>
-            </div>
+            <span className="text-sm font-bold text-gold tracking-tight group-hover:text-goldHover transition-colors">
+              Qindil Ops
+            </span>
           )}
         </Link>
 
@@ -214,10 +262,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* Navigation Links Scrollable Area */}
-      <nav className="flex-1 overflow-y-auto px-2.5 space-y-1 py-2 scrollbar-none overscroll-contain">
-        {renderNavGroup(activeItems, 'Operations')}
-        {superAdminItems.length > 0 && renderNavGroup(superAdminItems, 'System Administration')}
+      {/* Navigation Links Scrollable Area with 3 Categories */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-3 scrollbar-none overscroll-contain">
+        {categories.map((cat, idx) => {
+          const items = visibleItems.filter((item) => item.category === cat.id);
+          if (items.length === 0) return null;
+
+          return (
+            <div key={cat.id} className="space-y-1">
+              {idx > 0 && isCollapsed && (
+                <div className="my-2 mx-auto w-6 h-px bg-border/50" />
+              )}
+              {renderNavGroup(items, cat.title)}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Sidebar Footer */}
@@ -254,12 +313,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Icon name={isCollapsed ? 'ChevronRight' : 'ChevronLeft'} size={14} />
             {!isCollapsed && <span className="text-[11px]">Collapse</span>}
           </button>
-        )}
-
-        {!isCollapsed && (
-          <p className="text-[10px] font-mono text-textMuted/60 text-center pt-0.5">
-            Qindil Operations v2.0
-          </p>
         )}
       </div>
     </aside>

@@ -13,6 +13,7 @@ export interface CommandItem {
   path?: string;
   action?: () => void;
   superAdminOnly?: boolean;
+  memberOnly?: boolean;
   shortcut?: string;
 }
 
@@ -48,6 +49,7 @@ export const AdminCommandPalette: React.FC<AdminCommandPaletteProps> = ({ isOpen
         category: 'Actions',
         icon: 'FileText',
         path: '/admin/articles',
+        memberOnly: true,
       },
       {
         id: 'action-schedule-event',
@@ -60,7 +62,7 @@ export const AdminCommandPalette: React.FC<AdminCommandPaletteProps> = ({ isOpen
       },
       {
         id: 'action-new-topic',
-        title: 'Manage Topics & Disciplines',
+        title: 'Manage Topics',
         description: 'Organize research categories, tags, and topic taxonomies',
         category: 'Actions',
         icon: 'Tag',
@@ -72,7 +74,7 @@ export const AdminCommandPalette: React.FC<AdminCommandPaletteProps> = ({ isOpen
       {
         id: 'nav-workspace',
         title: 'Operations Workspace',
-        description: 'Personal task queue, assigned drafts, and active deadlines',
+        description: 'Team task queue, assigned drafts, and active deadlines',
         category: 'Navigation',
         icon: 'Folder',
         path: '/admin/workspace',
@@ -194,6 +196,7 @@ export const AdminCommandPalette: React.FC<AdminCommandPaletteProps> = ({ isOpen
     const term = search.toLowerCase().trim();
     return allCommands.filter((cmd) => {
       if (cmd.superAdminOnly && !isSuperAdmin) return false;
+      if (cmd.memberOnly && isSuperAdmin) return false;
       if (!term) return true;
       return (
         cmd.title.toLowerCase().includes(term) ||

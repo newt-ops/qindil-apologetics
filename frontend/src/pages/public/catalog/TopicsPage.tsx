@@ -24,7 +24,7 @@ export function TopicsPage() {
           <div className="relative z-10 space-y-2.5 sm:space-y-4">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-0.5 sm:px-3.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-gold shadow-sm">
               <Icon name="Compass" size={13} />
-              <span>Structured Research Disciplines</span>
+              <span>Structured Research Topics</span>
             </div>
 
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
@@ -108,7 +108,7 @@ export function TopicsPage() {
           </div>
         ) : (
           <div className="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/70 dark:bg-zinc-900/70 p-8 sm:p-12 text-center text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            No research disciplines found.
+            No research topics found.
           </div>
         )}
       </div>

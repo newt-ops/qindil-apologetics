@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export type TaskType = 'article' | 'video' | 'general';
-export type TaskStatus = 'pending' | 'inProgress' | 'inReview' | 'done' | 'overdue';
+export type TaskStatus = 'pending' | 'inProgress' | 'inReview' | 'approved' | 'done' | 'overdue';
 
 export interface ITask extends Document {
   type: TaskType;
@@ -17,6 +17,8 @@ export interface ITask extends Document {
   destination?: 'official' | 'personal';
   targetVideoUrl?: string;
   calendarEventId?: Types.ObjectId;
+  topicId?: Types.ObjectId;
+  linkedProposalId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,7 +39,7 @@ const taskSchema = new Schema<ITask>(
     dueDate: { type: Date, required: true, index: true },
     status: {
       type: String,
-      enum: ['pending', 'inProgress', 'inReview', 'done', 'overdue'],
+      enum: ['pending', 'inProgress', 'inReview', 'approved', 'done', 'overdue'],
       default: 'pending',
       required: true,
       index: true,
@@ -48,6 +50,8 @@ const taskSchema = new Schema<ITask>(
     destination: { type: String, enum: ['official', 'personal'] },
     targetVideoUrl: { type: String, trim: true },
     calendarEventId: { type: Schema.Types.ObjectId, ref: 'Event' },
+    topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
+    linkedProposalId: { type: Schema.Types.ObjectId, ref: 'ArticleProposal' },
   },
   {
     timestamps: true,

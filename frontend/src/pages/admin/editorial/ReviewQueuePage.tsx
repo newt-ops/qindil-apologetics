@@ -9,7 +9,7 @@ import { AdminPageHeader } from '../../../components/admin';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { Button } from '../../../components/ui/Button';
 import { Textarea } from '../../../components/ui/Textarea';
-import { Spinner } from '../../../components/ui/Spinner';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
 import { toast } from '../../../hooks/useToast';
 
@@ -34,6 +34,7 @@ export const ReviewQueuePage: React.FC = () => {
   // Decision Modal state for "Request Changes"
   const [isRequestChangesOpen, setIsRequestChangesOpen] = useState(false);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [activeDecision, setActiveDecision] = useState<'approve' | 'requestChanges' | 'publish' | null>(null);
 
   const handleSelectArticle = (article: ArticleItem) => {
     setSelectedArticle(article);
@@ -44,6 +45,7 @@ export const ReviewQueuePage: React.FC = () => {
     decision: 'approve' | 'requestChanges' | 'publish',
     notes?: string
   ) => {
+    setActiveDecision(decision);
     try {
       await reviewMutation.mutateAsync({
         id: articleId,
@@ -66,15 +68,13 @@ export const ReviewQueuePage: React.FC = () => {
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to submit review decision.';
       toast.error(msg);
+    } finally {
+      setActiveDecision(null);
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="table" />;
   }
 
   // Selected Article Full-Page Inspection Canvas
@@ -131,7 +131,8 @@ export const ReviewQueuePage: React.FC = () => {
               variant="danger"
               size="sm"
               onClick={() => setIsRequestChangesOpen(true)}
-              isLoading={reviewMutation.isPending}
+              isLoading={activeDecision === 'requestChanges'}
+              disabled={activeDecision !== null}
               leftIcon={<Icon name="AlertCircle" size={14} />}
             >
               Request Changes
@@ -140,7 +141,8 @@ export const ReviewQueuePage: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={() => handleDecision(selectedArticle._id, 'approve')}
-              isLoading={reviewMutation.isPending}
+              isLoading={activeDecision === 'approve'}
+              disabled={activeDecision !== null}
               leftIcon={<Icon name="Check" size={14} />}
             >
               Approve Only
@@ -158,7 +160,8 @@ export const ReviewQueuePage: React.FC = () => {
                 if (!ok) return;
                 handleDecision(selectedArticle._id, 'publish');
               }}
-              isLoading={reviewMutation.isPending}
+              isLoading={activeDecision === 'publish'}
+              disabled={activeDecision !== null}
               leftIcon={<Icon name="Globe" size={14} />}
             >
               Approve & Publish Live
@@ -180,7 +183,7 @@ export const ReviewQueuePage: React.FC = () => {
           <span className="text-border">|</span>
           <span className="flex items-center gap-1.5">
             <Icon name="Tag" size={13} className="text-gold" />
-            <span>Discipline: <strong className="text-gold">{topicName}</strong></span>
+            <span>Topic: <strong className="text-gold">{topicName}</strong></span>
           </span>
         </div>
 
@@ -238,7 +241,7 @@ export const ReviewQueuePage: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-textMuted">Discipline:</span>
+                  <span className="text-textMuted">Topic:</span>
                   <span className="font-semibold text-gold">{topicName}</span>
                 </div>
 
@@ -331,8 +334,8 @@ export const ReviewQueuePage: React.FC = () => {
                   onClick={() =>
                     handleDecision(selectedArticle._id, 'requestChanges', reviewNotes)
                   }
-                  isLoading={reviewMutation.isPending}
-                  disabled={!reviewNotes.trim()}
+                  isLoading={activeDecision === 'requestChanges'}
+                  disabled={!reviewNotes.trim() || activeDecision !== null}
                   leftIcon={<Icon name="Send" size={14} />}
                 >
                   Return for Revision
@@ -353,7 +356,7 @@ export const ReviewQueuePage: React.FC = () => {
     <div className="space-y-6 font-sans max-w-6xl mx-auto pb-12">
       {/* Header */}
       <AdminPageHeader
-        discipline="Editorial Subsystem"
+        badge="Editorial Subsystem"
         title="Peer Review Queue"
         subtitle="SuperAdmin editorial oversight for vetting, approving, requesting revisions, and publishing research papers."
         actions={

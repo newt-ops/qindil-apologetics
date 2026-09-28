@@ -238,6 +238,175 @@ export const deleteChannelMessage = async (
 };
 
 /**
+ * Send Telegram notification to all active Super Admins
+ */
+export const notifySuperAdmins = async (
+  text: string,
+  parseMode: 'Markdown' | 'HTML' = 'Markdown',
+  extra?: any
+): Promise<void> => {
+  try {
+    const superAdmins = await UserModel.find({ isActive: true }).populate('roles');
+    const targetAdmins = superAdmins.filter((u) =>
+      u.roles.some((r: any) => (typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'))
+    );
+
+    for (const sa of targetAdmins) {
+      if (sa.telegramChatId) {
+        await notifyUser(sa._id, text, parseMode, extra);
+      }
+    }
+
+    // Also forward to notification channel if configured
+    await notifyChannel(text, parseMode);
+  } catch (err) {
+    console.error('❌ Error in Telegram notifySuperAdmins:', err);
+  }
+};
+
+/**
+ * Send Telegram notification for new Article Proposal
+ */
+export const sendTelegramArticleProposalNotification = async (
+  proposal: {
+    _id: string | Types.ObjectId;
+    title: string;
+    summary: string;
+    topicName?: string;
+  },
+  authorName: string
+): Promise<void> => {
+  const message =
+    `💡 *New Article Proposal Submitted*\n\n` +
+    `✍️ *Scholar:* *${authorName}*\n` +
+    `📌 *Proposed Title:* *${proposal.title}*\n` +
+    `🏷️ *Topic Category:* \`${proposal.topicName || 'Unassigned / General'}\`\n\n` +
+    `📝 *Abstract & Scope:*\n` +
+    `_"${proposal.summary}"_\n\n` +
+    `👉 Review in your Editorial Dashboard to accept & assign task.`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url(
+        '🌐 Review Proposals',
+        'https://qindilapologetics.com/admin/articles'
+      ),
+      Markup.button.url(
+        '📋 Assign Task Directly',
+        `https://qindilapologetics.com/admin/tasks/assign?type=article&proposalId=${proposal._id}`
+      ),
+    ],
+  ]);
+
+  await notifySuperAdmins(message, 'Markdown', keyboard);
+};
+
+/**
+ * Send Telegram notification to author on Proposal Decision (Approved / Declined)
+ */
+export const sendTelegramProposalDecisionNotification = async (
+  userId: string | Types.ObjectId,
+  title: string,
+  decision: 'approved' | 'rejected',
+  feedback?: string
+): Promise<void> => {
+  const user = await UserModel.findById(userId).select('name');
+  const userName = user ? user.name.split(' ')[0] : 'Member';
+
+  let message = '';
+  let keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url('🌐 Open Workspace', 'https://qindilapologetics.com/admin/workspace'),
+      Markup.button.callback('📊 My Status', 'nav_status'),
+    ],
+  ]);
+
+  if (decision === 'approved') {
+    message =
+      `🎉 *Article Proposal Accepted!*\n\n` +
+      `Great news, *${userName}*! Your proposal for *"${title}"* was approved by the Super Admin! 🌟\n\n` +
+      `An operational task has been assigned to you. Please head to your workspace to accept the assignment and initialize your writing draft. 📝`;
+
+    keyboard = Markup.inlineKeyboard([
+      [
+        Markup.button.url('🚀 Accept & Start Draft', 'https://qindilapologetics.com/admin/workspace'),
+        Markup.button.callback('📋 My Open Tasks', 'my_tasks'),
+      ],
+    ]);
+  } else {
+    message =
+      `ℹ️ *Article Proposal Update*\n\n` +
+      `Hello *${userName}*, regarding your article proposal for *"${title}"*:\n\n` +
+      `Editorial Feedback: _"${feedback || 'Please consult editorial leads for guidance on revising this topic.'}"_\n\n` +
+      `You can submit revised proposals at any time via your author workspace.`;
+  }
+
+  await notifyUser(userId, message, 'Markdown', keyboard);
+};
+
+/**
+ * Send Telegram notification when Article is submitted for review
+ */
+export const sendTelegramArticleSubmittedNotification = async (
+  articleTitle: string,
+  authorName: string,
+  articleId: string | Types.ObjectId
+): Promise<void> => {
+  const message =
+    `📥 *Article Submitted for Editorial Review*\n\n` +
+    `✍️ *Author:* *${authorName}*\n` +
+    `📌 *Title:* *${articleTitle}*\n\n` +
+    `A draft has been completed and is awaiting Super Admin editorial evaluation and decision.`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url(
+        '📖 Moderate Article',
+        `https://qindilapologetics.com/admin/articles/${articleId}/edit`
+      ),
+      Markup.button.url(
+        '📋 Review Queue',
+        'https://qindilapologetics.com/admin/review-queue'
+      ),
+    ],
+  ]);
+
+  await notifySuperAdmins(message, 'Markdown', keyboard);
+};
+
+/**
+ * Send Telegram notification when Article is approved (Author can publish!)
+ */
+export const sendTelegramArticleApprovedNotification = async (
+  userId: string | Types.ObjectId,
+  articleTitle: string,
+  articleId: string | Types.ObjectId
+): Promise<void> => {
+  const user = await UserModel.findById(userId).select('name');
+  const userName = user ? user.name.split(' ')[0] : 'Member';
+
+  const message =
+    `🎉 *Article Approved by Editorial Moderation!*\n\n` +
+    `Dear *${userName}*, great news! Your article *"${articleTitle}"* has passed editorial review and is officially approved! 🌟\n\n` +
+    `🚀 *Next Step:* You can now publish it live to the public platform whenever you're ready. Open your editor and click *Publish Article*.`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url(
+        '🚀 Publish Article Now',
+        `https://qindilapologetics.com/admin/articles/${articleId}/edit`
+      ),
+      Markup.button.url(
+        '📚 My Articles',
+        'https://qindilapologetics.com/admin/articles/mine'
+      ),
+    ],
+  ]);
+
+  await notifyUser(userId, message, 'Markdown', keyboard);
+};
+
+/**
  * Send Telegram notification to public/admin notification channel
  */
 export const notifyChannel = async (
@@ -249,9 +418,14 @@ export const notifyChannel = async (
 
 export default {
   notifyUser,
+  notifySuperAdmins,
   sendTelegramRoleChangeNotification,
   sendTelegramTaskNotification,
   sendTelegramTaskProgressNotification,
+  sendTelegramArticleProposalNotification,
+  sendTelegramProposalDecisionNotification,
+  sendTelegramArticleSubmittedNotification,
+  sendTelegramArticleApprovedNotification,
   sendChannelMessage,
   deleteChannelMessage,
   notifyChannel,

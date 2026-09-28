@@ -5,7 +5,13 @@ import { ApiError } from '../utils/apiError.js';
 export const validate = (schema: ZodSchema) => {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
-      const shape = (schema as any)._def?.shape;
+      const shape =
+        typeof (schema as any).shape === 'object' && (schema as any).shape !== null
+          ? (schema as any).shape
+          : typeof (schema as any)._def?.shape === 'function'
+          ? (schema as any)._def.shape()
+          : (schema as any)._def?.shape;
+
       const hasBodyKey = shape && shape.body !== undefined;
       const hasQueryKey = shape && shape.query !== undefined;
       const hasParamsKey = shape && shape.params !== undefined;

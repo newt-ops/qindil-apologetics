@@ -98,7 +98,7 @@ export function HomePage() {
                 className="w-full sm:w-auto rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-text shadow-apple-sm hover:border-gold/50 hover:text-gold active:scale-97 flex items-center justify-center space-x-2 transition-all duration-200"
               >
                 <Icon name="Compass" size={16} />
-                <span>Browse Disciplines</span>
+                <span>Browse Topics</span>
               </Link>
             </div>
 
@@ -134,7 +134,7 @@ export function HomePage() {
                 Thematic Architecture
               </span>
               <h2 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
-                Curated Research Disciplines
+                Curated Research Topics
               </h2>
             </div>
 

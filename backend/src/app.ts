@@ -19,6 +19,7 @@ import teamRouter from './routes/team.routes.js';
 import eventRouter from './routes/event.routes.js';
 import topicRouter from './routes/topic.routes.js';
 import articleRouter from './routes/article.routes.js';
+import articleProposalRouter from './routes/articleProposal.routes.js';
 import videoRouter from './routes/video.routes.js';
 import analyticsRouter from './routes/analytics.routes.js';
 import contactRouter from './routes/contact.routes.js';
@@ -295,6 +296,9 @@ app.use('/api/v1/topics', topicRouter);
 
 // Article authoring & draft routes (protected, admin ranks)
 app.use('/api/v1/articles', articleRouter);
+
+// Article proposal / request routes (protected, admin ranks)
+app.use('/api/v1/article-proposals', articleProposalRouter);
 
 // Video production board routes (protected, admin ranks)
 app.use('/api/v1/videos', videoRouter);

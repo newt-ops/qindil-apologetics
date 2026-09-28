@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import Icon from '../../../components/icons/Icon';
 import { useAssignTask } from '../../../hooks/useTasks';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { useActiveTopics } from '../../../hooks/usePublicData';
-import { Input, Textarea, Select, Button } from '../../../components/ui';
+import { Input, Textarea, Select, Button, AdminPageSkeleton } from '../../../components/ui';
 import { toast } from '../../../hooks/useToast';
 import { TaskType } from '../../../api/task';
 
@@ -27,9 +27,22 @@ type FormData = z.infer<typeof assignTaskSchema>;
 
 export const AssignTaskPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryType = searchParams.get('type') as TaskType | null;
+  const proposalId = searchParams.get('proposalId');
+  const queryMemberId = searchParams.get('memberId');
+  const queryTitle = searchParams.get('title') || '';
+  const queryTopicId = searchParams.get('topicId') || '';
+  const queryDescription = searchParams.get('description') || '';
+  const queryDueDate = searchParams.get('dueDate') || '';
+
+  const initialType: TaskType = proposalId ? 'article' : (queryType && ['article', 'video', 'general'].includes(queryType) ? queryType : 'article');
+
   const assignTaskMutation = useAssignTask();
 
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>(() => {
+    return queryMemberId ? [queryMemberId] : [];
+  });
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
 
@@ -40,7 +53,7 @@ export const AssignTaskPage: React.FC = () => {
   });
 
   // Fetch active topics
-  const { data: topics = [] } = useActiveTopics();
+  const { data: topics = [], isLoading: isTopicsLoading } = useActiveTopics();
 
   const teamMembers = teamData?.data || [];
 
@@ -62,10 +75,11 @@ export const AssignTaskPage: React.FC = () => {
   } = useForm<FormData>({
     resolver: zodResolver(assignTaskSchema),
     defaultValues: {
-      type: 'article',
-      title: '',
-      description: '',
-      dueDate: '',
+      type: initialType,
+      title: queryTitle,
+      description: queryDescription,
+      dueDate: queryDueDate ? queryDueDate.slice(0, 16) : '',
+      topicId: queryTopicId,
       videoType: 'normal',
       destination: 'official',
     },
@@ -73,6 +87,11 @@ export const AssignTaskPage: React.FC = () => {
 
   const selectedType = watch('type') as TaskType;
   const selectedVideoType = watch('videoType');
+
+  // Prevent flash of empty form before team/topics load
+  if ((isTeamLoading || isTopicsLoading) && !teamData) {
+    return <AdminPageSkeleton variant="form" />;
+  }
 
   const toggleAssignee = (userId: string) => {
     setAssigneeError(null);
@@ -106,7 +125,7 @@ export const AssignTaskPage: React.FC = () => {
     }
 
     if (selectedType === 'article' && !formData.topicId) {
-      toast.error('Please select a discipline for the article task.');
+      toast.error('Please select a topic for the article task.');
       return;
     }
 
@@ -122,10 +141,11 @@ export const AssignTaskPage: React.FC = () => {
     try {
       await assignTaskMutation.mutateAsync({
         ...formData,
+        proposalId: proposalId || undefined,
         assignedTo: selectedAssignees,
       });
 
-      toast.success('Task created and assigned successfully!');
+      toast.success(proposalId ? 'Proposal approved and task delegated successfully!' : 'Task created and assigned successfully!');
       navigate('/admin/tasks');
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message || err?.response?.data?.message || 'Failed to assign task.';
@@ -159,6 +179,18 @@ export const AssignTaskPage: React.FC = () => {
             Delegate research articles, refutation video productions, or general team assignments.
           </p>
         </div>
+
+        {proposalId && (
+          <div className="rounded-xl border border-gold/40 bg-gold/10 p-4 flex items-start gap-3">
+            <Icon name="CheckCircle" size={18} className="text-gold mt-0.5 shrink-0" />
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gold">Assigning Approved Proposal</h4>
+              <p className="text-xs text-textMuted mt-0.5">
+                This task will officially approve the member&apos;s article proposal, notify them immediately on Telegram and Web, and enable them to accept and begin writing the article.
+              </p>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* 1. Task Type Selector */}
@@ -333,8 +365,8 @@ export const AssignTaskPage: React.FC = () => {
               </h4>
 
               <Select
-                label="Assign to Research Discipline *"
-                placeholder="Select a discipline..."
+                label="Assign to Topic *"
+                placeholder="Select a topic..."
                 options={topics.map((t: any) => ({ value: t._id, label: t.name }))}
                 error={errors.topicId?.message}
                 {...register('topicId')}

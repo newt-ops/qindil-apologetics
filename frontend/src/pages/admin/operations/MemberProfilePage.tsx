@@ -7,7 +7,7 @@ import { useHasRole } from '../../../hooks/useHasRole';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
-import { Spinner } from '../../../components/ui/Spinner';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 import { ConfirmDialog } from '../../../components/admin/ConfirmDialog';
 import { toast } from '../../../hooks/useToast';
 import TelegramLinkCard from '../../../components/shared/TelegramLinkCard';
@@ -41,11 +41,7 @@ export const MemberProfilePage: React.FC = () => {
   }, [member]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-gold">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="detail" />;
   }
 
   if (isError || !member) {
@@ -202,6 +198,105 @@ export const MemberProfilePage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Scholar Work & Output Analytics Card */}
+      <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-sm space-y-5">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/15 text-gold">
+              <Icon name="Activity" size={18} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text uppercase tracking-wider">
+                Work &amp; Output Analytics
+              </h3>
+              <p className="text-xs text-textMuted mt-0.5">
+                Scholarly productivity, readership engagement, video production, and operational task reliability.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Published Articles */}
+          <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-1">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-textMuted flex items-center gap-1.5">
+              <Icon name="FileText" size={13} className="text-gold" />
+              Articles Published
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-gold font-mono">
+                {member.workStats?.articles?.published ?? 0}
+              </span>
+              <span className="text-xs text-textMuted font-mono">
+                / {member.workStats?.articles?.total ?? 0} total
+              </span>
+            </div>
+            <p className="text-[11px] text-textMuted">
+              {member.workStats?.articles?.inReview ?? 0} currently in review
+            </p>
+          </div>
+
+          {/* Cumulative Readership */}
+          <div className="rounded-xl border border-border bg-bg/50 p-4 space-y-1">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-textMuted flex items-center gap-1.5">
+              <Icon name="Eye" size={13} className="text-gold" />
+              Total Readers
+            </span>
+            <span className="text-2xl font-black text-text font-mono block">
+              {(member.workStats?.articles?.totalViews ?? 0).toLocaleString()}
+            </span>
+            <p className="text-[11px] text-textMuted">Cumulative article views</p>
+          </div>
+
+          {/* Video Productions */}
+          <div className="rounded-xl border border-border bg-bg/50 p-4 space-y-1">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-textMuted flex items-center gap-1.5">
+              <Icon name="Video" size={13} className="text-gold" />
+              Video Productions
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-text font-mono">
+                {member.workStats?.videos?.completed ?? 0}
+              </span>
+              <span className="text-xs text-textMuted font-mono">
+                / {member.workStats?.videos?.total ?? 0} videos
+              </span>
+            </div>
+            <p className="text-[11px] text-textMuted">
+              {member.workStats?.videos?.inProgress ?? 0} in active production
+            </p>
+          </div>
+
+          {/* Task Reliability */}
+          <div className="rounded-xl border border-border bg-bg/50 p-4 space-y-1">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-textMuted flex items-center gap-1.5">
+              <Icon name="CheckCircle" size={13} className="text-gold" />
+              Task Reliability
+            </span>
+            <span className="text-2xl font-black text-emerald-400 font-mono block">
+              {member.workStats?.tasks?.completionRate ?? 100}%
+            </span>
+            <p className="text-[11px] text-textMuted">
+              {member.workStats?.tasks?.completed ?? 0} done · {member.workStats?.tasks?.overdue ?? 0} overdue
+            </p>
+          </div>
+        </div>
+
+        {/* Proposals Summary */}
+        <div className="rounded-xl border border-border/70 bg-surface p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Icon name="Inbox" size={15} className="text-gold shrink-0" />
+            <span className="font-semibold text-text">Article Proposals:</span>
+            <span className="text-textMuted">
+              {member.workStats?.proposals?.approved ?? 0} accepted · {member.workStats?.proposals?.pending ?? 0} pending · {member.workStats?.proposals?.rejected ?? 0} declined
+            </span>
+          </div>
+          <span className="text-[11px] font-mono text-textMuted">
+            {member.workStats?.tasks?.total ?? 0} total operational tasks delegated
+          </span>
         </div>
       </div>
 

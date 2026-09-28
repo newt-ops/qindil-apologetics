@@ -12,3 +12,4 @@ export * from './Notification.model.js';
 export * from './ContactMessage.model.js';
 export * from './AuditLog.model.js';
 export * from './SiteSettings.model.js';
+export * from './ArticleProposal.model.js';

@@ -6,8 +6,13 @@ import { ArticleModel } from '../models/Article.model.js';
 import { VideoLogModel } from '../models/VideoLog.model.js';
 import { EventModel } from '../models/Event.model.js';
 import { AuditLogModel } from '../models/AuditLog.model.js';
+import { ArticleProposalModel } from '../models/ArticleProposal.model.js';
 import { createNotification } from '../services/notify.js';
-import { sendTelegramTaskNotification, sendTelegramTaskProgressNotification } from '../telegram/index.js';
+import {
+  sendTelegramTaskNotification,
+  sendTelegramTaskProgressNotification,
+  sendTelegramProposalDecisionNotification,
+} from '../telegram/index.js';
 import { sendTaskAssignedEmail } from '../services/email/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
@@ -40,7 +45,7 @@ export const getMyTasks = asyncHandler(
     const now = new Date();
 
     const processedTasks = tasks.map((task) => {
-      const isOverdue = new Date(task.dueDate) < now && task.status !== 'done';
+      const isOverdue = new Date(task.dueDate) < now && task.status !== 'done' && task.status !== 'approved';
       return {
         ...task,
         status: isOverdue ? 'overdue' : task.status,
@@ -90,7 +95,7 @@ export const getTaskById = asyncHandler(
     }
 
     const now = new Date();
-    const isOverdue = new Date(task.dueDate) < now && task.status !== 'done';
+    const isOverdue = new Date(task.dueDate) < now && task.status !== 'done' && task.status !== 'approved';
 
     const processedTask = {
       ...task.toObject(),
@@ -118,6 +123,9 @@ export const createTask = asyncHandler(
       videoCategoryId,
       isRefutation,
       targetVideoUrl,
+      topicId,
+      proposalId,
+      linkedProposalId,
     } = req.body;
 
     if (!title || !assignedTo || !Array.isArray(assignedTo) || assignedTo.length === 0 || !dueDate) {
@@ -159,6 +167,8 @@ export const createTask = asyncHandler(
       }
     }
 
+    const targetProposalId = proposalId || linkedProposalId;
+
     // 2. Create Task record with status 'pending' (VideoLog document created on accept)
     const task = new TaskModel({
       type,
@@ -173,6 +183,8 @@ export const createTask = asyncHandler(
       videoType: type === 'video' ? (videoType || 'normal') : undefined,
       destination: type === 'video' ? (destination || 'official') : undefined,
       targetVideoUrl: type === 'video' ? (targetVideoUrl || undefined) : undefined,
+      topicId: topicId || undefined,
+      linkedProposalId: targetProposalId || undefined,
     });
 
     // 3. Create linked Event (Deadline)
@@ -189,6 +201,28 @@ export const createTask = asyncHandler(
 
     await task.save();
 
+    // 4. If task was created from an ArticleProposal, update the proposal status to approved
+    if (targetProposalId) {
+      const proposal = await ArticleProposalModel.findById(targetProposalId);
+      if (proposal) {
+        proposal.status = 'approved';
+        proposal.assignedTaskId = task._id as any;
+        proposal.reviewedBy = req.user!._id;
+        proposal.reviewedAt = new Date();
+        await proposal.save();
+
+        const authorId = proposal.author;
+        await createNotification({
+          recipient: authorId as any,
+          type: 'proposal_approved',
+          title: 'Article Proposal Accepted!',
+          body: `Super Admin accepted your proposal and assigned the task: "${title}".`,
+          link: '/admin/workspace',
+        });
+        await sendTelegramProposalDecisionNotification(authorId, title, 'approved');
+      }
+    }
+
     // 5. Trigger notifications for assignees
     for (const assignee of assignees) {
       await createNotification({
@@ -203,6 +237,20 @@ export const createTask = asyncHandler(
       await sendTaskAssignedEmail(assignee.email, title, req.user?.name, type, dueDateObj);
     }
 
+    // Also notify assigner (SuperAdmin) confirmation in web notification center
+    const isSelfAssigned = assignees.some(
+      (a) => a._id.toString() === req.user!._id.toString()
+    );
+    if (!isSelfAssigned) {
+      await createNotification({
+        recipient: req.user!._id,
+        type: 'task_assigned',
+        title: 'Task Assigned',
+        body: `You assigned "${title}" to ${assignees.map((a) => a.name || a.email).join(', ')}.`,
+        link: `/admin/tasks/${task._id}`,
+      });
+    }
+
     // 6. Audit log entry
     await AuditLogModel.create({
       actor: req.user!._id,
@@ -214,6 +262,7 @@ export const createTask = asyncHandler(
         type,
         assignedTo,
         dueDate,
+        proposalId: targetProposalId,
       },
     });
 
@@ -223,6 +272,7 @@ export const createTask = asyncHandler(
       { path: 'createdBy', select: 'name email' },
       { path: 'linkedArticle', select: 'title slug status' },
       { path: 'linkedVideo', select: 'title status videoType destination targetVideoUrl posterUrl notes submittedUrl' },
+      { path: 'topicId', select: 'name slug' },
     ]);
 
     sendSuccess(res, task, undefined, 201);
@@ -276,6 +326,7 @@ export const acceptTask = asyncHandler(
       const article = await ArticleModel.create({
         title: task.title,
         slug: articleSlug,
+        topic: task.topicId || undefined,
         author: req.user!._id,
         status: 'draft',
         linkedTaskId: task._id,
@@ -337,11 +388,22 @@ export const listTasks = asyncHandler(
     const type = (req.query.type as string || '').trim();
     const assignee = (req.query.assignee as string || '').trim();
 
+    const callerRoles = req.user!.roles || [];
+    const isSuperAdmin = callerRoles.some((r: any) =>
+      typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
+    );
+
     const filter: Record<string, any> = {};
+
+    if (!isSuperAdmin) {
+      // Non-superadmin members only see tasks assigned to them
+      filter.assignedTo = req.user!._id;
+    } else if (assignee) {
+      filter.assignedTo = assignee;
+    }
 
     if (status) filter.status = status;
     if (type) filter.type = type;
-    if (assignee) filter.assignedTo = assignee;
 
     const total = await TaskModel.countDocuments(filter);
     const totalPages = Math.ceil(total / limit) || 1;
@@ -358,7 +420,7 @@ export const listTasks = asyncHandler(
 
     const now = new Date();
     const processedTasks = tasks.map((t) => {
-      const isOverdue = new Date(t.dueDate) < now && t.status !== 'done';
+      const isOverdue = new Date(t.dueDate) < now && t.status !== 'done' && t.status !== 'approved';
       return {
         ...t,
         status: isOverdue ? 'overdue' : t.status,

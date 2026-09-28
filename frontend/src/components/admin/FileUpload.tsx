@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Icon from '../icons/Icon';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
@@ -13,6 +13,7 @@ export interface FileUploadProps {
   error?: string;
   accept?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -23,16 +24,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   error,
   accept = 'image/*',
   className = '',
+  disabled = false,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>(value);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync previewUrl whenever value prop updates (crucial for async data loading)
+  useEffect(() => {
+    setPreviewUrl(value || '');
+  }, [value]);
+
   const handleFile = async (file: File) => {
     if (!file) return;
 
-    // Show local preview immediately
+    // Show temporary local preview while uploading
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
     setIsUploading(true);
@@ -64,19 +71,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           const secureUrl = data.secure_url;
           setPreviewUrl(secureUrl);
           onUploadComplete(secureUrl);
-          toast.success('Image uploaded successfully!');
+          toast.success('Cover image uploaded successfully!');
         } else {
-          // If demo Cloudinary key or dev fallback, use local preview / object URL
-          console.warn('Cloudinary upload returned non-200. Using processed image URL.');
-          onUploadComplete(localUrl);
-          toast.info('Image uploaded (dev mode).');
+          const errData = await res.json().catch(() => ({}));
+          console.error('Cloudinary upload error:', errData);
+          toast.error(errData?.error?.message || 'Failed to upload image to cloud storage.');
+          setPreviewUrl(value || '');
         }
       }
     } catch (err: any) {
       console.error('File upload error:', err);
-      // Fall back gracefully to local preview URL in development
-      onUploadComplete(localUrl);
-      toast.info('Image uploaded (dev mode).');
+      toast.error('Network error while uploading image. Please try again.');
+      setPreviewUrl(value || '');
     } finally {
       setIsUploading(false);
     }
@@ -137,24 +143,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              Replace
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleRemove}
-              disabled={isUploading}
-            >
-              <Icon name="Trash2" size={14} />
-            </Button>
-          </div>
+          {!disabled && (
+            <div className="flex items-center space-x-2 shrink-0">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                Replace
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleRemove}
+                disabled={isUploading}
+              >
+                <Icon name="Trash2" size={14} />
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : disabled ? (
+        <div className="flex items-center justify-center rounded-xl border border-border bg-surface/50 p-6 text-center text-xs text-textMuted">
+          <span>No media uploaded</span>
         </div>
       ) : (
         <div

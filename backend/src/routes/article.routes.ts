@@ -64,8 +64,8 @@ router.patch(
 // PATCH /api/v1/articles/:id/approve — Approve article
 router.patch('/:id/approve', requireRole('superAdmin'), approveArticle);
 
-// PATCH /api/v1/articles/:id/publish — Publish approved article
-router.patch('/:id/publish', requireRole('superAdmin'), publishArticle);
+// PATCH /api/v1/articles/:id/publish — Publish approved article (Author or SuperAdmin)
+router.patch('/:id/publish', publishArticle);
 
 // PATCH /api/v1/articles/:id/archive — Archive published article
 router.patch('/:id/archive', requireRole('superAdmin'), archiveArticle);

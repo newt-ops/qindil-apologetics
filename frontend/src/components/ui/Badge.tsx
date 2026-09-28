@@ -4,6 +4,7 @@ export type BadgeVariant =
   | 'draft'
   | 'inReview'
   | 'in_review'
+  | 'approved'
   | 'published'
   | 'archived'
   | 'pending'
@@ -30,7 +31,10 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const getVariantClasses = (v: string) => {
     switch (v) {
+      case 'approved':
+        return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35';
       case 'published':
+        return 'bg-gold/15 text-gold border-gold/40';
       case 'active':
       case 'completed':
       case 'success':

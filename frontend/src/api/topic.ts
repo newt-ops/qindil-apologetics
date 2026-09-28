@@ -35,6 +35,11 @@ export const listAdminTopicsApi = async () => {
   return response.data;
 };
 
+export const getTopicByIdApi = async (id: string) => {
+  const response = await apiClient.get<{ success: boolean; data: TopicItem }>(`/topics/${id}`);
+  return response.data;
+};
+
 export const createTopicApi = async (data: CreateTopicPayload) => {
   const response = await apiClient.post<{ success: boolean; data: TopicItem }>('/topics', data);
   return response.data;

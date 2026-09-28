@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listAdminTopicsApi,
+  getTopicByIdApi,
   createTopicApi,
   updateTopicApi,
   deleteTopicApi,
@@ -20,6 +21,20 @@ export const useAdminTopics = () => {
       return res.data || [];
     },
     enabled: isAuthenticated,
+  });
+};
+
+export const useTopic = (id?: string) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  return useQuery({
+    queryKey: ['topics', 'detail', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const res = await getTopicByIdApi(id);
+      return res.data;
+    },
+    enabled: isAuthenticated && Boolean(id),
   });
 };
 

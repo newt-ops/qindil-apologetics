@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon, { IconName } from '../icons/Icon';
+import { IconName } from '../icons/Icon';
 import AdminBreadcrumbs, { BreadcrumbItem } from './AdminBreadcrumbs';
 
 export interface AdminPageHeaderProps {
@@ -8,6 +8,7 @@ export interface AdminPageHeaderProps {
   subtitle?: string; // alias for description
   badge?: string;
   discipline?: string; // alias for badge
+  topic?: string; // alias for badge
   badgeIcon?: IconName;
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
@@ -23,15 +24,11 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   title,
   description,
   subtitle,
-  badge,
-  discipline,
-  badgeIcon,
   breadcrumbs,
   actions,
   children,
   className = '',
 }) => {
-  const displayBadge = badge || discipline;
   const displayDescription = description || subtitle;
   return (
     <div className={`space-y-4 border-b border-border/70 pb-5 font-sans ${className}`}>
@@ -41,14 +38,6 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
       {/* Main Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0 flex-1">
-          {/* Category / Discipline Pill Badge */}
-          {displayBadge && (
-            <div className="inline-flex items-center space-x-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-0.5 text-xs font-semibold text-gold mb-1 shadow-apple-sm">
-              {badgeIcon && <Icon name={badgeIcon} size={13} />}
-              <span>{displayBadge}</span>
-            </div>
-          )}
-
           {/* Page Heading */}
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight truncate">
             {title}

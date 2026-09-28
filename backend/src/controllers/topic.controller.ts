@@ -20,8 +20,12 @@ function slugify(text: string): string {
 // @route   GET /api/v1/topics
 // @access  Private (SuperAdmin)
 export const listTopicsAdmin = asyncHandler(
-  async (_req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const topics = await TopicModel.find().sort({ order: 1, createdAt: -1 });
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const isSuperAdmin = req.user?.roles?.some((r: any) =>
+      typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
+    );
+    const filter = isSuperAdmin ? {} : { isActive: true };
+    const topics = await TopicModel.find(filter).sort({ order: 1, createdAt: -1 });
 
     // Aggregate article counts per topic
     const counts = await ArticleModel.aggregate([
@@ -41,6 +45,26 @@ export const listTopicsAdmin = asyncHandler(
     }));
 
     sendSuccess(res, result);
+  }
+);
+
+// @desc    Get single topic by ID
+// @route   GET /api/v1/topics/:id
+// @access  Private (SuperAdmin)
+export const getTopicById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+    const topic = await TopicModel.findById(id);
+    if (!topic) {
+      return next(ApiError.notFound('Topic not found', 'NOT_FOUND'));
+    }
+
+    const articleCount = await ArticleModel.countDocuments({ topic: topic._id });
+
+    sendSuccess(res, {
+      ...topic.toObject(),
+      articleCount,
+    });
   }
 );
 

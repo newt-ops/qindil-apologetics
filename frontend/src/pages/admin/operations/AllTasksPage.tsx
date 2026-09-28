@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/icons/Icon';
-import { useAllTasks, useUpdateTaskStatus } from '../../../hooks/useTasks';
-import { TaskItem, TaskStatus } from '../../../api/task';
+import { useAllTasks } from '../../../hooks/useTasks';
+import { TaskItem } from '../../../api/task';
 import { DataTable } from '../../../components/admin/DataTable';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
 import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
@@ -10,7 +10,7 @@ import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
 import { Column } from '../../../components/ui/Table';
-import { toast } from '../../../hooks/useToast';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 
 export const AllTasksPage: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -18,7 +18,7 @@ export const AllTasksPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState('');
 
   // Global Query for Overview Metrics
-  const { data: globalData } = useAllTasks({ page: 1, limit: 100 });
+  const { data: globalData, isLoading: isLoadingGlobal } = useAllTasks({ page: 1, limit: 100 });
   const allTasks = globalData?.data || [];
 
   // Filtered Query for the Table
@@ -29,7 +29,10 @@ export const AllTasksPage: React.FC = () => {
     type: typeFilter,
   });
 
-  const updateStatusMutation = useUpdateTaskStatus();
+  // Guard against flashing 0s - show skeleton until tasks load
+  if ((isLoading || isLoadingGlobal) && !data && !globalData) {
+    return <AdminPageSkeleton variant="table" />;
+  }
 
   const tasks = data?.data || [];
   const meta = data?.meta;
@@ -37,41 +40,34 @@ export const AllTasksPage: React.FC = () => {
   // Metrics from loaded tasks
   const totalTasks = meta?.total || allTasks.length;
   const overdueCount = allTasks.filter(
-    (t) => t.isOverdue || (new Date(t.dueDate) < new Date() && t.status !== 'done')
+    (t) => t.isOverdue || (new Date(t.dueDate) < new Date() && t.status !== 'done' && t.status !== 'approved')
   ).length;
   const inProgressCount = allTasks.filter((t) => t.status === 'inProgress').length;
   const inReviewCount = allTasks.filter((t) => t.status === 'inReview').length;
+  const approvedCount = allTasks.filter((t) => t.status === 'approved').length;
   const doneCount = allTasks.filter((t) => t.status === 'done').length;
-
-  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
-    try {
-      await updateStatusMutation.mutateAsync({ id: taskId, status: newStatus });
-      toast.success(`Task status updated to "${newStatus}".`);
-    } catch (err: any) {
-      const msg = err?.response?.data?.error?.message || 'Failed to update task status.';
-      toast.error(msg);
-    }
-  };
 
   const statusTabs = [
     { value: '', label: 'All Tasks', count: totalTasks },
     { value: 'pending', label: 'Pending' },
     { value: 'inProgress', label: 'In Progress', count: inProgressCount },
     { value: 'inReview', label: 'In Review', count: inReviewCount },
+    { value: 'approved', label: 'Approved', count: approvedCount },
     { value: 'done', label: 'Completed', count: doneCount },
   ];
 
   const columns: Column<TaskItem>[] = [
     {
       key: 'title',
-      header: 'Task Title & Discipline',
+      header: 'Task Title & Topic',
       sortable: true,
+      className: 'min-w-[180px]',
       render: (item) => (
-        <div className="space-y-1 max-w-sm">
+        <div className="space-y-0.5 max-w-sm">
           <div className="flex items-center space-x-2">
             <Link
               to={`/admin/tasks/${item._id}`}
-              className="font-bold text-text hover:text-gold transition-colors block text-sm leading-snug"
+              className="font-bold text-text hover:text-gold transition-colors block text-xs sm:text-[13px] leading-snug"
             >
               {item.title}
             </Link>
@@ -80,7 +76,7 @@ export const AllTasksPage: React.FC = () => {
             </Badge>
           </div>
           {item.description && (
-            <p className="text-[11px] text-textMuted line-clamp-1 italic font-serif">
+            <p className="text-[10.5px] text-textMuted line-clamp-1 italic font-serif">
               "{item.description}"
             </p>
           )}
@@ -90,20 +86,21 @@ export const AllTasksPage: React.FC = () => {
     {
       key: 'assignedTo',
       header: 'Assignees',
+      width: '160px',
       render: (item) => (
-        <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
+        <div className="flex flex-wrap items-center gap-1 max-w-[160px]">
           {item.assignedTo && item.assignedTo.length > 0 ? (
             item.assignedTo.map((assignee: any, idx: number) => {
               const name = typeof assignee === 'string' ? 'User' : assignee.name;
               return (
                 <span
                   key={idx}
-                  className="inline-flex items-center space-x-1 rounded-full border border-border/80 bg-surface px-2 py-0.5 text-[10px] font-semibold text-text shadow-2xs"
+                  className="inline-flex items-center space-x-1 rounded-full border border-border/80 bg-surface px-1.5 py-0.5 text-[9.5px] font-semibold text-text shadow-2xs"
                 >
-                  <span className="h-3.5 w-3.5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[9px] font-bold">
+                  <span className="h-3.5 w-3.5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[8.5px] font-bold">
                     {name?.charAt(0).toUpperCase()}
                   </span>
-                  <span className="truncate max-w-[100px]">{name}</span>
+                  <span className="truncate max-w-[70px]">{name}</span>
                 </span>
               );
             })
@@ -117,9 +114,10 @@ export const AllTasksPage: React.FC = () => {
       key: 'dueDate',
       header: 'Deadline',
       sortable: true,
+      width: '115px',
       render: (item) => {
         const dateObj = new Date(item.dueDate);
-        const isPast = dateObj < new Date() && item.status !== 'done';
+        const isPast = dateObj < new Date() && item.status !== 'done' && item.status !== 'approved';
         return (
           <span
             className={`text-xs font-mono font-semibold ${
@@ -128,7 +126,7 @@ export const AllTasksPage: React.FC = () => {
                 : 'text-text'
             }`}
           >
-            {(isPast || item.isOverdue) && <Icon name="AlertCircle" size={12} />}
+            {(isPast || item.isOverdue) && <Icon name="AlertCircle" size={11} />}
             {dateObj.toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -142,18 +140,24 @@ export const AllTasksPage: React.FC = () => {
       key: 'status',
       header: 'Status',
       sortable: true,
+      width: '110px',
       render: (item) => <StatusBadge status={item.status} />,
     },
     {
       key: 'linkedResource',
       header: 'Linked Content',
+      width: '140px',
       render: (item) => {
         if (item.linkedArticle) {
+          const articlePath =
+            item.status === 'inReview'
+              ? `/admin/articles/${item.linkedArticle._id}/review`
+              : `/admin/articles/${item.linkedArticle._id}/edit`;
           return (
             <Link
-              to={`/admin/articles/${item.linkedArticle._id}/edit`}
-              className="inline-flex items-center gap-1 text-[11px] text-gold hover:underline font-medium truncate max-w-[150px]"
-              title="Open linked article"
+              to={articlePath}
+              className="inline-flex items-center gap-1 text-[11px] text-gold hover:underline font-medium truncate max-w-[130px]"
+              title={item.status === 'inReview' ? 'Review in Moderation Queue' : 'Open Article Editor'}
             >
               <Icon name="FileText" size={12} />
               <span className="truncate">{item.linkedArticle.title}</span>
@@ -164,7 +168,7 @@ export const AllTasksPage: React.FC = () => {
           return (
             <Link
               to={`/admin/videos/${item.linkedVideo._id}`}
-              className="inline-flex items-center gap-1 text-[11px] text-gold hover:underline font-medium truncate max-w-[150px]"
+              className="inline-flex items-center gap-1 text-[11px] text-gold hover:underline font-medium truncate max-w-[130px]"
               title="Open video workspace"
             >
               <Icon name="Video" size={12} />
@@ -176,21 +180,52 @@ export const AllTasksPage: React.FC = () => {
       },
     },
     {
-      key: 'quickStatus',
-      header: 'Quick Action',
-      render: (item) => (
-        <select
-          value={item.status}
-          onChange={(e) => handleStatusChange(item._id, e.target.value as TaskStatus)}
-          disabled={updateStatusMutation.isPending}
-          className="rounded-md border border-border bg-bg px-2 py-1 text-[11px] font-semibold text-text focus:border-gold focus:outline-none cursor-pointer"
-        >
-          <option value="pending">Pending</option>
-          <option value="inProgress">In Progress</option>
-          <option value="inReview">In Review</option>
-          <option value="done">Completed</option>
-        </select>
-      ),
+      key: 'actions',
+      header: 'Actions',
+      width: '120px',
+      align: 'right',
+      render: (item) => {
+        if (item.status === 'inReview' && item.linkedArticle) {
+          return (
+            <Link to={`/admin/articles/${item.linkedArticle._id}/review`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="h-7 px-2.5 text-xs font-bold"
+                leftIcon={<Icon name="Eye" size={12} />}
+              >
+                Review
+              </Button>
+            </Link>
+          );
+        }
+        if (item.status === 'approved' && item.linkedArticle) {
+          return (
+            <Link to={`/admin/articles/${item.linkedArticle._id}/edit`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="h-7 px-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                leftIcon={<Icon name="Globe" size={12} />}
+              >
+                Publish
+              </Button>
+            </Link>
+          );
+        }
+        return (
+          <Link to={`/admin/tasks/${item._id}`}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              leftIcon={<Icon name="Search" size={12} />}
+            >
+              Inspect
+            </Button>
+          </Link>
+        );
+      },
     },
   ];
 
@@ -198,7 +233,7 @@ export const AllTasksPage: React.FC = () => {
     <div className="space-y-6 font-sans">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="Operations Task Board"
+        badge="Operations Task Board"
         title="All Operations Tasks"
         subtitle="Global administrative registry of article drafting, video production, and scholarly operational tasks."
         actions={

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   listTopicsAdmin,
+  getTopicById,
   createTopic,
   updateTopic,
   deleteTopic,
@@ -17,12 +18,17 @@ import {
 
 const router = Router();
 
-// Protect all topic management endpoints for SuperAdmin only
+// Protect all topic management endpoints
 router.use(protect);
+
+// GET /api/v1/topics — List topics (superAdmin sees all; admin/scholar sees active)
+router.get('/', listTopicsAdmin);
+
+// SuperAdmin only endpoints for mutating topics
 router.use(requireRole('superAdmin'));
 
-// GET /api/v1/topics — List all topics (including inactive)
-router.get('/', listTopicsAdmin);
+// GET /api/v1/topics/:id — Get single topic
+router.get('/:id', getTopicById);
 
 // POST /api/v1/topics — Create topic
 router.post('/', validate(createTopicSchema), createTopic);

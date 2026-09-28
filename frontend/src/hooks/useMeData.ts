@@ -5,6 +5,7 @@ import {
   updateMyProfileApi,
   generateTelegramLinkCodeApi,
   unlinkTelegramApi,
+  getMyWorkStatsApi,
   UpdateProfilePayload,
 } from '../api/me';
 import { useAuthStore } from '../stores/authStore';
@@ -69,6 +70,17 @@ export const useUnlinkTelegram = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['me'] });
     },
+  });
+};
+
+export const useMyWorkStats = () => {
+  return useQuery({
+    queryKey: ['me', 'workStats'],
+    queryFn: async () => {
+      const res = await getMyWorkStatsApi();
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 3, // 3 minutes
   });
 };
 

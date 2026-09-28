@@ -27,7 +27,7 @@ export const assignTaskSchema = z.object({
 });
 
 export const updateTaskStatusSchema = z.object({
-  status: z.enum(['pending', 'inProgress', 'inReview', 'done', 'overdue'], {
+  status: z.enum(['pending', 'inProgress', 'inReview', 'approved', 'done', 'overdue'], {
     required_error: 'Status is required',
   }),
 });

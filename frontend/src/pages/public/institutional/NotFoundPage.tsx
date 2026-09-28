@@ -22,7 +22,7 @@ export const NotFoundPage: React.FC = () => {
       icon: 'BookOpen',
     },
     {
-      title: 'Thematic Disciplines',
+      title: 'Thematic Topics',
       desc: 'Explore categorized areas of inquiry',
       to: '/topics',
       icon: 'Layers',

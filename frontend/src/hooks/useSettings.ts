@@ -8,7 +8,8 @@ export const useSettings = () => {
       const res = await getSettingsApi();
       return res.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 15, // 15 seconds
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -17,7 +18,10 @@ export const useUpdateSettings = () => {
 
   return useMutation({
     mutationFn: (payload: UpdateSettingsPayload) => updateSettingsApi(payload),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.data) {
+        queryClient.setQueryData(['settings'], data.data);
+      }
       queryClient.invalidateQueries({ queryKey: ['settings'] });
     },
   });

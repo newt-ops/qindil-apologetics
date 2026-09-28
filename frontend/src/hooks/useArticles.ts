@@ -120,6 +120,8 @@ export const useSubmitForReview = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -140,6 +142,8 @@ export const useReviewArticle = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -166,6 +170,8 @@ export const useRequestChanges = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables.id], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -178,6 +184,8 @@ export const useApproveArticle = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -190,6 +198,8 @@ export const usePublishArticle = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -202,10 +212,27 @@ export const useArchiveArticle = () => {
     onSuccess: (res, variables) => {
       queryClient.setQueryData(['articles', 'edit', variables], res.data);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+};
+
+export const useDeleteArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteArticleDraftApi(id),
+    onSuccess: (_, deletedId) => {
+      queryClient.removeQueries({ queryKey: ['articles', 'edit', deletedId] });
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
 
 export default useArticlesAdmin;
+
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useLogout } from '../hooks/useAuth';
 import { useHasRole } from '../hooks/useHasRole';
 import NotificationBell from '../components/shared/NotificationBell';
+import { UniversalPageSkeleton } from '../components/ui/Skeleton';
 
 export const AdminLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,6 +42,36 @@ export const AdminLayout: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const logoutMutation = useLogout();
   const isSuperAdmin = useHasRole('superAdmin');
+
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const quickCreateRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        setProfileDropdownOpen(false);
+      }
+      if (
+        quickCreateRef.current &&
+        !quickCreateRef.current.contains(event.target as Node)
+      ) {
+        setQuickCreateOpen(false);
+      }
+    };
+
+    if (profileDropdownOpen || quickCreateOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [profileDropdownOpen, quickCreateOpen]);
 
   // Close mobile drawer when route changes
   const prevPathname = useRef(location.pathname);
@@ -100,8 +131,10 @@ export const AdminLayout: React.FC = () => {
         return 'Admin Dashboard';
       case '/admin/workspace':
         return 'Team Workspace';
+      case '/admin/tasks':
+        return isSuperAdmin ? 'All Tasks' : 'My Tasks';
       case '/admin/articles':
-        return 'My Articles';
+        return isSuperAdmin ? 'All Articles' : 'My Articles';
       case '/admin/videos':
         return 'Video Workspace';
       case '/admin/calendar':
@@ -234,7 +267,7 @@ export const AdminLayout: React.FC = () => {
             </button>
 
             {/* Quick Create Dropdown Button */}
-            <div className="relative">
+            <div className="relative" ref={quickCreateRef}>
               <button
                 type="button"
                 onClick={() => setQuickCreateOpen((prev) => !prev)}
@@ -248,82 +281,85 @@ export const AdminLayout: React.FC = () => {
 
               <AnimatePresence>
                 {quickCreateOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-20"
-                      onClick={() => setQuickCreateOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
-                    >
-                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-textMuted border-b border-border/60">
-                        Quick Actions
-                      </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
+                  >
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-textMuted border-b border-border/60">
+                      Quick Actions
+                    </div>
 
-                      <Link
-                        to="/admin/articles"
-                        onClick={() => setQuickCreateOpen(false)}
-                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
-                      >
-                        <Icon name="FileText" size={14} className="text-gold" />
-                        <span>Create Article</span>
-                      </Link>
+                    {!isSuperAdmin ? (
+                      <>
+                        <Link
+                          to="/admin/tasks"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="CheckSquare" size={14} className="text-gold" />
+                          <span>My Tasks</span>
+                        </Link>
+                        <Link
+                          to="/admin/articles"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="FileText" size={14} className="text-gold" />
+                          <span>My Articles</span>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/admin/tasks/assign"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="CheckSquare" size={14} className="text-gold" />
+                          <span>Assign Task</span>
+                        </Link>
 
-                      {isSuperAdmin && (
-                        <>
-                          <Link
-                            to="/admin/tasks/assign"
-                            onClick={() => setQuickCreateOpen(false)}
-                            className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
-                          >
-                            <Icon name="CheckSquare" size={14} className="text-gold" />
-                            <span>Assign Task</span>
-                          </Link>
+                        <Link
+                          to="/admin/review-queue"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="Eye" size={14} className="text-gold" />
+                          <span>Review Queue</span>
+                        </Link>
 
-                          <Link
-                            to="/admin/events"
-                            onClick={() => setQuickCreateOpen(false)}
-                            className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
-                          >
-                            <Icon name="Calendar" size={14} className="text-gold" />
-                            <span>Schedule Event</span>
-                          </Link>
+                        <Link
+                          to="/admin/events"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="Calendar" size={14} className="text-gold" />
+                          <span>Schedule Event</span>
+                        </Link>
 
-                          <Link
-                            to="/admin/topics"
-                            onClick={() => setQuickCreateOpen(false)}
-                            className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
-                          >
-                            <Icon name="Tag" size={14} className="text-gold" />
-                            <span>New Topic</span>
-                          </Link>
-                        </>
-                      )}
-                    </motion.div>
-                  </>
+                        <Link
+                          to="/admin/topics"
+                          onClick={() => setQuickCreateOpen(false)}
+                          className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text hover:bg-gold/10 hover:text-gold transition-colors"
+                        >
+                          <Icon name="Tag" size={14} className="text-gold" />
+                          <span>New Topic</span>
+                        </Link>
+                      </>
+                    )}
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Back to Main Page Button */}
-            <Link
-              to="/"
-              className="inline-flex items-center space-x-1.5 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-text hover:border-gold/50 hover:text-gold active:scale-95 transition-all shadow-apple-sm"
-              title="Return to Main Page"
-            >
-              <Icon name="ArrowLeft" size={13} className="text-gold" />
-              <span className="hidden sm:inline">Main Page</span>
-            </Link>
 
             {/* Notification Bell Component */}
             <NotificationBell />
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setProfileDropdownOpen((prev) => !prev)}
                 className="flex items-center space-x-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-2.5 sm:px-3 py-1.5 text-xs hover:border-gold/40 active:scale-95 transition-all shadow-apple-sm"
@@ -349,80 +385,76 @@ export const AdminLayout: React.FC = () => {
               {/* Profile Dropdown Menu */}
               <AnimatePresence>
                 {profileDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-20"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 z-30 mt-2 w-56 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
-                    >
-                      <div className="border-b border-border/60 px-3 py-2">
-                        <p className="text-xs font-bold text-text truncate">{user?.name}</p>
-                        <p className="text-[11px] text-textMuted truncate">{user?.email}</p>
-                        <div className="mt-1.5">
-                          <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 text-[9px] font-bold text-gold uppercase tracking-wider shadow-apple-sm">
-                            {isSuperAdmin ? 'Super Admin' : 'Admin'}
-                          </span>
-                        </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 z-30 mt-2 w-56 rounded-2xl border border-border/80 dark:border-white/10 bg-surface/95 dark:bg-zinc-900/95 backdrop-blur-2xl p-1.5 shadow-apple-float space-y-0.5"
+                  >
+                    <div className="border-b border-border/60 px-3 py-2">
+                      <p className="text-xs font-bold text-text truncate">{user?.name}</p>
+                      <p className="text-[11px] text-textMuted truncate">{user?.email}</p>
+                      <div className="mt-1.5">
+                        <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 text-[9px] font-bold text-gold uppercase tracking-wider shadow-apple-sm">
+                          {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                        </span>
                       </div>
+                    </div>
 
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
-                      >
-                        <Icon name="User" size={14} />
-                        <span>Member Dashboard</span>
-                      </Link>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
+                    >
+                      <Icon name="User" size={14} />
+                      <span>Member Dashboard</span>
+                    </Link>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          setIsCommandPaletteOpen(true);
-                        }}
-                        className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Icon name="Search" size={14} />
-                          <span>Command Palette</span>
-                        </div>
-                        <kbd className="text-[10px] font-mono text-textMuted">⌘K</kbd>
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        setIsCommandPaletteOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-gold/10 hover:text-gold"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Icon name="Search" size={14} />
+                        <span>Command Palette</span>
+                      </div>
+                      <kbd className="text-[10px] font-mono text-textMuted">⌘K</kbd>
+                    </button>
 
-                      <Link
-                        to="/"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-surface/80 hover:text-gold"
-                      >
-                        <Icon name="Globe" size={14} />
-                        <span>Back to Main Page</span>
-                      </Link>
+                    <Link
+                      to="/"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-text transition hover:bg-surface/80 hover:text-gold"
+                    >
+                      <Icon name="Globe" size={14} />
+                      <span>Back to Main Page</span>
+                    </Link>
 
-                      <button
-                        onClick={handleLogout}
-                        disabled={logoutMutation.isPending}
-                        className="w-full flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
-                      >
-                        <Icon name="LogOut" size={14} />
-                        <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>
-                      </button>
-                    </motion.div>
-                  </>
+                    <button
+                      onClick={handleLogout}
+                      disabled={logoutMutation.isPending}
+                      className="w-full flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+                    >
+                      <Icon name="LogOut" size={14} />
+                      <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>
+                    </button>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
         </header>
 
-        {/* Dynamic Outlet Main Content Area */}
+        {/* Dynamic Outlet Main Content Area with Adaptive Skeleton Loading */}
         <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 bg-bg">
-          <Outlet />
+          <Suspense fallback={<UniversalPageSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

@@ -4,7 +4,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Icon from '../icons/Icon';
 import EmptyState from '../ui/EmptyState';
-import { DataTableSkeleton } from '../ui/Skeleton';
+import Checkbox from '../ui/Checkbox';
 
 export interface DataTableProps<T> {
   columns: Column<T>[];
@@ -186,18 +186,25 @@ export function DataTable<T extends Record<string, any>>({
 
     const selectColumn: Column<T> = {
       key: '__select__',
-      header: '',
-      width: '44px',
+      header: (
+        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isAllSelected}
+            indeterminate={isSomeSelected}
+            onChange={handleToggleSelectAll}
+            aria-label="Select all rows"
+          />
+        </div>
+      ),
+      width: '40px',
       render: (item: T) => {
         const key = getItemKey(item, 0);
         const checked = selectedIds.includes(key);
         return (
-          <div className="flex items-center justify-center">
-            <input
-              type="checkbox"
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
               checked={checked}
               onChange={() => handleToggleRow(key)}
-              className="h-4 w-4 rounded border-border text-gold focus:ring-gold/30 bg-bg cursor-pointer"
               aria-label="Select row"
             />
           </div>
@@ -206,14 +213,19 @@ export function DataTable<T extends Record<string, any>>({
     };
 
     return [selectColumn, ...columns];
-  }, [selectable, columns, selectedIds, sortedData]);
+  }, [selectable, columns, selectedIds, sortedData, isAllSelected, isSomeSelected]);
 
   // CSV Export Function
   const handleExportCsv = () => {
     if (sortedData.length === 0) return;
 
     const exportColumns = columns.filter((c) => c.key !== '__select__' && c.key !== 'actions');
-    const headers = exportColumns.map((c) => `"${c.header.replace(/"/g, '""')}"`).join(',');
+    const headers = exportColumns
+      .map((c) => {
+        const title = typeof c.header === 'string' ? c.header : c.key;
+        return `"${title.replace(/"/g, '""')}"`;
+      })
+      .join(',');
 
     const rows = sortedData.map((item) => {
       return exportColumns
@@ -248,7 +260,22 @@ export function DataTable<T extends Record<string, any>>({
               value={searchTerm}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              leftElement={<Icon name="Search" size={15} />}
+              leftElement={<Icon name="Search" size={15} className="text-textMuted" />}
+              rightElement={
+                searchTerm ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      onSearchChange?.('');
+                    }}
+                    className="text-textMuted hover:text-text p-0.5 transition-colors"
+                    title="Clear search"
+                  >
+                    <Icon name="X" size={13} />
+                  </button>
+                ) : undefined
+              }
             />
           </div>
 
@@ -298,7 +325,60 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table Container */}
       <div className="relative">
         {isLoading ? (
-          <DataTableSkeleton columns={columns.length || 4} rows={5} />
+          <div className="w-full overflow-hidden rounded-xl border border-border/70 bg-surface/80 shadow-2xs">
+            <div className="w-full overflow-x-auto scrollbar-thin">
+              <table className="w-full text-left border-collapse text-xs sm:text-[13px] text-text min-w-[540px] sm:min-w-full">
+                <thead className="border-b border-border/70 bg-bg/60 dark:bg-zinc-950/40 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-textMuted select-none">
+                  <tr>
+                    {selectable && (
+                      <th className="w-10 min-w-[40px] max-w-[40px] px-1 py-2 text-center">
+                        <div className="h-3.5 w-3.5 mx-auto rounded-[4px] skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+                      </th>
+                    )}
+                    {columns.map((col, idx) => (
+                      <th
+                        key={idx}
+                        style={col.width ? { width: col.width, minWidth: col.width } : undefined}
+                        className="px-3 sm:px-3.5 py-2.5"
+                      >
+                        <div
+                          className={`h-3 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70 ${
+                            idx === 0 ? 'w-24' : 'w-16'
+                          }`}
+                        />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {Array.from({ length: 6 }).map((_, rowIdx) => (
+                    <tr key={rowIdx}>
+                      {selectable && (
+                        <td className="w-10 min-w-[40px] max-w-[40px] px-1 py-2 text-center">
+                          <div className="h-3.5 w-3.5 mx-auto rounded-[4px] skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+                        </td>
+                      )}
+                      {columns.map((_, colIdx) => (
+                        <td key={colIdx} className="px-3 sm:px-3.5 py-2 sm:py-2.5">
+                          <div
+                            className={`h-3 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60 ${
+                              colIdx === 0
+                                ? 'w-3/5'
+                                : colIdx === 1
+                                ? 'w-20'
+                                : colIdx === columns.length - 1
+                                ? 'w-14 ml-auto'
+                                : 'w-16'
+                            }`}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : sortedData.length === 0 ? (
           emptyState || (
             <EmptyState
@@ -308,32 +388,14 @@ export function DataTable<T extends Record<string, any>>({
             />
           )
         ) : (
-          <div className="relative">
-            {/* Master Select All Checkbox Overlay on First Header */}
-            {selectable && (
-              <div className="absolute top-3.5 left-4 z-30">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  ref={(input) => {
-                    if (input) input.indeterminate = isSomeSelected;
-                  }}
-                  onChange={handleToggleSelectAll}
-                  className="h-4 w-4 rounded border-border text-gold focus:ring-gold/30 bg-bg cursor-pointer"
-                  aria-label="Select all rows"
-                />
-              </div>
-            )}
-
-            <Table
-              columns={tableColumns}
-              data={sortedData}
-              onSort={handleSort}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              keyExtractor={getItemKey}
-            />
-          </div>
+          <Table
+            columns={tableColumns}
+            data={sortedData}
+            onSort={handleSort}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            keyExtractor={getItemKey}
+          />
         )}
       </div>
 

@@ -69,7 +69,7 @@ export function AboutPage() {
   const metrics = [
     { value: '450+', label: 'Primary Source Citations' },
     { value: '100%', label: 'Double-Reviewed Papers' },
-    { value: '24+', label: 'Academic Disciplines' },
+    { value: '24+', label: 'Academic Topics' },
     { value: '32', label: 'Scholars & Fellows' },
   ];
 
@@ -168,7 +168,7 @@ export function AboutPage() {
         {/* Research Pillars - Prompt 42: Compact 2-col on mobile */}
         <div className="space-y-4 sm:space-y-8">
           <div className="text-center space-y-1">
-            <h2 className="text-lg sm:text-2xl font-bold text-text">Research Pillars &amp; Disciplines</h2>
+            <h2 className="text-lg sm:text-2xl font-bold text-text">Research Pillars &amp; Topics</h2>
             <p className="text-[11px] sm:text-xs text-textMuted max-w-lg mx-auto">
               Our multidisciplinary focus areas for scholarly refutations and intellectual investigations
             </p>

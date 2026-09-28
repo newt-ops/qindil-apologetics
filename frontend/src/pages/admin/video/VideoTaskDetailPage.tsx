@@ -16,7 +16,7 @@ import { VideoEmbed } from '../../../components/admin/VideoEmbed';
 import { Button } from '../../../components/ui/Button';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Input } from '../../../components/ui/Input';
-import { Spinner } from '../../../components/ui/Spinner';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 import { toast } from '../../../hooks/useToast';
 
 export const VideoTaskDetailPage: React.FC = () => {
@@ -36,6 +36,7 @@ export const VideoTaskDetailPage: React.FC = () => {
   const [submittedUrl, setSubmittedUrl] = useState('');
   const [publishedUrl, setPublishedUrl] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
+  const [reviewDecisionLoading, setReviewDecisionLoading] = useState<'approve' | 'requestChanges' | null>(null);
 
   useEffect(() => {
     if (video) {
@@ -48,11 +49,7 @@ export const VideoTaskDetailPage: React.FC = () => {
   }, [video]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="detail" />;
   }
 
   if (isError || !video) {
@@ -142,6 +139,7 @@ export const VideoTaskDetailPage: React.FC = () => {
       toast.error('Please enter review notes explaining requested changes.');
       return;
     }
+    setReviewDecisionLoading(decision);
     try {
       await reviewVideoMutation.mutateAsync({
         id: video._id,
@@ -154,6 +152,8 @@ export const VideoTaskDetailPage: React.FC = () => {
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message || 'Failed to process review.';
       toast.error(msg);
+    } finally {
+      setReviewDecisionLoading(null);
     }
   };
 
@@ -346,7 +346,8 @@ export const VideoTaskDetailPage: React.FC = () => {
               variant="primary"
               size="sm"
               onClick={() => handleReviewDecision('approve')}
-              isLoading={reviewVideoMutation.isPending}
+              isLoading={reviewDecisionLoading === 'approve'}
+              disabled={reviewDecisionLoading !== null}
               leftIcon={<Icon name="Check" size={14} />}
             >
               Approve Video
@@ -355,7 +356,8 @@ export const VideoTaskDetailPage: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={() => handleReviewDecision('requestChanges')}
-              isLoading={reviewVideoMutation.isPending}
+              isLoading={reviewDecisionLoading === 'requestChanges'}
+              disabled={reviewDecisionLoading !== null}
               leftIcon={<Icon name="AlertTriangle" size={14} />}
               className="border-warning/50 text-warning hover:bg-warning/10"
             >
@@ -451,6 +453,7 @@ export const VideoTaskDetailPage: React.FC = () => {
                 variant="secondary"
                 size="sm"
                 isLoading={updateDetailsMutation.isPending}
+                disabled={submitVideoMutation.isPending}
                 leftIcon={<Icon name="Check" size={14} />}
               >
                 Save Workspace Details
@@ -465,6 +468,7 @@ export const VideoTaskDetailPage: React.FC = () => {
                     size="sm"
                     onClick={handleSubmitVideo}
                     isLoading={submitVideoMutation.isPending}
+                    disabled={updateDetailsMutation.isPending}
                     leftIcon={<Icon name="Send" size={14} />}
                   >
                     Submit Video Task

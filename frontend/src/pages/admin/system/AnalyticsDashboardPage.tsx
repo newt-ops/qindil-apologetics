@@ -18,7 +18,7 @@ import {
   useArticlesOverTime,
   useTeamActivity,
 } from '../../../hooks/useAnalytics';
-import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { AdminPageHeader, AdminStatCard, AdminPageSkeleton } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { useThemeStore } from '../../../stores/themeStore';
 
@@ -185,11 +185,16 @@ export const AnalyticsDashboardPage: React.FC = () => {
     ],
   };
 
+  // Guard against flashing 0s - show skeleton until analytics load
+  if (isOverviewLoading && !overview) {
+    return <AdminPageSkeleton variant="dashboard" />;
+  }
+
   return (
     <div className="space-y-6 font-sans pb-16">
       {/* Page Header & Range Selector */}
       <AdminPageHeader
-        discipline="Platform Governance"
+        badge="Platform Governance"
         title="Analytics & Intelligence"
         subtitle="System performance telemetry, article readership metrics, and operational throughput."
         actions={

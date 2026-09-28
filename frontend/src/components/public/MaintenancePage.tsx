@@ -1,15 +1,36 @@
-import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../icons/Icon';
 import { useSettings } from '../../hooks/useSettings';
 
-export const MaintenancePage: React.FC = () => {
+interface MaintenancePageProps {
+  previewMode?: boolean;
+}
+
+export const MaintenancePage: React.FC<MaintenancePageProps> = ({ previewMode = false }) => {
+  const navigate = useNavigate();
   const { data: settings } = useSettings();
 
-  const siteName = settings?.siteName || 'Qindil Platform';
+  const siteName = settings?.siteName || 'منصة القنديل';
   const contactEmail = settings?.contactEmail || 'contact@qindilapologetics.com';
 
   return (
     <div className="min-h-screen w-full bg-bg text-text font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+      {/* Preview Mode Top Banner */}
+      {previewMode && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-bg font-bold px-4 py-2.5 text-xs sm:text-sm flex items-center justify-between shadow-lg">
+          <div className="flex items-center space-x-2">
+            <Icon name="Eye" size={16} />
+            <span>PREVIEW MODE: This is the Maintenance Screen currently presented to public visitors.</span>
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="px-3 py-1 bg-bg text-text rounded text-xs font-mono hover:bg-surface transition"
+          >
+            Exit Preview
+          </button>
+        </div>
+      )}
+
       {/* Subtle Background Glow */}
       <div className="absolute h-96 w-96 rounded-full bg-gold/5 blur-3xl -top-20 -left-20 pointer-events-none" />
       <div className="absolute h-96 w-96 rounded-full bg-gold/5 blur-3xl -bottom-20 -right-20 pointer-events-none" />
@@ -46,6 +67,14 @@ export const MaintenancePage: React.FC = () => {
             </a>
           </div>
         )}
+
+        {/* Admin Login Link */}
+        <div className="pt-2 text-xs text-textMuted/70 border-t border-border/40">
+          <span>Platform staff? </span>
+          <Link to="/login" className="text-gold hover:underline font-semibold">
+            Administrator Sign In
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 text-[11px] font-mono text-textMuted/60">

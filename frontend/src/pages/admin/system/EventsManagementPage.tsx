@@ -8,7 +8,7 @@ import {
 } from '../../../hooks/useEvents';
 import { CalendarEventItem, EventType, EventVisibility } from '../../../api/event';
 import { DataTable } from '../../../components/admin/DataTable';
-import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { AdminPageHeader, AdminStatCard, AdminPageSkeleton } from '../../../components/admin';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
@@ -57,11 +57,16 @@ export const EventsManagementPage: React.FC = () => {
     visibility: visibilityFilter || undefined,
   });
 
-  const eventsList = eventsData?.items || [];
-
   const createMutation = useCreateEvent();
   const updateMutation = useUpdateEvent();
   const deleteMutation = useDeleteEvent();
+
+  // Guard against flashing 0s - show skeleton until events load
+  if (isLoading && !eventsData) {
+    return <AdminPageSkeleton variant="table" />;
+  }
+
+  const eventsList = eventsData?.items || [];
 
   const handleOpenCreateModal = () => {
     setEditingEvent(null);
@@ -167,26 +172,26 @@ export const EventsManagementPage: React.FC = () => {
   const renderTypeBadge = (t: EventType) => {
     switch (t) {
       case 'publicEvent':
-        return <Badge variant="gold">Public Event</Badge>;
+        return <Badge variant="gold" size="sm">Public Event</Badge>;
       case 'deadline':
-        return <Badge variant="danger">Deadline</Badge>;
+        return <Badge variant="danger" size="sm">Deadline</Badge>;
       case 'meeting':
-        return <Badge variant="info">Meeting</Badge>;
+        return <Badge variant="info" size="sm">Meeting</Badge>;
       default:
-        return <Badge variant="secondary">Other</Badge>;
+        return <Badge variant="secondary" size="sm">Other</Badge>;
     }
   };
 
   // Helper for Visibility Badges
   const renderVisibilityBadge = (v: EventVisibility) => {
     return v === 'public' ? (
-      <span className="inline-flex items-center space-x-1 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-[11px] font-bold text-gold">
-        <Icon name="Globe" size={12} />
+      <span className="inline-flex items-center space-x-1 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-bold text-gold">
+        <Icon name="Globe" size={11} />
         <span>Public</span>
       </span>
     ) : (
-      <span className="inline-flex items-center space-x-1 rounded-full border border-border bg-surface px-2.5 py-0.5 text-[11px] font-semibold text-textMuted">
-        <Icon name="Lock" size={12} />
+      <span className="inline-flex items-center space-x-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold text-textMuted">
+        <Icon name="Lock" size={11} />
         <span>Team Only</span>
       </span>
     );
@@ -198,24 +203,25 @@ export const EventsManagementPage: React.FC = () => {
       key: 'title',
       header: 'Event Title & Details',
       sortable: true,
+      className: 'min-w-[180px]',
       render: (item) => (
-        <div className="space-y-1 max-w-sm">
-          <div className="font-bold text-text text-sm flex items-center space-x-2">
+        <div className="space-y-0.5 max-w-sm">
+          <div className="font-bold text-text text-xs sm:text-[13px] flex items-center space-x-2">
             <span>{item.title}</span>
             {item.relatedTask && (
-              <span className="shrink-0 rounded bg-info/10 border border-info/30 px-1.5 py-0.5 text-[9px] font-semibold text-info">
+              <span className="shrink-0 rounded bg-info/10 border border-info/30 px-1.5 py-0.2 text-[8.5px] font-semibold text-info">
                 Task Linked
               </span>
             )}
           </div>
           {item.description && (
-            <p className="text-[11px] text-textMuted line-clamp-1 italic">
+            <p className="text-[10.5px] text-textMuted line-clamp-1 italic">
               {item.description}
             </p>
           )}
           {item.location && (
-            <div className="flex items-center space-x-1 text-[11px] text-gold/80">
-              <Icon name="MapPin" size={12} />
+            <div className="flex items-center space-x-1 text-[10.5px] text-gold/80">
+              <Icon name="MapPin" size={11} />
               <span>{item.location}</span>
             </div>
           )}
@@ -226,18 +232,21 @@ export const EventsManagementPage: React.FC = () => {
       key: 'type',
       header: 'Type',
       sortable: true,
+      width: '120px',
       render: (item) => renderTypeBadge(item.type),
     },
     {
       key: 'visibility',
       header: 'Visibility',
       sortable: true,
+      width: '115px',
       render: (item) => renderVisibilityBadge(item.visibility),
     },
     {
       key: 'startDate',
       header: 'Date & Time',
       sortable: true,
+      width: '130px',
       render: (item) => {
         const start = new Date(item.startDate);
         const end = item.endDate ? new Date(item.endDate) : null;
@@ -275,15 +284,18 @@ export const EventsManagementPage: React.FC = () => {
     {
       key: 'actions',
       header: 'Actions',
+      width: '120px',
+      align: 'right',
       render: (item) => {
         const isTaskLinked = Boolean(item.relatedTask);
 
         return (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-end space-x-1.5">
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={<Icon name="Edit" size={14} />}
+              className="h-7 px-2 text-xs"
+              leftIcon={<Icon name="Edit" size={12} />}
               onClick={() => handleOpenEditModal(item)}
             >
               Edit
@@ -291,7 +303,7 @@ export const EventsManagementPage: React.FC = () => {
 
             {isTaskLinked ? (
               <span
-                className="text-[10px] text-textMuted/60 italic cursor-not-allowed select-none px-2 py-1 bg-surface border border-border/50 rounded"
+                className="text-[9.5px] text-textMuted/60 italic cursor-not-allowed select-none px-1.5 py-0.5 bg-surface border border-border/50 rounded"
                 title="Task-linked events cannot be deleted directly."
               >
                 Task Managed
@@ -300,11 +312,11 @@ export const EventsManagementPage: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-danger hover:bg-danger/10 hover:text-danger"
+                className="h-7 w-7 p-0 flex items-center justify-center text-danger hover:bg-danger/10 hover:text-danger"
                 onClick={() => handleDeleteEvent(item)}
                 title="Delete event"
               >
-                <Icon name="Trash2" size={14} />
+                <Icon name="Trash2" size={13} />
               </Button>
             )}
           </div>
@@ -406,7 +418,7 @@ export const EventsManagementPage: React.FC = () => {
     <div className="space-y-6 font-sans">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="SuperAdmin Console"
+        badge="SuperAdmin Console"
         title="Events Management"
         subtitle="Create public events for the platform website or schedule internal team calendar events."
         actions={

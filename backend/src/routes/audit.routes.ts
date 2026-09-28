@@ -5,9 +5,9 @@ import { requireRole } from '../middleware/roleGuard.js';
 
 const router = Router();
 
-// Protect all audit log endpoints with authentication & superAdmin guard
+// Protect all audit log endpoints with authentication & admin guard
 router.use(protect);
-router.use(requireRole('superAdmin'));
+router.use(requireRole(['admin', 'superAdmin']));
 
 router.get('/', listAuditLog);
 

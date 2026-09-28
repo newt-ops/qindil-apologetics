@@ -14,7 +14,7 @@ import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
 import Textarea from '../../../components/ui/Textarea';
-import Spinner from '../../../components/ui/Spinner';
+import { AdminPageSkeleton } from '../../../components/ui/Skeleton';
 import Icon from '../../../components/icons/Icon';
 import { toast } from '../../../hooks/useToast';
 
@@ -45,11 +45,7 @@ export const ArticleReviewPage: React.FC = () => {
   const [notesError, setNotesError] = useState('');
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="detail" />;
   }
 
   if (error || !article) {
@@ -102,6 +98,7 @@ export const ArticleReviewPage: React.FC = () => {
     try {
       await approveMutation.mutateAsync(article._id);
       toast.success('Article approved successfully!');
+      navigate('/admin/review-queue');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to approve article.');
     }
@@ -141,6 +138,12 @@ export const ArticleReviewPage: React.FC = () => {
     }
   };
 
+  const isAnyPending =
+    requestChangesMutation.isPending ||
+    approveMutation.isPending ||
+    publishMutation.isPending ||
+    archiveMutation.isPending;
+
   return (
     <div className="space-y-6 font-sans max-w-5xl mx-auto pb-16">
       {/* Top Action & Navigation Header */}
@@ -174,6 +177,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="MessageSquare" size={14} />}
                 onClick={() => setIsNotesModalOpen(true)}
                 isLoading={requestChangesMutation.isPending}
+                disabled={isAnyPending}
               >
                 Request Changes
               </Button>
@@ -183,6 +187,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="Check" size={14} />}
                 onClick={handleApprove}
                 isLoading={approveMutation.isPending}
+                disabled={isAnyPending}
               >
                 Approve Article
               </Button>
@@ -192,6 +197,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="Globe" size={14} />}
                 onClick={handlePublish}
                 isLoading={publishMutation.isPending}
+                disabled={isAnyPending}
               >
                 Approve & Publish Live
               </Button>
@@ -206,6 +212,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="MessageSquare" size={14} />}
                 onClick={() => setIsNotesModalOpen(true)}
                 isLoading={requestChangesMutation.isPending}
+                disabled={isAnyPending}
               >
                 Request Changes
               </Button>
@@ -215,6 +222,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="Globe" size={14} />}
                 onClick={handlePublish}
                 isLoading={publishMutation.isPending}
+                disabled={isAnyPending}
               >
                 Publish Live
               </Button>
@@ -241,6 +249,7 @@ export const ArticleReviewPage: React.FC = () => {
                 leftIcon={<Icon name="Archive" size={14} />}
                 onClick={handleArchive}
                 isLoading={archiveMutation.isPending}
+                disabled={isAnyPending}
               >
                 Archive
               </Button>
@@ -263,7 +272,7 @@ export const ArticleReviewPage: React.FC = () => {
         <span className="text-border">|</span>
         <span className="flex items-center gap-1.5">
           <Icon name="Tag" size={13} className="text-gold" />
-          <span>Discipline: <strong className="text-gold">{topicName}</strong></span>
+          <span>Topic: <strong className="text-gold">{topicName}</strong></span>
         </span>
       </div>
 

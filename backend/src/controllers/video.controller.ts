@@ -314,6 +314,10 @@ export const reviewVideoTask = asyncHandler(
       if (reviewNotes) video.reviewNotes = reviewNotes.trim();
       await video.save();
 
+      if (video.linkedTaskId) {
+        await TaskModel.findByIdAndUpdate(video.linkedTaskId, { $set: { status: 'approved' } });
+      }
+
       await createNotification({
         recipient: creatorId,
         type: 'video_approved',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Table from '@tiptap/extension-table';
@@ -41,6 +41,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Footnote Modal state
   const [isFootnoteModalOpen, setIsFootnoteModalOpen] = useState(false);
   const [footnoteText, setFootnoteText] = useState('');
+
+  // Flag to avoid cursor jump / re-sync loops on local user typing
+  const isInternalUpdateRef = useRef(false);
 
   // Helper to parse incoming content prop into JSONContent or HTML string
   const parseInitialContent = (input: any): any => {
@@ -94,14 +97,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     content: initialContent,
     editable,
     onUpdate: ({ editor }) => {
+      isInternalUpdateRef.current = true;
       if (onChange) {
         onChange(editor.getJSON(), editor.getHTML());
       }
     },
   });
 
-  // Re-sync editor content if content prop changes externally
+  // Re-sync editor content ONLY if content prop changes externally (e.g. data fetch / reset)
   useEffect(() => {
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      return;
+    }
+
     if (editor && content !== undefined && content !== null) {
       const parsed = parseInitialContent(content);
       const currentJson = JSON.stringify(editor.getJSON());

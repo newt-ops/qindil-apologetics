@@ -6,6 +6,7 @@ import { AuditLogModel } from '../models/AuditLog.model.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 import { env } from '../config/env.js';
+import { calculateMemberWorkStats } from '../services/workStats.service.js';
 
 // Helper to sanitize user object
 const sanitizeUser = (user: any) => {
@@ -166,6 +167,15 @@ export const unlinkTelegram = asyncHandler(
     });
 
     sendSuccess(res, { message: 'Telegram account unlinked successfully' });
+  }
+);
+
+// @desc    Get current user's work and productivity metrics
+// @route   GET /api/v1/me/stats
+export const getMyWorkStats = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const stats = await calculateMemberWorkStats(req.user!._id);
+    sendSuccess(res, stats);
   }
 );
 

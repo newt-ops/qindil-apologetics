@@ -76,3 +76,41 @@ export const unlinkTelegramApi = async () => {
   return response.data;
 };
 
+export interface MemberWorkStats {
+  articles: {
+    published: number;
+    approved: number;
+    inReview: number;
+    drafts: number;
+    total: number;
+    totalViews: number;
+  };
+  videos: {
+    completed: number;
+    inProgress: number;
+    total: number;
+  };
+  tasks: {
+    completed: number;
+    inProgress: number;
+    inReview: number;
+    pending: number;
+    overdue: number;
+    total: number;
+    completionRate: number;
+  };
+  proposals: {
+    pending: number;
+    approved: number;
+    rejected: number;
+    total: number;
+  };
+}
+
+export const getMyWorkStatsApi = async () => {
+  const response = await apiClient.get<{ success: boolean; data: MemberWorkStats }>(
+    '/me/stats'
+  );
+  return response.data;
+};
+

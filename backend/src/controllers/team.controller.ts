@@ -7,6 +7,7 @@ import { createNotification } from '../services/notify.js';
 import { sendTelegramRoleChangeNotification } from '../telegram/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
+import { calculateMemberWorkStats } from '../services/workStats.service.js';
 
 // Helper to sanitize user output
 const sanitizeUser = (user: any) => {
@@ -90,7 +91,28 @@ export const getTeamMember = asyncHandler(
       return next(ApiError.notFound('Member not found', 'NOT_FOUND'));
     }
 
-    sendSuccess(res, sanitizeUser(user));
+    const workStats = await calculateMemberWorkStats(id);
+    const sanitized = sanitizeUser(user);
+    sanitized.workStats = workStats;
+
+    sendSuccess(res, sanitized);
+  }
+);
+
+// @desc    Get detailed work & performance metrics for a specific scholar/member
+// @route   GET /api/v1/team/:id/stats
+// @access  Private (SuperAdmin only)
+export const getMemberWorkStats = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return next(ApiError.notFound('Member not found', 'NOT_FOUND'));
+    }
+
+    const stats = await calculateMemberWorkStats(id);
+    sendSuccess(res, stats);
   }
 );
 

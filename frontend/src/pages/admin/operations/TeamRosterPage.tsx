@@ -4,7 +4,7 @@ import Icon from '../../../components/icons/Icon';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { User } from '../../../stores/authStore';
 import { DataTable } from '../../../components/admin/DataTable';
-import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { AdminPageHeader, AdminStatCard, AdminPageSkeleton } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
@@ -19,7 +19,7 @@ export const TeamRosterPage: React.FC = () => {
   const [includeUsers, setIncludeUsers] = useState(false);
 
   // Global Query for Overview Stats
-  const { data: globalData } = useTeamMembers({
+  const { data: globalData, isLoading: isLoadingGlobal } = useTeamMembers({
     page: 1,
     limit: 100,
     includeUsers: true,
@@ -34,6 +34,11 @@ export const TeamRosterPage: React.FC = () => {
     role: roleFilter,
     includeUsers,
   });
+
+  // Guard against flashing 0s - show skeleton until roster data is loaded
+  if ((isLoadingGlobal || isLoading) && !globalData && !data) {
+    return <AdminPageSkeleton variant="table" />;
+  }
 
   const members = data?.data || [];
   const meta = data?.meta;
@@ -65,27 +70,28 @@ export const TeamRosterPage: React.FC = () => {
       key: 'name',
       header: 'Scholar / Member Name',
       sortable: true,
+      className: 'min-w-[180px]',
       render: (item) => (
         <div
           onClick={() => navigate(`/admin/team/${item._id}`)}
-          className="flex items-center space-x-3 cursor-pointer group"
+          className="flex items-center space-x-2.5 cursor-pointer group"
         >
           {item.avatarUrl ? (
             <img
               src={item.avatarUrl}
               alt={item.name}
-              className="h-9 w-9 rounded-full object-cover border border-gold/40 shrink-0"
+              className="h-7 w-7 rounded-full object-cover border border-gold/40 shrink-0"
             />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/20 font-bold text-gold text-sm shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gold/20 font-bold text-gold text-xs shrink-0">
               {item.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div>
-            <p className="font-bold text-text group-hover:text-gold transition-colors text-sm">
+          <div className="min-w-0">
+            <p className="font-bold text-text group-hover:text-gold transition-colors text-xs sm:text-[13px] truncate">
               {item.name}
             </p>
-            <p className="text-[11px] text-textMuted font-mono">{item.email}</p>
+            <p className="text-[10px] text-textMuted font-mono truncate">{item.email}</p>
           </div>
         </div>
       ),
@@ -94,19 +100,21 @@ export const TeamRosterPage: React.FC = () => {
       key: 'roles',
       header: 'Assigned Role',
       sortable: true,
+      width: '130px',
       render: (item) => {
         const role = getPrimaryRole(item);
         const variant = role === 'superAdmin' ? 'gold' : role === 'admin' ? 'inReview' : 'muted';
         const label = role === 'superAdmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Public Member';
-        return <Badge variant={variant}>{label}</Badge>;
+        return <Badge variant={variant} size="sm">{label}</Badge>;
       },
     },
     {
       key: 'isActive',
       header: 'Status',
       sortable: true,
+      width: '105px',
       render: (item) => (
-        <Badge variant={item.isActive ? 'published' : 'archived'}>
+        <Badge variant={item.isActive ? 'published' : 'archived'} size="sm">
           {item.isActive ? 'Active' : 'Deactivated'}
         </Badge>
       ),
@@ -115,6 +123,7 @@ export const TeamRosterPage: React.FC = () => {
       key: 'createdAt',
       header: 'Joined Date',
       sortable: true,
+      width: '110px',
       render: (item) => (
         <span className="text-xs font-mono text-textMuted">
           {new Date(item.createdAt).toLocaleDateString(undefined, {
@@ -128,12 +137,15 @@ export const TeamRosterPage: React.FC = () => {
     {
       key: 'actions',
       header: 'Actions',
+      width: '125px',
+      align: 'right',
       render: (item) => (
         <Button
           variant="secondary"
           size="sm"
+          className="h-7 px-2 text-xs"
           onClick={() => navigate(`/admin/team/${item._id}`)}
-          leftIcon={<Icon name="User" size={13} />}
+          leftIcon={<Icon name="User" size={12} />}
         >
           Inspect Profile
         </Button>
@@ -145,7 +157,7 @@ export const TeamRosterPage: React.FC = () => {
     <div className="space-y-6 font-sans">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="Personnel & Roles"
+        badge="Personnel & Roles"
         title="Team Roster Management"
         subtitle="SuperAdmin central dashboard to inspect member credentials, manage RBAC privileges, and monitor operational status."
         actions={

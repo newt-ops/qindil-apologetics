@@ -84,7 +84,7 @@ export function ArticlesByTopicPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-4 py-2.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:border-gold/50 hover:text-gold transition-all shadow-sm"
               >
                 <Icon name="ArrowLeft" size={14} />
-                <span>All Disciplines</span>
+                <span>All Topics</span>
               </Link>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function ArticlesByTopicPage() {
             <EmptyState
               icon="BookOpen"
               title="No treatises found in this domain"
-              description="Articles are currently being prepared for peer review and publication in this discipline."
+              description="Articles are currently being prepared for peer review and publication in this topic."
               action={{
                 label: 'Browse All Articles',
                 onClick: () => window.location.assign('/articles'),

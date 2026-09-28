@@ -5,7 +5,7 @@ import { useAuditLog } from '../../../hooks/useAuditLog';
 import { useTeamMembers } from '../../../hooks/useTeam';
 import { AuditLogItem } from '../../../api/audit';
 import { DataTable } from '../../../components/admin/DataTable';
-import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { AdminPageHeader, AdminStatCard, AdminPageSkeleton } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -99,6 +99,11 @@ export const AuditLogPage: React.FC = () => {
   const { data: teamResponse } = useTeamMembers();
   const teamMembers = teamResponse?.data || [];
 
+  // Guard against flashing 0s - show skeleton until audit logs load
+  if (isLoading && !auditData) {
+    return <AdminPageSkeleton variant="table" />;
+  }
+
   const logsList = auditData?.items || [];
   const availableActions = auditData?.availableActions || [];
   const availableTargetModels = auditData?.availableTargetModels || [];
@@ -109,23 +114,26 @@ export const AuditLogPage: React.FC = () => {
       key: 'actor',
       header: 'Actor',
       sortable: true,
+      width: '170px',
       render: (item) => {
-        const actor = item.actor;
+        const actor = typeof item.actor === 'object' && item.actor ? item.actor : null;
+        const actorName = actor?.name || (typeof item.actor === 'string' ? item.actor : 'System / Admin');
+        const initial = actorName ? actorName.charAt(0).toUpperCase() : 'S';
         return (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             {actor?.avatarUrl ? (
               <img
                 src={actor.avatarUrl}
-                alt={actor.name}
-                className="h-8 w-8 rounded-full border border-gold/30 object-cover shrink-0"
+                alt={actorName}
+                className="h-7 w-7 rounded-full border border-gold/30 object-cover shrink-0"
               />
             ) : (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold font-bold text-xs border border-gold/30">
-                {actor?.name ? actor.name[0].toUpperCase() : 'S'}
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold font-bold text-xs border border-gold/30">
+                {initial}
               </div>
             )}
-            <div className="space-y-0.5 max-w-[140px] truncate">
-              <div className="text-xs font-bold text-text truncate">{actor?.name || 'System / Admin'}</div>
+            <div className="space-y-0.5 min-w-0 max-w-[130px] truncate">
+              <div className="text-xs font-bold text-text truncate">{actorName}</div>
               <div className="text-[10px] text-textMuted font-mono truncate">{actor?.email || '—'}</div>
             </div>
           </div>
@@ -136,9 +144,10 @@ export const AuditLogPage: React.FC = () => {
       key: 'action',
       header: 'Action Performed',
       sortable: true,
+      width: '140px',
       render: (item) => (
-        <div className="space-y-1">
-          <Badge variant="gold">{formatActionLabel(item.action)}</Badge>
+        <div className="space-y-0.5">
+          <Badge variant="gold" size="sm">{formatActionLabel(item.action)}</Badge>
           <div className="text-[10px] font-mono text-textMuted/70">{item.action}</div>
         </div>
       ),
@@ -147,13 +156,14 @@ export const AuditLogPage: React.FC = () => {
       key: 'targetModel',
       header: 'Target Resource',
       sortable: true,
+      width: '120px',
       render: (item) => {
         const target = item.targetModel || item.targetType || '—';
         const link = getTargetLink(item);
 
         return (
-          <div className="space-y-1">
-            <span className="inline-flex items-center space-x-1 rounded border border-border bg-bg px-2 py-0.5 text-[11px] font-mono text-textMuted">
+          <div className="space-y-0.5">
+            <span className="inline-flex items-center space-x-1 rounded border border-border bg-bg px-1.5 py-0.2 text-[10.5px] font-mono text-textMuted">
               <span>{target}</span>
             </span>
             {link && (
@@ -162,8 +172,8 @@ export const AuditLogPage: React.FC = () => {
                   to={link}
                   className="text-[10px] text-gold hover:underline font-semibold flex items-center space-x-1"
                 >
-                  <span>View Resource</span>
-                  <Icon name="ExternalLink" size={10} />
+                  <span>View</span>
+                  <Icon name="ExternalLink" size={9} />
                 </Link>
               </div>
             )}
@@ -174,8 +184,13 @@ export const AuditLogPage: React.FC = () => {
     {
       key: 'details',
       header: 'Summary Details',
+      className: 'font-mono text-xs',
       render: (item) => {
-        const payload = item.details || item.metadata || {};
+        const payload = (item.details && typeof item.details === 'object')
+          ? item.details
+          : (item.metadata && typeof item.metadata === 'object')
+          ? item.metadata
+          : {};
         const keys = Object.keys(payload);
 
         if (keys.length === 0) {
@@ -201,6 +216,7 @@ export const AuditLogPage: React.FC = () => {
       key: 'createdAt',
       header: 'Timestamp',
       sortable: true,
+      width: '125px',
       render: (item) => {
         const date = new Date(item.createdAt);
         return (
@@ -226,15 +242,17 @@ export const AuditLogPage: React.FC = () => {
     {
       key: 'actions',
       header: 'Inspect',
+      width: '60px',
+      align: 'right',
       render: (item) => (
         <Button
           variant="ghost"
           size="sm"
-          className="text-textMuted hover:text-gold"
+          className="h-7 w-7 p-0 flex items-center justify-center text-textMuted hover:text-gold"
           onClick={() => setSelectedLog(item)}
           title="Inspect action details"
         >
-          <Icon name="Code" size={14} />
+          <Icon name="Code" size={13} />
         </Button>
       ),
     },
@@ -336,7 +354,7 @@ export const AuditLogPage: React.FC = () => {
     <div className="space-y-6 font-sans">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="SuperAdmin Governance"
+        badge="SuperAdmin Governance"
         title="System Audit Log & Activity Feed"
         subtitle="Chronological audit trail of all security changes, content lifecycle transitions, and administrative actions."
       />
@@ -462,9 +480,15 @@ export const AuditLogPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-textMuted block text-[10px] uppercase font-bold">Actor</span>
-                <span className="font-bold text-text">{selectedLog.actor?.name || 'System'}</span>
+                <span className="font-bold text-text">
+                  {(typeof selectedLog.actor === 'object' && selectedLog.actor?.name)
+                    ? selectedLog.actor.name
+                    : (typeof selectedLog.actor === 'string' ? selectedLog.actor : 'System')}
+                </span>
                 <span className="text-textMuted font-mono block text-[10px]">
-                  {selectedLog.actor?.email || '—'}
+                  {(typeof selectedLog.actor === 'object' && selectedLog.actor?.email)
+                    ? selectedLog.actor.email
+                    : '—'}
                 </span>
               </div>
               <div>

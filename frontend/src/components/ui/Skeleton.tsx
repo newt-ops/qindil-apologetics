@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'text' | 'circular' | 'rounded' | 'rectangular' | 'button' | 'pill';
@@ -193,7 +194,7 @@ export function TopicCardSkeleton({ className = '' }: { className?: string }) {
   return (
     <div
       role="status"
-      aria-label="Loading research discipline"
+      aria-label="Loading research topic"
       className={`group relative flex flex-col justify-between h-40 sm:h-64 rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-3 sm:p-8 shadow-apple-sm ${className}`}
     >
       {/* Header: Emblem & Arrow */}
@@ -423,6 +424,299 @@ export function StatsGridSkeleton({ count = 4, className = '' }: { count?: numbe
       ))}
     </div>
   );
+}
+
+/**
+ * Composite Detail Record Skeleton
+ * Matches detailed views like TaskDetailPage, VideoTaskDetailPage, and MemberProfilePage
+ */
+export function DetailRecordSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans ${className}`}>
+      {/* Left Main Content Card */}
+      <div className="lg:col-span-2 rounded-2xl border border-border bg-surface p-5 sm:p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="h-5 w-24 rounded-full skeleton-shimmer bg-gold/15" />
+          <div className="h-5 w-20 rounded-full skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="h-7 w-3/4 rounded-xl skeleton-shimmer bg-stone-200/85 dark:bg-zinc-800/85" />
+          <div className="h-4 w-1/2 rounded-md skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+        </div>
+
+        <div className="space-y-2.5 pt-3 border-t border-border/60">
+          <div className="h-4 w-full rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+          <div className="h-4 w-[95%] rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+          <div className="h-4 w-[85%] rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+
+        {/* Action toolbar */}
+        <div className="pt-4 border-t border-border/60 flex items-center gap-3">
+          <div className="h-9 w-28 rounded-xl skeleton-shimmer bg-gold/20" />
+          <div className="h-9 w-24 rounded-xl skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+        </div>
+      </div>
+
+      {/* Right Metadata Sidebar Card */}
+      <div className="rounded-2xl border border-border bg-surface p-5 space-y-4 h-fit">
+        <div className="h-4 w-32 rounded skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+        <div className="divide-y divide-border/60">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="py-3 flex items-center justify-between">
+              <div className="h-3 w-16 rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+              <div className="h-3.5 w-24 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Composite Form Page Skeleton
+ * Matches forms like ArticleEditorPage, AssignTaskPage, SiteSettingsPage
+ */
+export function FormPageSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div className={`rounded-2xl border border-border bg-surface p-5 sm:p-8 space-y-6 max-w-4xl mx-auto font-sans ${className}`}>
+      <div className="space-y-2 border-b border-border/70 pb-4">
+        <div className="h-6 w-48 rounded-lg skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+        <div className="h-3.5 w-80 rounded skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="h-3.5 w-20 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+          <div className="h-10 w-full rounded-xl skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3.5 w-24 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+          <div className="h-10 w-full rounded-xl skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="h-3.5 w-28 rounded skeleton-shimmer bg-stone-200/70 dark:bg-zinc-800/70" />
+        <div className="h-36 w-full rounded-2xl skeleton-shimmer bg-stone-200/40 dark:bg-zinc-800/40" />
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/70">
+        <div className="h-9 w-20 rounded-xl skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+        <div className="h-9 w-28 rounded-xl skeleton-shimmer bg-gold/25" />
+      </div>
+    </div>
+  );
+}
+
+export interface AdminPageSkeletonProps {
+  variant?: 'cards' | 'table' | 'detail' | 'form' | 'calendar' | 'dashboard';
+  hasHeader?: boolean;
+  hasStats?: boolean;
+  className?: string;
+}
+
+/**
+ * Full Admin Page Skeleton Loader
+ * Standardized for all administrative pages and route transitions
+ */
+export function AdminPageSkeleton({
+  variant = 'cards',
+  hasHeader = true,
+  hasStats = true,
+  className = '',
+}: AdminPageSkeletonProps) {
+  return (
+    <div className={`space-y-6 font-sans ${className}`}>
+      {/* Header Skeleton */}
+      {hasHeader && (
+        <div className="space-y-4 border-b border-border/70 pb-5">
+          {/* Breadcrumbs */}
+          <div className="flex items-center space-x-2">
+            <div className="h-3.5 w-24 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+            <div className="h-3.5 w-3 rounded skeleton-shimmer bg-stone-200/40 dark:bg-zinc-800/40" />
+            <div className="h-3.5 w-32 rounded skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <div className="h-7 sm:h-8 w-48 sm:w-64 rounded-xl skeleton-shimmer bg-stone-200/85 dark:bg-zinc-800/85" />
+              <div className="h-3.5 w-72 sm:w-96 rounded-md skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+            </div>
+
+            {/* Header Action Buttons */}
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-20 rounded-lg skeleton-shimmer bg-stone-200/60 dark:bg-zinc-800/60" />
+              <div className="h-8 w-28 rounded-lg skeleton-shimmer bg-gold/20" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KPI Stats Strip */}
+      {hasStats && variant !== 'detail' && variant !== 'form' && (
+        <StatsGridSkeleton count={4} />
+      )}
+
+      {/* Filter Tabs / Action Toolbar */}
+      {variant !== 'detail' && variant !== 'form' && variant !== 'dashboard' && (
+        <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-7 rounded-lg skeleton-shimmer ${
+                i === 0
+                  ? 'w-24 bg-gold/20'
+                  : 'w-20 bg-stone-200/60 dark:bg-zinc-800/60'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Content Area Based on Variant */}
+      {variant === 'cards' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TaskCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {variant === 'table' && (
+        <DataTableSkeleton columns={5} rows={6} />
+      )}
+
+      {variant === 'calendar' && (
+        <CalendarGridSkeleton />
+      )}
+
+      {variant === 'detail' && (
+        <DetailRecordSkeleton />
+      )}
+
+      {variant === 'form' && (
+        <FormPageSkeleton />
+      )}
+
+      {variant === 'dashboard' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="h-5 w-40 rounded skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <TaskCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-5 w-32 rounded skeleton-shimmer bg-stone-200/80 dark:bg-zinc-800/80" />
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <NotificationSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export interface PublicPageSkeletonProps {
+  variant?: 'catalog' | 'article' | 'about' | 'contact' | 'events';
+  className?: string;
+}
+
+/**
+ * Full Public Page Skeleton Loader
+ */
+export function PublicPageSkeleton({
+  variant = 'catalog',
+  className = '',
+}: PublicPageSkeletonProps) {
+  if (variant === 'article') {
+    return <ArticleDetailSkeleton />;
+  }
+
+  return (
+    <div className={`min-h-screen bg-bg text-text py-8 sm:py-12 ${className}`}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Public Hero Strip */}
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="h-4 w-28 mx-auto rounded-full skeleton-shimmer bg-gold/15" />
+          <div className="h-8 sm:h-10 w-3/4 mx-auto rounded-2xl skeleton-shimmer bg-stone-200/85 dark:bg-zinc-800/85" />
+          <div className="h-4 w-5/6 mx-auto rounded-md skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+
+        {/* Filter bar / search placeholder */}
+        <div className="flex items-center justify-center gap-2 max-w-md mx-auto">
+          <div className="h-10 w-full rounded-full skeleton-shimmer bg-stone-200/50 dark:bg-zinc-800/50" />
+        </div>
+
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ArticleCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Universal Page Skeleton
+ * Intelligently adapts to current route path for seamless, zero-CLS page transitions
+ */
+export function UniversalPageSkeleton() {
+  const location = useLocation();
+  const path = location.pathname;
+
+  if (path.startsWith('/admin')) {
+    let variant: AdminPageSkeletonProps['variant'] = 'cards';
+    if (path === '/admin' || path === '/admin/') {
+      variant = 'dashboard';
+    } else if (path.includes('/calendar')) {
+      variant = 'calendar';
+    } else if (
+      path.match(/\/admin\/(tasks|videos|team)\/[a-zA-Z0-9_-]+/) &&
+      !path.includes('/new') &&
+      !path.includes('/assign')
+    ) {
+      variant = 'detail';
+    } else if (
+      path.includes('/new') ||
+      path.includes('/assign') ||
+      path.includes('/edit') ||
+      path.includes('/settings')
+    ) {
+      variant = 'form';
+    } else if (
+      path.includes('/tasks') ||
+      path.includes('/team') ||
+      path.includes('/topics') ||
+      path.includes('/articles') ||
+      path.includes('/events') ||
+      path.includes('/analytics') ||
+      path.includes('/contact') ||
+      path.includes('/audit') ||
+      path.includes('/review')
+    ) {
+      variant = 'table';
+    }
+
+    return <AdminPageSkeleton variant={variant} />;
+  }
+
+  if (path.startsWith('/articles/') && path !== '/articles') {
+    return <ArticleDetailSkeleton />;
+  }
+
+  return <PublicPageSkeleton />;
 }
 
 export default Skeleton;

@@ -18,9 +18,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case 'published':
       case 'active':
         return { variant: 'published', label: 'Published' };
+      case 'approved':
+        return { variant: 'approved', label: 'Approved' };
       case 'inReview':
       case 'in_review':
         return { variant: 'inReview', label: 'In Review' };
+      case 'changesRequested':
+      case 'changes_requested':
+        return { variant: 'danger', label: 'Changes Requested' };
       case 'draft':
         return { variant: 'draft', label: 'Draft' };
       case 'archived':

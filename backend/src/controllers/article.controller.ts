@@ -5,7 +5,11 @@ import UserModel from '../models/User.model.js';
 import TaskModel from '../models/Task.model.js';
 import AuditLogModel from '../models/AuditLog.model.js';
 import { createNotification } from '../services/notify.js';
-import { sendTelegramTaskProgressNotification } from '../telegram/index.js';
+import {
+  sendTelegramTaskProgressNotification,
+  sendTelegramArticleSubmittedNotification,
+  sendTelegramArticleApprovedNotification,
+} from '../telegram/index.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 
@@ -296,9 +300,15 @@ export const submitForReview = asyncHandler(
     await article.save();
 
     // Also update linked Task status to 'inReview'
-    if (article.linkedTaskId) {
-      await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'inReview' } });
-    }
+    await TaskModel.updateMany(
+      {
+        $or: [
+          ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+          { linkedArticle: article._id },
+        ],
+      },
+      { $set: { status: 'inReview' } }
+    );
 
     // Trigger notification to every SuperAdmin
     const superAdmins = await UserModel.find({ isActive: true }).populate('roles');
@@ -315,6 +325,13 @@ export const submitForReview = asyncHandler(
         link: '/admin/review-queue',
       });
     }
+
+    // Telegram notification to SuperAdmins
+    await sendTelegramArticleSubmittedNotification(
+      article.title,
+      req.user!.name || 'Author',
+      article._id
+    );
 
     // Write audit log
     await AuditLogModel.create({
@@ -397,9 +414,15 @@ export const reviewArticle = asyncHandler(
       await article.save();
 
       // Kick linked task back to inProgress
-      if (article.linkedTaskId) {
-        await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'inProgress' } });
-      }
+      await TaskModel.updateMany(
+        {
+          $or: [
+            ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+            { linkedArticle: article._id },
+          ],
+        },
+        { $set: { status: 'inProgress' } }
+      );
 
       // Notify author via in-app notification and Telegram
       await createNotification({
@@ -431,15 +454,27 @@ export const reviewArticle = asyncHandler(
       article.lastEditedBy = req.user!._id;
       await article.save();
 
+      // Milestone reached: Peer review passed, task approved
+      await TaskModel.updateMany(
+        {
+          $or: [
+            ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+            { linkedArticle: article._id },
+          ],
+        },
+        { $set: { status: 'approved' } }
+      );
+
       await createNotification({
         recipient: authorId,
         type: 'article_approved',
-        title: 'Article Approved',
-        body: `Your article "${article.title}" has been approved!`,
+        title: 'Article Approved by Editorial Moderation',
+        body: `Your article "${article.title}" has been approved! You can now publish it live whenever you're ready.`,
         link: `/admin/articles/${article._id}/edit`,
       });
 
       await sendTelegramTaskProgressNotification(authorId, article.title, 'approved');
+      await sendTelegramArticleApprovedNotification(authorId, article.title, article._id);
     } else if (decision === 'publish') {
       if (article.status !== 'inReview' && article.status !== 'approved') {
         return next(
@@ -470,9 +505,15 @@ export const reviewArticle = asyncHandler(
       await article.save();
 
       // Update linked task to done
-      if (article.linkedTaskId) {
-        await TaskModel.findByIdAndUpdate(article.linkedTaskId, { $set: { status: 'done' } });
-      }
+      await TaskModel.updateMany(
+        {
+          $or: [
+            ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+            { linkedArticle: article._id },
+          ],
+        },
+        { $set: { status: 'done' } }
+      );
 
       await createNotification({
         recipient: authorId,
@@ -532,6 +573,17 @@ export const requestChanges = asyncHandler(
     article.reviewNotes = reviewNotes;
     await article.save();
 
+    // Automatically update linked task status back to inProgress
+    await TaskModel.updateMany(
+      {
+        $or: [
+          ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+          { linkedArticle: article._id },
+        ],
+      },
+      { $set: { status: 'inProgress' } }
+    );
+
     // Notify author via in-app notification and Telegram
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
 
@@ -590,21 +642,37 @@ export const approveArticle = asyncHandler(
     article.status = 'approved';
     await article.save();
 
+    // Milestone reached: Peer review passed, task approved
+    await TaskModel.updateMany(
+      {
+        $or: [
+          ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+          { linkedArticle: article._id },
+        ],
+      },
+      { $set: { status: 'approved' } }
+    );
+
     // Notify author via in-app notification and Telegram
     const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
 
     await createNotification({
       recipient: authorId,
       type: 'article_approved',
-      title: 'Article Approved',
-      body: `Your article "${article.title}" has been approved!`,
-      link: `/admin/articles`,
+      title: 'Article Approved by Editorial Moderation',
+      body: `Your article "${article.title}" has been approved! You can now publish it live whenever you're ready.`,
+      link: `/admin/articles/${article._id}/edit`,
     });
 
     await sendTelegramTaskProgressNotification(
       authorId,
       article.title,
       'approved'
+    );
+    await sendTelegramArticleApprovedNotification(
+      authorId,
+      article.title,
+      article._id
     );
 
     // Write audit log
@@ -620,9 +688,9 @@ export const approveArticle = asyncHandler(
   }
 );
 
-// @desc    Publish approved article (SuperAdmin only)
+// @desc    Publish approved article (Author or SuperAdmin)
 // @route   PATCH /api/v1/articles/:id/publish
-// @access  Private (SuperAdmin only)
+// @access  Private (Author or SuperAdmin)
 export const publishArticle = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
@@ -635,10 +703,25 @@ export const publishArticle = asyncHandler(
       return next(ApiError.notFound('Article not found', 'NOT_FOUND'));
     }
 
+    const callerId = req.user!._id.toString();
+    const authorId = (article.author as any)?._id
+      ? (article.author as any)._id.toString()
+      : (article.author as any).toString();
+    const isAuthor = authorId === callerId;
+    const isSuperAdmin = req.user!.roles.some((r: any) =>
+      typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
+    );
+
+    if (!isAuthor && !isSuperAdmin) {
+      return next(
+        ApiError.forbidden('Only the author or a Super Admin can publish this approved article.', 'FORBIDDEN')
+      );
+    }
+
     if (article.status !== 'approved') {
       return next(
         ApiError.badRequest(
-          'Article must be approved before it can be published.',
+          'Article must be approved by Super Admin before it can be published.',
           'NOT_APPROVED'
         )
       );
@@ -646,18 +729,41 @@ export const publishArticle = asyncHandler(
 
     article.status = 'published';
     article.publishedAt = new Date();
+    article.lastEditedBy = req.user!._id;
+
+    // Finalize slug if missing
+    if (!article.slug && article.title) {
+      let genSlug = slugify(article.title);
+      const slugExists = await ArticleModel.findOne({ slug: genSlug, _id: { $ne: article._id } });
+      if (slugExists) {
+        genSlug = `${genSlug}-${Date.now().toString().slice(-4)}`;
+      }
+      article.slug = genSlug;
+    }
+
     await article.save();
 
-    // Notify author via in-app notification and Telegram
-    const authorId = typeof article.author === 'object' ? (article.author as any)._id : article.author;
+    // Update linked task to done
+    await TaskModel.updateMany(
+      {
+        $or: [
+          ...(article.linkedTaskId ? [{ _id: article.linkedTaskId }] : []),
+          { linkedArticle: article._id },
+        ],
+      },
+      { $set: { status: 'done' } }
+    );
 
-    await createNotification({
-      recipient: authorId,
-      type: 'article_published',
-      title: 'Article Published',
-      body: `Your article "${article.title}" is now published and live on Qindil!`,
-      link: `/articles/${article.slug}`,
-    });
+    // Notify author if published by superAdmin
+    if (!isAuthor) {
+      await createNotification({
+        recipient: authorId as any,
+        type: 'article_published',
+        title: 'Article Published',
+        body: `Your article "${article.title}" was published live by Super Admin!`,
+        link: `/articles/${article.slug}`,
+      });
+    }
 
     await sendTelegramTaskProgressNotification(
       authorId,
@@ -671,7 +777,7 @@ export const publishArticle = asyncHandler(
       action: 'article.publish',
       targetModel: 'Article',
       targetId: article._id,
-      details: { title: article.title, publishedAt: article.publishedAt },
+      details: { title: article.title, publishedAt: article.publishedAt, publishedBy: callerId },
     });
 
     sendSuccess(res, article);
@@ -713,11 +819,39 @@ export const archiveArticle = asyncHandler(
 // @route   POST /api/v1/articles
 // @access  Private (Admin & SuperAdmin)
 export const createArticleDraft = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const { title, topic, topicId, authorId } = req.body;
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { title, topic, topicId, authorId, taskId } = req.body;
     const isSuperAdmin = req.user!.roles.some((r: any) =>
       typeof r === 'string' ? r === 'superAdmin' : r.name === 'superAdmin'
     );
+
+    // Guard: Non-superAdmins cannot create unassigned rogue articles
+    let linkedTaskId: any = undefined;
+    if (!isSuperAdmin) {
+      if (!taskId) {
+        return next(
+          ApiError.forbidden(
+            'Articles can only be initiated through an assigned task. Please request an article assignment or accept your assigned task in the workspace.',
+            'TASK_REQUIRED'
+          )
+        );
+      }
+
+      const assignedTask = await TaskModel.findOne({
+        _id: taskId,
+        assignedTo: req.user!._id,
+        type: 'article',
+      });
+
+      if (!assignedTask) {
+        return next(
+          ApiError.forbidden('Valid assigned article task required to create draft.', 'INVALID_TASK')
+        );
+      }
+      linkedTaskId = assignedTask._id;
+    } else if (taskId) {
+      linkedTaskId = taskId;
+    }
 
     // Determine target author
     const targetAuthor = isSuperAdmin && authorId ? authorId : req.user!._id;
@@ -736,7 +870,14 @@ export const createArticleDraft = asyncHandler(
       status: 'draft',
       content: '',
       viewCount: 0,
+      linkedTaskId,
     });
+
+    if (linkedTaskId) {
+      await TaskModel.findByIdAndUpdate(linkedTaskId, {
+        $set: { linkedArticle: article._id, status: 'inProgress' },
+      });
+    }
 
     const populatedArticle = await ArticleModel.findById(article._id)
       .populate('topic', 'name slug')
@@ -748,7 +889,7 @@ export const createArticleDraft = asyncHandler(
       action: 'article.createDraft',
       targetModel: 'Article',
       targetId: article._id,
-      details: { title: article.title, author: targetAuthor },
+      details: { title: article.title, author: targetAuthor, linkedTaskId },
     });
 
     sendSuccess(res, populatedArticle || article, undefined, 201);
@@ -820,9 +961,9 @@ export const listArticlesAdmin = asyncHandler(
   }
 );
 
-// @desc    Delete article draft (Draft status only)
+// @desc    Delete article (Author or SuperAdmin)
 // @route   DELETE /api/v1/articles/:id
-// @access  Private (Admin & SuperAdmin)
+// @access  Private (Author or SuperAdmin)
 export const deleteArticleDraft = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
@@ -836,34 +977,36 @@ export const deleteArticleDraft = asyncHandler(
       return next(ApiError.notFound('Article not found', 'NOT_FOUND'));
     }
 
-    if (article.status !== 'draft') {
-      return next(
-        ApiError.badRequest(
-          `Cannot delete article with status "${article.status}". Only draft articles can be deleted.`,
-          'INVALID_STATUS'
-        )
-      );
-    }
-
     const isAuthor = article.author.toString() === callerId;
     if (!isAuthor && !isSuperAdmin) {
       return next(
-        ApiError.forbidden('You do not have permission to delete this draft.', 'FORBIDDEN')
+        ApiError.forbidden('You do not have permission to delete this article.', 'FORBIDDEN')
       );
     }
+
+    // Decouple any tasks linked to this article
+    if (article.linkedTaskId) {
+      await TaskModel.findByIdAndUpdate(article.linkedTaskId, {
+        $unset: { linkedArticle: 1 },
+      });
+    }
+    await TaskModel.updateMany(
+      { linkedArticle: article._id },
+      { $unset: { linkedArticle: 1 } }
+    );
 
     await ArticleModel.findByIdAndDelete(id);
 
     // Write audit log
     await AuditLogModel.create({
       actor: req.user!._id,
-      action: 'article.deleteDraft',
+      action: 'article.delete',
       targetModel: 'Article',
       targetId: article._id,
-      details: { title: article.title },
+      details: { title: article.title, status: article.status },
     });
 
-    sendSuccess(res, { message: 'Article draft deleted successfully' });
+    sendSuccess(res, { message: 'Article deleted successfully' });
   }
 );
 

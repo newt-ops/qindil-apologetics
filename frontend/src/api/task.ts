@@ -2,7 +2,7 @@ import apiClient from './client';
 import { User } from '../stores/authStore';
 
 export type TaskType = 'article' | 'video' | 'general';
-export type TaskStatus = 'pending' | 'inProgress' | 'inReview' | 'done' | 'overdue';
+export type TaskStatus = 'pending' | 'inProgress' | 'inReview' | 'approved' | 'done' | 'overdue';
 
 export interface LinkedArticle {
   _id: string;
@@ -49,6 +49,7 @@ export interface AssignTaskPayload {
   assignedTo: string[];
   dueDate: string;
   topicId?: string;
+  proposalId?: string;
   articleTitle?: string;
   videoType?: 'refutation' | 'normal';
   destination?: 'official' | 'personal';

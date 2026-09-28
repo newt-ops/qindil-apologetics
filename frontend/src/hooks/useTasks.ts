@@ -91,6 +91,7 @@ export const useAssignTask = () => {
     mutationFn: (data: AssignTaskPayload) => assignTaskApi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
     },
   });
 };
@@ -103,6 +104,7 @@ export const useAcceptTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
     },
   });
 };

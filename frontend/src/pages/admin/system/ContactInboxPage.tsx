@@ -7,7 +7,7 @@ import {
 } from '../../../hooks/useContactMessages';
 import { ContactMessageItem, ContactMessageStatus } from '../../../api/contact';
 import { DataTable } from '../../../components/admin/DataTable';
-import { AdminPageHeader, AdminStatCard } from '../../../components/admin';
+import { AdminPageHeader, AdminStatCard, AdminPageSkeleton } from '../../../components/admin';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -37,6 +37,11 @@ export const ContactInboxPage: React.FC = () => {
 
   const archiveMutation = useArchiveContactMessage();
 
+  // Guard against flashing 0s - show skeleton until messages load
+  if (isLoading && !messagesData) {
+    return <AdminPageSkeleton variant="table" />;
+  }
+
   const messagesList = messagesData?.items || [];
   const unreadCount = messagesData?.unreadCount || 0;
 
@@ -56,17 +61,17 @@ export const ContactInboxPage: React.FC = () => {
     switch (status) {
       case 'new':
         return (
-          <span className="inline-flex items-center space-x-1 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-[11px] font-bold text-gold">
+          <span className="inline-flex items-center space-x-1 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-bold text-gold">
             <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
             <span>New</span>
           </span>
         );
       case 'read':
-        return <Badge variant="info">Read</Badge>;
+        return <Badge variant="info" size="sm">Read</Badge>;
       case 'archived':
-        return <Badge variant="secondary">Archived</Badge>;
+        return <Badge variant="secondary" size="sm">Archived</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary" size="sm">{status}</Badge>;
     }
   };
 
@@ -76,30 +81,36 @@ export const ContactInboxPage: React.FC = () => {
       key: 'name',
       header: 'Sender',
       sortable: true,
-      render: (item) => (
-        <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold font-bold text-xs border border-gold/30">
-            {item.name[0]?.toUpperCase() || 'U'}
-          </div>
-          <div className="space-y-0.5">
-            <div className={`text-xs font-bold ${item.status === 'new' ? 'text-gold font-extrabold' : 'text-text'}`}>
-              {item.name}
+      width: '180px',
+      render: (item) => {
+        const senderName = item?.name || 'Anonymous';
+        const initial = senderName.charAt(0).toUpperCase() || 'U';
+        return (
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold font-bold text-xs border border-gold/30">
+              {initial}
             </div>
-            <div className="text-[11px] text-textMuted font-mono">{item.email}</div>
+            <div className="space-y-0.5 min-w-0 max-w-[130px] truncate">
+              <div className={`text-xs font-bold truncate ${item.status === 'new' ? 'text-gold font-extrabold' : 'text-text'}`}>
+                {senderName}
+              </div>
+              <div className="text-[10px] text-textMuted font-mono truncate">{item.email || '—'}</div>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: 'subject',
       header: 'Subject & Snippet',
       sortable: true,
+      className: 'min-w-[180px]',
       render: (item) => (
-        <div className="space-y-1 max-w-md">
+        <div className="space-y-0.5 max-w-md">
           <div className={`text-xs ${item.status === 'new' ? 'font-extrabold text-text' : 'font-semibold text-textMuted'}`}>
             {item.subject || 'No Subject'}
           </div>
-          <p className="text-[11px] text-textMuted line-clamp-1 italic">
+          <p className="text-[10.5px] text-textMuted line-clamp-1 italic">
             "{item.message}"
           </p>
         </div>
@@ -109,12 +120,14 @@ export const ContactInboxPage: React.FC = () => {
       key: 'status',
       header: 'Status',
       sortable: true,
+      width: '110px',
       render: (item) => renderStatusBadge(item.status),
     },
     {
       key: 'createdAt',
       header: 'Received Date',
       sortable: true,
+      width: '120px',
       render: (item) => {
         const date = new Date(item.createdAt);
         return (
@@ -139,12 +152,15 @@ export const ContactInboxPage: React.FC = () => {
     {
       key: 'actions',
       header: 'Actions',
+      width: '110px',
+      align: 'right',
       render: (item) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-end space-x-1.5">
           <Button
             variant="secondary"
             size="sm"
-            leftIcon={<Icon name="Eye" size={14} />}
+            className="h-7 px-2 text-xs"
+            leftIcon={<Icon name="Eye" size={12} />}
             onClick={() => setSelectedMessageId(item._id)}
           >
             View
@@ -154,11 +170,11 @@ export const ContactInboxPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-textMuted hover:text-gold hover:bg-gold/10"
+              className="h-7 w-7 p-0 flex items-center justify-center text-textMuted hover:text-gold hover:bg-gold/10"
               onClick={() => handleArchive(item)}
               title="Archive message"
             >
-              <Icon name="Archive" size={14} />
+              <Icon name="Archive" size={13} />
             </Button>
           )}
         </div>
@@ -224,7 +240,7 @@ export const ContactInboxPage: React.FC = () => {
     <div className="space-y-6 font-sans">
       {/* Page Header */}
       <AdminPageHeader
-        discipline="SuperAdmin Console"
+        badge="SuperAdmin Console"
         title="Contact Inbox"
         subtitle="Review inquiries, reader feedback, and correspondence submitted through the public website."
         actions={
